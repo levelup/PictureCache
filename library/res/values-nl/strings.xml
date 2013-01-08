@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="oom_alert">Weinig geheugen</string>
+  <string name="oom_warning">Geen geheugen beschikbaar!</string>
+</resources>
