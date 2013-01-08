@@ -24,7 +24,7 @@ import android.graphics.BitmapFactory;
 import android.os.Environment;
 import android.text.TextUtils;
 
-import com.levelup.GalleryScanner;
+import com.levelup.FileUtils;
 import com.levelup.HandlerUIThread;
 import com.levelup.OOMHandler;
 import com.levelup.log.AbstractLogger;
@@ -603,7 +603,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			if (v!=null && v.path!=null) {
 				if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
 					File dst = new File(getPictureDir(), key.getFilename());
-					Utils.copyFile(v.path, dst, mLogger);
+					FileUtils.copyFile(v.path, dst, mLogger);
 					succeeded = true;
 
 					try {
