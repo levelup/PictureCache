@@ -10,7 +10,7 @@ import java.util.Hashtable;
 import android.graphics.Bitmap;
 import android.text.TextUtils;
 
-import com.levelup.SimpleLogger;
+import com.levelup.log.AbstractLogger;
 import com.levelup.picturecache.BitmapDownloader.JobMonitor;
 
 class DownloadManager implements JobMonitor {
@@ -22,10 +22,10 @@ class DownloadManager implements JobMonitor {
 	}
 
 	private final Hashtable<String, BitmapDownloader> mJobs = new Hashtable<String, BitmapDownloader>();
-	private final SimpleLogger mLogger;
+	private final AbstractLogger mLogger;
 	private JobsMonitor mMonitor;
 
-	DownloadManager(SimpleLogger logger) {
+	DownloadManager(AbstractLogger logger) {
 		this.mLogger = logger;
 	}
 

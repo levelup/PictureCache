@@ -6,7 +6,7 @@ import android.graphics.Bitmap;
 import android.widget.RemoteViews;
 
 import com.levelup.HandlerUIThread;
-import com.levelup.SimpleLogger;
+import com.levelup.log.AbstractLogger;
 
 public class RemoteViewLoader extends PictureLoaderHandler {
 	private final RemoteViews remoteViews;
@@ -22,12 +22,12 @@ public class RemoteViewLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	public void drawDefaultPicture(String url, HandlerUIThread postHandler, SimpleLogger logger) {
+	public void drawDefaultPicture(String url, HandlerUIThread postHandler, AbstractLogger logger) {
 		remoteViews.setImageViewResource(viewId, defaultView);
 	}
 
 	@Override
-	public void drawBitmap(Bitmap bmp, String url, HandlerUIThread postHandler, SimpleLogger logger) {
+	public void drawBitmap(Bitmap bmp, String url, HandlerUIThread postHandler, AbstractLogger logger) {
 		remoteViews.setImageViewBitmap(viewId, bmp);
 	}
 
@@ -50,7 +50,7 @@ public class RemoteViewLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	public boolean setLoadingNewURL(DownloadManager downloadManager, String newURL, SimpleLogger logger) {
+	public boolean setLoadingNewURL(DownloadManager downloadManager, String newURL, AbstractLogger logger) {
 		if (newURL!=null && newURL.equals(mLoadingUrl))
 			return false;
 		downloadManager.cancelDownloadForLoader(this, mLoadingUrl);

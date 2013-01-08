@@ -27,8 +27,7 @@ import android.text.TextUtils;
 import com.levelup.GalleryScanner;
 import com.levelup.HandlerUIThread;
 import com.levelup.OOMHandler;
-import com.levelup.SimpleLogger;
-import com.levelup.Utils;
+import com.levelup.log.AbstractLogger;
 import com.levelup.picturecache.DownloadManager.JobsMonitor;
 
 public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem> implements JobsMonitor {
@@ -78,7 +77,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	private int mCacheSizeShortterm;
 
 	private DownloadManager mJobManager;
-	private SimpleLogger mLogger;
+	private AbstractLogger mLogger;
 	private Context mContext;
 
 	private AtomicInteger mPurgeCounterLongterm = new AtomicInteger();
@@ -220,7 +219,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		return new String[] {key.serialize()};
 	}
 
-	protected PictureCache(Context context, HandlerUIThread postHandler, int sizeShortTerm, int sizeLongTerm, int sizeEternal, SimpleLogger logger) {
+	protected PictureCache(Context context, HandlerUIThread postHandler, int sizeShortTerm, int sizeLongTerm, int sizeEternal, AbstractLogger logger) {
 		super(context, DATABASE_NAME, DATABASE_VERSION);
 
 		this.mContext = context;
@@ -832,7 +831,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		return null;
 	}
 
-	public SimpleLogger getLogger() {
+	public AbstractLogger getLogger() {
 		return mLogger;
 	}
 

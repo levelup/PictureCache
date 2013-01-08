@@ -7,7 +7,7 @@ import android.graphics.drawable.Drawable;
 import android.widget.ImageView;
 
 import com.levelup.HandlerUIThread;
-import com.levelup.SimpleLogger;
+import com.levelup.log.AbstractLogger;
 
 public class ImageViewLoader extends PictureLoaderHandler {
 	protected final ImageView view;
@@ -26,7 +26,7 @@ public class ImageViewLoader extends PictureLoaderHandler {
 
 		// pending draw data
 		private Bitmap mPendingDraw;
-		private SimpleLogger mPendingLogger;
+		private AbstractLogger mPendingLogger;
 		private String mPendingUrl;
 		private DrawInUI mDrawInUI;
 
@@ -37,7 +37,7 @@ public class ImageViewLoader extends PictureLoaderHandler {
 			this.storageTransform = storageTransform;
 		}
 
-		public void setPendingDraw(Bitmap pendingDraw, SimpleLogger pendingLogger, String pendingUrl) {
+		public void setPendingDraw(Bitmap pendingDraw, AbstractLogger pendingLogger, String pendingUrl) {
 			if (mDrawInUI!=null)
 				mDrawInUI.setPendingDraw(pendingDraw, pendingLogger, pendingUrl);
 			else {
@@ -87,14 +87,14 @@ public class ImageViewLoader extends PictureLoaderHandler {
 
 			// pending draw data
 			private Bitmap mPendingDraw;
-			private SimpleLogger mPendingLogger;
+			private AbstractLogger mPendingLogger;
 			private String mPendingUrl;
 
 			DrawInUI(ImageViewLoader view) {
 				this.viewLoader = view;
 			}
 
-			public void setPendingDraw(Bitmap pendingDraw, SimpleLogger pendingLogger, String pendingUrl) {
+			public void setPendingDraw(Bitmap pendingDraw, AbstractLogger pendingLogger, String pendingUrl) {
 				synchronized (viewLoader) {
 					this.mPendingDraw = pendingDraw;
 					this.mPendingLogger = pendingLogger;
@@ -182,13 +182,13 @@ public class ImageViewLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	public final void drawDefaultPicture(String url, HandlerUIThread postHandler, SimpleLogger logger) {
+	public final void drawDefaultPicture(String url, HandlerUIThread postHandler, AbstractLogger logger) {
 		if (DEBUG_VIEW_LOADING) logger.d(this+" drawDefaultPicture");
 		showDrawable(postHandler, null, url, logger);
 	}
 
 	@Override
-	public final void drawBitmap(Bitmap bmp, String url, HandlerUIThread postHandler, final SimpleLogger logger) {
+	public final void drawBitmap(Bitmap bmp, String url, HandlerUIThread postHandler, final AbstractLogger logger) {
 		if (DEBUG_VIEW_LOADING) logger.d(this+" drawBitmap "+view+" with "+bmp);
 		showDrawable(postHandler, bmp, url, logger);
 	}
@@ -210,7 +210,7 @@ public class ImageViewLoader extends PictureLoaderHandler {
 		view.setImageBitmap(bmp);
 	}
 
-	private void showDrawable(HandlerUIThread postHandler, Bitmap customBitmap, String url, SimpleLogger logger) {
+	private void showDrawable(HandlerUIThread postHandler, Bitmap customBitmap, String url, AbstractLogger logger) {
 		synchronized (this) {
 			ViewTag tag = (ViewTag) view.getTag();
 			if (tag==null) {
@@ -223,7 +223,7 @@ public class ImageViewLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	public boolean setLoadingNewURL(DownloadManager downloadManager, String newURL, SimpleLogger logger) {
+	public boolean setLoadingNewURL(DownloadManager downloadManager, String newURL, AbstractLogger logger) {
 		ViewTag newTag = new ViewTag(newURL, getStorageTransform(), getDisplayTransform());
 
 		ViewTag currentTag = null;
