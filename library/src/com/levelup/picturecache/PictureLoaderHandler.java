@@ -2,10 +2,9 @@ package com.levelup.picturecache;
 
 import java.io.File;
 
-import com.levelup.HandlerUIThread;
-
 import android.graphics.Bitmap;
 
+import com.levelup.HandlerUIThread;
 import com.levelup.log.AbstractLogger;
 
 public abstract class PictureLoaderHandler {

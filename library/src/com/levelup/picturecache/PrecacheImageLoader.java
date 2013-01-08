@@ -3,10 +3,9 @@ package com.levelup.picturecache;
 import java.io.File;
 import java.util.Random;
 
-import com.levelup.HandlerUIThread;
-
 import android.graphics.Bitmap;
 
+import com.levelup.HandlerUIThread;
 import com.levelup.log.AbstractLogger;
 
 public class PrecacheImageLoader extends PictureLoaderHandler {
