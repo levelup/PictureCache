@@ -22,7 +22,6 @@ import android.net.Uri;
 import android.util.FloatMath;
 
 import com.levelup.OOMHandler;
-import com.levelup.Utils;
 
 class BitmapDownloader extends Thread {
 
@@ -338,7 +337,7 @@ class BitmapDownloader extends Thread {
 			} catch (FileNotFoundException e) {
 				//mCache.getLogger().d(false, "cache error trying ContentResolver on "+mURL);
 				URL url = new URL(mURL);
-				URLConnection conn = Utils.getUrlConnection(mCache.getContext(), url);
+				URLConnection conn = url.openConnection();
 				conn.setConnectTimeout(CONNECT_TIMEOUT_DL);
 				conn.setUseCaches(false);
 				conn.setRequestProperty("Accept-Encoding", "identity");
