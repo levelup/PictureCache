@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import st.gaw.db.InMemoryDbHelper;
 import st.gaw.db.InMemoryDbOperation;
 import st.gaw.db.InMemoryHashmapDb;
+import st.gaw.db.Logger;
 import st.gaw.db.MapEntry;
 import android.content.ContentValues;
 import android.content.Context;
@@ -27,11 +28,12 @@ import android.text.TextUtils;
 import com.levelup.FileUtils;
 import com.levelup.HandlerUIThread;
 import com.levelup.OOMHandler;
-import com.levelup.log.AbstractLogger;
 import com.levelup.picturecache.DownloadManager.JobsMonitor;
 
 public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem> implements JobsMonitor {
 
+	protected static final String TAG = "PictureCache";
+	
 	private static final int MIN_ADD_BEFORE_PURGE = 7;
 
 	/**
@@ -77,7 +79,6 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	private int mCacheSizeShortterm;
 
 	private DownloadManager mJobManager;
-	private AbstractLogger mLogger;
 	private Context mContext;
 
 	private AtomicInteger mPurgeCounterLongterm = new AtomicInteger();
@@ -137,7 +138,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				if (val.path.exists()) {
 					int typeIdx = c.getInt(indexType);
 					if (typeIdx<0) {
-						mLogger.w("unknown cache type "+typeIdx);
+						LogManager.logger.w(TAG, "unknown cache type "+typeIdx);
 						val.type = CacheType.CACHE_SHORTTERM;
 					} else
 						val.type = typeIdx;
@@ -155,7 +156,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				if (val.path.exists()) {
 					int typeIdx = c.getInt(indexType);
 					if (typeIdx<0) {
-						mLogger.w("unknown cache type "+typeIdx);
+						LogManager.logger.w(TAG, "unknown cache type "+typeIdx);
 						val.type = CacheType.CACHE_SHORTTERM;
 					} else
 						val.type = typeIdx;
@@ -172,13 +173,13 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		} else {
 			final String path = c.getString(indexPath);
 			if (TextUtils.isEmpty(path)) {
-				mLogger.w("trying to load an empty cache item for "+c.getString(indexURL));
+				LogManager.logger.w(TAG, "trying to load an empty cache item for "+c.getString(indexURL));
 				return null;
 			}
 			CacheItem val = new CacheItem(new File(path), c.getString(indexURL));
 			int typeIdx = c.getInt(indexType);
 			if (typeIdx<0) {
-				mLogger.w("unknown cache type "+typeIdx);
+				LogManager.logger.w(TAG, "unknown cache type "+typeIdx);
 				val.type = CacheType.CACHE_SHORTTERM;
 			} else
 				val.type = typeIdx;
@@ -194,7 +195,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	@Override
 	protected ContentValues getValuesFromData(Entry<CacheKey, CacheItem> data, SQLiteDatabase dbToFill) throws RuntimeException {
 		if (data.getValue().path==null) {
-			mLogger.w("cache item has an empty path :"+data.getKey()+" / "+data.getValue());
+			LogManager.logger.w(TAG, "cache item has an empty path :"+data.getKey()+" / "+data.getValue());
 			throw new RuntimeException("empty path for "+data);
 		}
 
@@ -219,11 +220,11 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		return new String[] {key.serialize()};
 	}
 
-	protected PictureCache(Context context, HandlerUIThread postHandler, int sizeShortTerm, int sizeLongTerm, int sizeEternal, AbstractLogger logger) {
-		super(context, DATABASE_NAME, DATABASE_VERSION);
+	protected PictureCache(Context context, HandlerUIThread postHandler, int sizeShortTerm, int sizeLongTerm, int sizeEternal, Logger logger) {
+		super(context, DATABASE_NAME, DATABASE_VERSION, logger);
 
+		LogManager.setLogger(logger);
 		this.mContext = context;
-		this.mLogger = logger;
 		this.postHandler = postHandler;
 
 		File olddir = new File(Environment.getExternalStorageDirectory(), "/Android/data/"+context.getPackageName()+"/cache");
@@ -242,7 +243,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			mCacheFolder = newdir;
 		}
 
-		mJobManager = new DownloadManager(mLogger);
+		mJobManager = new DownloadManager();
 		mJobManager.setMonitor(this);
 		mCacheSizeEternal = sizeEternal;
 		mCacheSizeLongterm = sizeLongTerm;
@@ -261,7 +262,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-		mLogger.w("Upgrading PictureCache from " + oldVersion + " to " + newVersion);
+		LogManager.logger.w(TAG, "Upgrading PictureCache from " + oldVersion + " to " + newVersion);
 	}
 
 	File getCachedFilepath(CacheKey key) throws SecurityException, IOException
@@ -276,9 +277,9 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		try {
 			assertFolderExists();
 		} catch (SecurityException e) {
-			mLogger.e("getTempDir() cannot access the dir ", e);
+			LogManager.logger.e(TAG, "getTempDir() cannot access the dir ", e);
 		} catch (IOException e) {
-			mLogger.e("getTempDir() cannot access the dir ", e);
+			LogManager.logger.e(TAG, "getTempDir() cannot access the dir ", e);
 		}
 		return mCacheFolder;
 	}
@@ -309,7 +310,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				}
 				dstDir.mkdirs();
 			} catch (SecurityException e) {
-				mLogger.e("getPictureDir() cannot access the dir ", e);
+				LogManager.logger.e(TAG, "getPictureDir() cannot access the dir ", e);
 			}
 		}
 		return dstDir;
@@ -317,17 +318,17 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 	private void assertFolderExists() throws IOException, SecurityException 
 	{
-		//mLogger.e("assertFolderExists " +DirAsserted);
+		//LogManager.logger.e(TAG, "assertFolderExists " +DirAsserted);
 		synchronized (mDirAsserted) {
 			if (!mDirAsserted) {
-				//mLogger.i("data dir=" + Environment.getDataDirectory().getAbsolutePath());
+				//LogManager.logger.i("data dir=" + Environment.getDataDirectory().getAbsolutePath());
 				if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
-					//mLogger.w("cache dir=" + dir.getAbsolutePath()+" exists:"+dir.exists());
+					//LogManager.logger.w(TAG, "cache dir=" + dir.getAbsolutePath()+" exists:"+dir.exists());
 					if (mCacheFolder.exists() && mCacheFolder.isDirectory())
 						mDirAsserted = Boolean.TRUE;
 					else {
 						mDirAsserted = Boolean.valueOf(mCacheFolder.mkdirs());
-						//mLogger.w("cache dir=" + dir.getAbsolutePath()+" asserted:"+DirAsserted);
+						//LogManager.logger.w(TAG, "cache dir=" + dir.getAbsolutePath()+" asserted:"+DirAsserted);
 						if (mDirAsserted) {
 							File noMedia = new File(mCacheFolder, ".nomedia");
 							noMedia.createNewFile();
@@ -372,7 +373,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			}
 		} catch (Throwable e) {
 			// workaround to avoid locking mData during read/write in the DB
-			mLogger.e("getCacheSize failed", e);
+			LogManager.logger.e(TAG, "getCacheSize failed", e);
 		} finally {
 			mDataLock.unlock();
 		}
@@ -380,13 +381,13 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	}
 
 	private Entry<CacheKey, CacheItem> getCacheOldestEntry(int type) {
-		//mLogger.d("getCacheOldest in");
+		//LogManager.logger.d(TAG, "getCacheOldest in");
 		Entry<CacheKey, CacheItem> result = null;
 		for (Entry<CacheKey, CacheItem> k : getMap().entrySet()) {
 			if (!CacheType.isStrictlyLowerThan(type, k.getValue().type) && (result==null || result.getValue().lastAccessDate > k.getValue().lastAccessDate))
 				result = k;
 		}
-		//mLogger.e("getCacheOldest out with "+result);
+		//LogManager.logger.e(TAG, "getCacheOldest out with "+result);
 		return result;
 	}
 
@@ -443,13 +444,13 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 								}
 							}
 						}
-						//mLogger.d("makeroom");
+						//LogManager.logger.d(TAG, "makeroom");
 					}
 				}
 			} catch (NullPointerException e) {
-				cache.mLogger.w("can't make room for type:"+type,e);
+				LogManager.logger.w(TAG, "can't make room for type:"+type,e);
 			}
-			//mLogger.d("makeroom done");
+			//LogManager.logger.d(TAG, "makeroom done");
 		}
 	}
 
@@ -465,24 +466,24 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	{
 		mDataLock.lock();
 		try {
-			//mLogger.d("getting picture "+URL+" into "+target+" key:"+key);
+			//LogManager.logger.d(TAG, "getting picture "+URL+" into "+target+" key:"+key);
 			if (TextUtils.isEmpty(URL)) {
 				// get the URL matching the UUID if we don't have a forced one
 				CacheItem v = getMap().get(key);
 				if (v!=null)
 					URL = v.URL;
-				//mLogger.i("no URL specified for "+key+" using "+URL);
+				//LogManager.logger.i("no URL specified for "+key+" using "+URL);
 			}
 			if (TextUtils.isEmpty(URL)) {
-				mLogger.d("no URL specified/known for "+key+" using default");
+				LogManager.logger.d(TAG, "no URL specified/known for "+key+" using default");
 				removePictureLoader(loader, null);
-				loader.drawDefaultPicture(null, postHandler, mLogger);
+				loader.drawDefaultPicture(null, postHandler);
 				return;
 			}
 
-			//mLogger.v("load "+URL+" in "+target+" key:"+key);
-			if (!loader.setLoadingNewURL(mJobManager, URL, mLogger)) {
-				//mLogger.v(loader+" no need to draw anything");
+			//LogManager.logger.v(TAG, "load "+URL+" in "+target+" key:"+key);
+			if (!loader.setLoadingNewURL(mJobManager, URL)) {
+				//LogManager.logger.v(TAG, loader+" no need to draw anything");
 				return; // no need to do anything the image is the same or downloading for it
 			}
 
@@ -498,19 +499,19 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				try {
 					Bitmap bmp = BitmapFactory.decodeFile(file.getAbsolutePath());
 					if (bmp!=null) {
-						//mLogger.d("using direct file for URL "+URL+" file:"+file);
-						loader.drawBitmap(bmp, URL, postHandler, mLogger);
+						//LogManager.logger.d(TAG, "using direct file for URL "+URL+" file:"+file);
+						loader.drawBitmap(bmp, URL, postHandler);
 						return;
 					}
 				} catch (OutOfMemoryError e) {
-					loader.drawDefaultPicture(URL, postHandler, mLogger);
-					mLogger.w("can't decode "+file,e);
+					loader.drawDefaultPicture(URL, postHandler);
+					LogManager.logger.w(TAG, "can't decode "+file,e);
 					OOMHandler.handleOutOfMemory(getContext(), postHandler, e);
 					return;
 				}
 			}
 
-			loader.drawDefaultPicture(URL, postHandler, mLogger);
+			loader.drawDefaultPicture(URL, postHandler);
 
 			// we could not read from the cache, load the URL
 			if (key!=null)
@@ -541,7 +542,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		try {
 			builder.startLoading(this);
 		} catch (NoSuchAlgorithmException e) {
-			mLogger.d("can't load picture", e);
+			LogManager.logger.d(TAG, "can't load picture", e);
 		}
 	}
 
@@ -568,7 +569,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		try {
 			builder.startLoading(this);
 		} catch (NoSuchAlgorithmException e) {
-			mLogger.d("can't load picture", e);
+			LogManager.logger.d(TAG, "can't load picture", e);
 		}
 	}
 
@@ -590,7 +591,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	public void removePictureLoader(PictureLoaderHandler loader, String oldURL) {
 		if (loader!=null) {
 			mJobManager.cancelDownloadForLoader(loader, oldURL);
-			loader.setLoadingNewURL(mJobManager, null, mLogger);
+			loader.setLoadingNewURL(mJobManager, null);
 		}
 	}
 
@@ -603,14 +604,14 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			if (v!=null && v.path!=null) {
 				if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
 					File dst = new File(getPictureDir(), key.getFilename());
-					FileUtils.copyFile(v.path, dst, mLogger);
+					FileUtils.copyFile(v.path, dst, TAG);
 					succeeded = true;
 
 					try {
 						GalleryScanner saver = new GalleryScanner(getContext());
 						saver.scan(dst);
 					} catch (ReceiverCallNotAllowedException e) {
-						mLogger.w("could not start the gallery scanning");
+						LogManager.logger.w(TAG, "could not start the gallery scanning");
 					}
 				}
 			}
@@ -644,9 +645,9 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			}
 			assertFolderExists();
 		} catch (SecurityException e) {
-			mLogger.e("clearCache exception", e);
+			LogManager.logger.e(TAG, "clearCache exception", e);
 		} catch (IOException e) {
-			mLogger.e("clearCache could not recreate the cache folder", e);
+			LogManager.logger.e(TAG, "clearCache could not recreate the cache folder", e);
 		}
 	}
 
@@ -671,9 +672,9 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	}
 
 	private boolean moveCachedFiles(CacheKey srcKey, CacheKey dstKey, int cacheType) {
-		mLogger.v("Copy "+srcKey+" to "+dstKey);
+		LogManager.logger.v(TAG, "Copy "+srcKey+" to "+dstKey);
 		if (getMap().containsKey(dstKey)) {
-			mLogger.d("item "+dstKey+" already exists in the DB");
+			LogManager.logger.d(TAG, "item "+dstKey+" already exists in the DB");
 			return false;
 		}
 
@@ -690,13 +691,13 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 						v.type = cacheType;
 						return put(dstKey, v)!=null;
 					} else {
-						mLogger.e("Failed to rename path "+src+" to "+dst);
+						LogManager.logger.e(TAG, "Failed to rename path "+src+" to "+dst);
 					}
-					//else mLogger.d(false, "keep the old version of "+newKey);
+					//else LogManager.logger.d(TAG, false, "keep the old version of "+newKey);
 				}
 			}
 		} catch (Throwable e) {
-			mLogger.e("failed to copy " + srcKey + " to " + dstKey, e);
+			LogManager.logger.e(TAG, "failed to copy " + srcKey + " to " + dstKey, e);
 		}
 		return false;
 	}
@@ -705,7 +706,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		mCacheSizeLongterm = longTermSize;
 		mCacheSizeEternal = eternalSize;
 		mCacheSizeShortterm = shortTermSize;
-		mLogger.d(this + " New cache size:" + mCacheSizeLongterm + " / " + mCacheSizeShortterm + " / " + mCacheSizeEternal);
+		LogManager.logger.d(TAG, this + " New cache size:" + mCacheSizeLongterm + " / " + mCacheSizeShortterm + " / " + mCacheSizeEternal);
 		scheduleCustomOperation(new RemoveExpired());
 	}
 
@@ -736,15 +737,15 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 						val.lastAccessDate = System.currentTimeMillis();
 						notifyItemChanged(variant.key);
 						/*if (!changed && url.equals(val.URL))
-							mLogger.v("image " + key.toString()+" unchanged");
+							LogManager.logger.v(TAG, "image " + key.toString()+" unchanged");
 						else
-							mLogger.v("image " + key.toString()+" already exists, adjusting the touitDate:"+val.touitID+" bmpIsNew:"+bmpIsNew+" rbmpIsNew:"+rbmpIsNew+" url:"+url);*/
+							LogManager.logger.v(TAG, "image " + key.toString()+" already exists, adjusting the touitDate:"+val.touitID+" bmpIsNew:"+bmpIsNew+" rbmpIsNew:"+rbmpIsNew+" url:"+url);*/
 					} else {
 						val = new CacheItem(variant.path, url);
 						val.remoteDate = remoteDate;
 						val.type = type;
 						val.lastAccessDate = System.currentTimeMillis();
-						//mLogger.v("adding image " + key.toString() +" type:"+type+" bmpIsNew:"+bmpIsNew+" rbmpIsNew:"+rbmpIsNew+" url:"+url);
+						//LogManager.logger.v(TAG, "adding image " + key.toString() +" type:"+type+" bmpIsNew:"+bmpIsNew+" rbmpIsNew:"+rbmpIsNew+" url:"+url);
 						put(variant.key, val);
 					}
 
@@ -753,13 +754,13 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 					mDataLock.unlock();
 				}
 
-				//mLogger.i("saved bmp to "+outFile.getAbsolutePath());
+				//LogManager.logger.i("saved bmp to "+outFile.getAbsolutePath());
 			} catch (IOException e) {
-				mLogger.e("failed to save "+url+" as "+variant, e);
+				LogManager.logger.e(TAG, "failed to save "+url+" as "+variant, e);
 			}
 		}
 
-		//mLogger.i("BitmapLoaded outFile:"+outFile);
+		//LogManager.logger.i("BitmapLoaded outFile:"+outFile);
 		if (fileSizeAdded!=0) {
 			final boolean needsPurge;
 			if (type==CacheType.CACHE_LONGTERM)
@@ -782,19 +783,19 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 	File getCachedFile(CacheKey key, String URL, long itemDate) {
 		//if (URL!=null && !URL.contains("/profile_images/"))
-		//mLogger.v(" getPicture URL:"+URL + " key:"+key);
+		//LogManager.logger.v(TAG, " getPicture URL:"+URL + " key:"+key);
 		if (key != null) {
 			mDataLock.lock();
 			try {
 				CacheItem v = getMap().get(key);
 
 				//if (URL!=null && !URL.contains("/profile_images/"))
-				//mLogger.v(" found cache item "+v);
+				//LogManager.logger.v(TAG, " found cache item "+v);
 				if (v!=null) {
 					try {
 						if (URL!=null && !URL.equals(v.URL)) {
 							// the URL for the cached item changed
-							//mLogger.v(key+" changed from "+v.URL+" to "+URL+" v.touitID:"+v.touitDate +" touitDate:"+touitDate);
+							//LogManager.logger.v(TAG, key+" changed from "+v.URL+" to "+URL+" v.touitID:"+v.touitDate +" touitDate:"+touitDate);
 							if (v.remoteDate < itemDate) {
 								// the item in the Cache is older than this request, the image changed for a newer one
 								// we need to mark the old one as short term with a UUID that has the picture ID inside
@@ -817,22 +818,18 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 						if (v!=null)
 							return v.path;
 					} catch (SecurityException e) {
-						mLogger.e("getPicture exception:" + e.getMessage(), e);
+						LogManager.logger.e(TAG, "getPicture exception:" + e.getMessage(), e);
 					} catch (OutOfMemoryError e) {
-						mLogger.w("Could not decode image " + URL, e);
+						LogManager.logger.w(TAG, "Could not decode image " + URL, e);
 						OOMHandler.handleOutOfMemory(mContext, postHandler, e);
 					}
 				}
-				//else mLogger.i(key.toString()+" not found in "+mData.size()+" cache elements");
+				//else LogManager.logger.i(key.toString()+" not found in "+mData.size()+" cache elements");
 			} finally {
 				mDataLock.unlock();
 			}
 		}
 		return null;
-	}
-
-	public AbstractLogger getLogger() {
-		return mLogger;
 	}
 
 	public Context getContext() {

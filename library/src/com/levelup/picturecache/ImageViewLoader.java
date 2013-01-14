@@ -7,7 +7,6 @@ import android.graphics.drawable.Drawable;
 import android.widget.ImageView;
 
 import com.levelup.HandlerUIThread;
-import com.levelup.log.AbstractLogger;
 
 public class ImageViewLoader extends PictureLoaderHandler {
 	protected final ImageView view;
@@ -26,7 +25,6 @@ public class ImageViewLoader extends PictureLoaderHandler {
 
 		// pending draw data
 		private Bitmap mPendingDraw;
-		private AbstractLogger mPendingLogger;
 		private String mPendingUrl;
 		private DrawInUI mDrawInUI;
 
@@ -37,13 +35,12 @@ public class ImageViewLoader extends PictureLoaderHandler {
 			this.storageTransform = storageTransform;
 		}
 
-		public void setPendingDraw(Bitmap pendingDraw, AbstractLogger pendingLogger, String pendingUrl) {
+		public void setPendingDraw(Bitmap pendingDraw, String pendingUrl) {
 			if (mDrawInUI!=null)
-				mDrawInUI.setPendingDraw(pendingDraw, pendingLogger, pendingUrl);
+				mDrawInUI.setPendingDraw(pendingDraw, pendingUrl);
 			else {
-				if (DEBUG_VIEW_LOADING) pendingLogger.i("temporary store pending draw:"+pendingDraw+" for "+pendingUrl);
+				if (DEBUG_VIEW_LOADING) LogManager.logger.i(PictureCache.TAG, "temporary store pending draw:"+pendingDraw+" for "+pendingUrl);
 				this.mPendingDraw = pendingDraw;
-				this.mPendingLogger = pendingLogger;
 				this.mPendingUrl = pendingUrl;
 			}
 		}
@@ -87,17 +84,15 @@ public class ImageViewLoader extends PictureLoaderHandler {
 
 			// pending draw data
 			private Bitmap mPendingDraw;
-			private AbstractLogger mPendingLogger;
 			private String mPendingUrl;
 
 			DrawInUI(ImageViewLoader view) {
 				this.viewLoader = view;
 			}
 
-			public void setPendingDraw(Bitmap pendingDraw, AbstractLogger pendingLogger, String pendingUrl) {
+			public void setPendingDraw(Bitmap pendingDraw, String pendingUrl) {
 				synchronized (viewLoader) {
 					this.mPendingDraw = pendingDraw;
-					this.mPendingLogger = pendingLogger;
 					this.mPendingUrl = pendingUrl;
 				}
 			}
@@ -110,7 +105,7 @@ public class ImageViewLoader extends PictureLoaderHandler {
 					if (tag!=null) {
 						if (mPendingDraw!=null && mPendingUrl!=null && (tag.url==null || !mPendingUrl.equals(tag.url))) {
 							skipDrawing = true;
-							if (DEBUG_VIEW_LOADING) mPendingLogger.e(viewLoader+" skip drawing "+mPendingUrl+" instead of "+tag.url+" with "+mPendingDraw);
+							if (DEBUG_VIEW_LOADING) LogManager.logger.e(PictureCache.TAG, viewLoader+" skip drawing "+mPendingUrl+" instead of "+tag.url+" with "+mPendingDraw);
 							//throw new IllegalStateException(ImageViewLoader.this+" try to draw "+mPendingUrl+" instead of "+tag.url+" with "+mPendingDraw);
 						}
 					}
@@ -122,12 +117,12 @@ public class ImageViewLoader extends PictureLoaderHandler {
 							tag.setUrlIsLoaded(mPendingDraw!=null);
 						}
 
-						if (DEBUG_VIEW_LOADING) mPendingLogger.e(viewLoader+" drawing "+(mPendingDraw==null ? "default view" : mPendingDraw)+" tag:"+tag);
+						if (DEBUG_VIEW_LOADING) LogManager.logger.e(PictureCache.TAG, viewLoader+" drawing "+(mPendingDraw==null ? "default view" : mPendingDraw)+" tag:"+tag);
 
 						if (mPendingDraw==null) {
 							if (!wasAlreadyDefault)
 								viewLoader.displayDefaultView();
-							else if (DEBUG_VIEW_LOADING) mPendingLogger.e(viewLoader+" saved a default drawing");
+							else if (DEBUG_VIEW_LOADING) LogManager.logger.e(PictureCache.TAG, viewLoader+" saved a default drawing");
 						} else
 							viewLoader.displayCustomBitmap(mPendingDraw);
 					}
@@ -140,12 +135,12 @@ public class ImageViewLoader extends PictureLoaderHandler {
 		synchronized void drawInView(HandlerUIThread postHandler, ImageViewLoader viewLoader) {
 			if (mDrawInUI == null) {
 				mDrawInUI = new DrawInUI(viewLoader);
-				mDrawInUI.setPendingDraw(mPendingDraw, mPendingLogger, mPendingUrl);
+				mDrawInUI.setPendingDraw(mPendingDraw, mPendingUrl);
 				mPendingDraw = null;
 				mPendingUrl = null;
 			}
 
-			if (DEBUG_VIEW_LOADING) mDrawInUI.mPendingLogger.i(viewLoader+" drawInView run mDrawInUI bitmap:"+mDrawInUI.mPendingDraw+" for "+mDrawInUI.mPendingUrl);
+			if (DEBUG_VIEW_LOADING) LogManager.logger.i(PictureCache.TAG, viewLoader+" drawInView run mDrawInUI bitmap:"+mDrawInUI.mPendingDraw+" for "+mDrawInUI.mPendingUrl);
 			postHandler.removeCallbacks(mDrawInUI);
 			postHandler.runOnUIThread(mDrawInUI);
 		}
@@ -182,15 +177,15 @@ public class ImageViewLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	public final void drawDefaultPicture(String url, HandlerUIThread postHandler, AbstractLogger logger) {
-		if (DEBUG_VIEW_LOADING) logger.d(this+" drawDefaultPicture");
-		showDrawable(postHandler, null, url, logger);
+	public final void drawDefaultPicture(String url, HandlerUIThread postHandler) {
+		if (DEBUG_VIEW_LOADING) LogManager.logger.d(PictureCache.TAG, this+" drawDefaultPicture");
+		showDrawable(postHandler, null, url);
 	}
 
 	@Override
-	public final void drawBitmap(Bitmap bmp, String url, HandlerUIThread postHandler, final AbstractLogger logger) {
-		if (DEBUG_VIEW_LOADING) logger.d(this+" drawBitmap "+view+" with "+bmp);
-		showDrawable(postHandler, bmp, url, logger);
+	public final void drawBitmap(Bitmap bmp, String url, HandlerUIThread postHandler) {
+		if (DEBUG_VIEW_LOADING) LogManager.logger.d(PictureCache.TAG, this+" drawBitmap "+view+" with "+bmp);
+		showDrawable(postHandler, bmp, url);
 	}
 
 	/**
@@ -210,32 +205,32 @@ public class ImageViewLoader extends PictureLoaderHandler {
 		view.setImageBitmap(bmp);
 	}
 
-	private void showDrawable(HandlerUIThread postHandler, Bitmap customBitmap, String url, AbstractLogger logger) {
+	private void showDrawable(HandlerUIThread postHandler, Bitmap customBitmap, String url) {
 		synchronized (this) {
 			ViewTag tag = (ViewTag) view.getTag();
 			if (tag==null) {
 				tag = new ViewTag(url, getStorageTransform(), getDisplayTransform());
 				view.setTag(tag);
 			}
-			tag.setPendingDraw(customBitmap, logger, url);
+			tag.setPendingDraw(customBitmap, url);
 			tag.drawInView(postHandler, this);
 		}
 	}
 
 	@Override
-	public boolean setLoadingNewURL(DownloadManager downloadManager, String newURL, AbstractLogger logger) {
+	public boolean setLoadingNewURL(DownloadManager downloadManager, String newURL) {
 		ViewTag newTag = new ViewTag(newURL, getStorageTransform(), getDisplayTransform());
 
 		ViewTag currentTag = null;
 		synchronized (this) {
 			currentTag = (ViewTag) view.getTag();
 			if (newTag.equals(currentTag)) {
-				if (DEBUG_VIEW_LOADING) logger.d(this+" setting the same picture in "+view+" isLoaded:"+currentTag.isUrlLoaded());
+				if (DEBUG_VIEW_LOADING) LogManager.logger.d(PictureCache.TAG, this+" setting the same picture in "+view+" isLoaded:"+currentTag.isUrlLoaded());
 				return !currentTag.isUrlLoaded(); // no need to do anything
 			}
 
 			if (currentTag!=null) { // the previous URL loading is not good for this view anymore
-				if (DEBUG_VIEW_LOADING) logger.i(this+" the old picture in "+view+" doesn't match "+newURL+" was "+currentTag+" isDefault:"+currentTag.isDefault());
+				if (DEBUG_VIEW_LOADING) LogManager.logger.i(PictureCache.TAG, this+" the old picture in "+view+" doesn't match "+newURL+" was "+currentTag+" isDefault:"+currentTag.isDefault());
 				// keep the previous state of the tag
 				newTag.setAndGetIsDefault(currentTag.isDefault());
 				newTag.mDrawInUI = currentTag.mDrawInUI;
@@ -243,12 +238,12 @@ public class ImageViewLoader extends PictureLoaderHandler {
 
 			view.setTag(newTag);
 		}
-		if (DEBUG_VIEW_LOADING) logger.e(this+" set loading "+view+" with "+newURL+" tag:"+newTag);
+		if (DEBUG_VIEW_LOADING) LogManager.logger.e(PictureCache.TAG, this+" set loading "+view+" with "+newURL+" tag:"+newTag);
 
 		if (currentTag!=null) { // the previous URL loading is not good for this view anymore
-			if (DEBUG_VIEW_LOADING) logger.i(this+" the old picture in "+view+" doesn't match "+newURL+" was "+currentTag+" isDefault:"+currentTag.isDefault());
+			if (DEBUG_VIEW_LOADING) LogManager.logger.i(PictureCache.TAG, this+" the old picture in "+view+" doesn't match "+newURL+" was "+currentTag+" isDefault:"+currentTag.isDefault());
 			boolean wasRunning = downloadManager.cancelDownloadForLoader(this, currentTag.url);
-			if (wasRunning && DEBUG_VIEW_LOADING) logger.w(this+" canceled a load running");
+			if (wasRunning && DEBUG_VIEW_LOADING) LogManager.logger.w(PictureCache.TAG, this+" canceled a load running");
 		}
 		return true;
 	}

@@ -10,7 +10,6 @@ import java.util.Hashtable;
 import android.graphics.Bitmap;
 import android.text.TextUtils;
 
-import com.levelup.log.AbstractLogger;
 import com.levelup.picturecache.BitmapDownloader.JobMonitor;
 
 class DownloadManager implements JobMonitor {
@@ -22,12 +21,7 @@ class DownloadManager implements JobMonitor {
 	}
 
 	private final Hashtable<String, BitmapDownloader> mJobs = new Hashtable<String, BitmapDownloader>();
-	private final AbstractLogger mLogger;
 	private JobsMonitor mMonitor;
-
-	DownloadManager(AbstractLogger logger) {
-		this.mLogger = logger;
-	}
 
 	void setMonitor(JobsMonitor monitor) {
 		mMonitor = monitor;
@@ -38,10 +32,10 @@ class DownloadManager implements JobMonitor {
 		synchronized (mJobs) {
 			// add job by URL
 			BitmapDownloader downloader = mJobs.get(URL);
-			if (DEBUG_DOWNLOADER) mLogger.i("add loader:"+loadHandler+" to downloader:"+downloader);
+			if (DEBUG_DOWNLOADER) LogManager.logger.i(PictureCache.TAG, "add loader:"+loadHandler+" to downloader:"+downloader);
 			final boolean targetAdded = downloader!=null && downloader.addTarget(loadHandler, key, itemDate, cacheType);
 			if (!targetAdded) {
-				if (DEBUG_DOWNLOADER) mLogger.i("add new downloader for "+URL+" key:"+key+" loader:"+loadHandler+" jobs:"+mJobs);
+				if (DEBUG_DOWNLOADER) LogManager.logger.i(PictureCache.TAG, "add new downloader for "+URL+" key:"+key+" loader:"+loadHandler+" jobs:"+mJobs);
 				// create a fresh new one if an old one is not ready to accept our loadHandler
 				downloader = new BitmapDownloader(URL, cache);
 				downloader.setMonitor(this);
@@ -50,7 +44,7 @@ class DownloadManager implements JobMonitor {
 			}
 			if (DEBUG_DOWNLOADER) {
 				downloader = mJobs.get(URL);
-				mLogger.e("downloader for "+URL+" = "+downloader+" loader added:"+targetAdded);
+				LogManager.logger.e(PictureCache.TAG, "downloader for "+URL+" = "+downloader+" loader added:"+targetAdded);
 			}
 		}
 	}
@@ -63,28 +57,28 @@ class DownloadManager implements JobMonitor {
 	 */
 	boolean cancelDownloadForLoader(PictureLoaderHandler loadHandler, String URL) {
 		synchronized (mJobs) {
-			if (DEBUG_DOWNLOADER) mLogger.i("cancelDownloadForLoader for "+URL+" loadHandler:"+loadHandler);
+			if (DEBUG_DOWNLOADER) LogManager.logger.i(PictureCache.TAG, "cancelDownloadForLoader for "+URL+" loadHandler:"+loadHandler);
 			if (!TextUtils.isEmpty(URL)) {
 				BitmapDownloader downloader = mJobs.get(URL);
-				if (DEBUG_DOWNLOADER) mLogger.i(" cancelDownloadForLoader loadHandler:"+loadHandler+" found:"+downloader);
+				if (DEBUG_DOWNLOADER) LogManager.logger.i(PictureCache.TAG, " cancelDownloadForLoader loadHandler:"+loadHandler+" found:"+downloader);
 				if (downloader!=null) {
-					//mLogger.d("cancelDownloadForTarget for URL " + URL+" for "+loader);
+					//LogManager.logger.d(PictureCache.TAG, "cancelDownloadForTarget for URL " + URL+" for "+loader);
 					return downloader.removeTarget(loadHandler);
 				}
 			}
 		}
 
 		// find the target by view
-		//mLogger.w("cancelDownloadForTarget by key " + loader);
+		//LogManager.logger.w(PictureCache.TAG, "cancelDownloadForTarget by key " + loader);
 		Enumeration<BitmapDownloader> downloaders = mJobs.elements();
 		while (downloaders.hasMoreElements()) {
 			BitmapDownloader downloader = downloaders.nextElement();
 			if (downloader.removeTarget(loadHandler)) {
-				if (DEBUG_DOWNLOADER) mLogger.i(" cancelDownloadForLoader loadHandler:"+loadHandler+" deleted on:"+downloader/*+" url:"+url*/);
+				if (DEBUG_DOWNLOADER) LogManager.logger.i(PictureCache.TAG, " cancelDownloadForLoader loadHandler:"+loadHandler+" deleted on:"+downloader/*+" url:"+url*/);
 				return true;
 			}
 		}
-		if (DEBUG_DOWNLOADER) mLogger.w("cancelDownloadForLoader do nothing for loadHandler:"+loadHandler);
+		if (DEBUG_DOWNLOADER) LogManager.logger.w(PictureCache.TAG, "cancelDownloadForLoader do nothing for loadHandler:"+loadHandler);
 		return false;
 	}
 
@@ -95,10 +89,10 @@ class DownloadManager implements JobMonitor {
 		synchronized (mJobs) {
 			if (mJobs.containsKey(downloader.getURL())) {
 				mJobs.remove(downloader.getURL());
-				if (DEBUG_DOWNLOADER) mLogger.i("Job Finishing for "+downloader.getURL() + " remaining:"+mJobs);
+				if (DEBUG_DOWNLOADER) LogManager.logger.i(PictureCache.TAG, "Job Finishing for "+downloader.getURL() + " remaining:"+mJobs);
 			}
 			else
-				mLogger.w("Unknown job finishing for "+downloader.getURL() + " remaining:"+mJobs);
+				LogManager.logger.w(PictureCache.TAG, "Unknown job finishing for "+downloader.getURL() + " remaining:"+mJobs);
 		}
 	}
 }

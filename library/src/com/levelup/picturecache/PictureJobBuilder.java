@@ -75,7 +75,7 @@ public class PictureJobBuilder {
 	void startLoading(PictureCache cache) throws NoSuchAlgorithmException {
 		CacheKey key = buildKey();
 		if (key==null) {
-			cache.getLogger().w("could not generate a CacheKey for "+mUUID+" / "+mURL);
+			LogManager.logger.w(PictureCache.TAG, "could not generate a CacheKey for "+mUUID+" / "+mURL);
 			return;
 		}
 

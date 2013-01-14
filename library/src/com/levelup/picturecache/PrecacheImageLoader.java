@@ -6,7 +6,6 @@ import java.util.Random;
 import android.graphics.Bitmap;
 
 import com.levelup.HandlerUIThread;
-import com.levelup.log.AbstractLogger;
 
 public class PrecacheImageLoader extends PictureLoaderHandler {
 	
@@ -20,10 +19,10 @@ public class PrecacheImageLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	public void drawDefaultPicture(String url, HandlerUIThread postHandler, AbstractLogger logger) {}
+	public void drawDefaultPicture(String url, HandlerUIThread postHandler) {}
 
 	@Override
-	public void drawBitmap(Bitmap bmp, String url, HandlerUIThread postHandler, AbstractLogger logger) {}
+	public void drawBitmap(Bitmap bmp, String url, HandlerUIThread postHandler) {}
 
 	@Override
 	public boolean equals(Object o) {
@@ -39,7 +38,7 @@ public class PrecacheImageLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	public boolean setLoadingNewURL(DownloadManager downloadManager, String newURL, AbstractLogger logger) {
+	public boolean setLoadingNewURL(DownloadManager downloadManager, String newURL) {
 		if (newURL!=null && newURL.equals(mLoadingUrl))
 			return false;
 		downloadManager.cancelDownloadForLoader(this, mLoadingUrl);

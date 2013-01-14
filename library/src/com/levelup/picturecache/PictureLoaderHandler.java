@@ -5,12 +5,11 @@ import java.io.File;
 import android.graphics.Bitmap;
 
 import com.levelup.HandlerUIThread;
-import com.levelup.log.AbstractLogger;
 
 public abstract class PictureLoaderHandler {
 
-	abstract protected void drawDefaultPicture(String url, HandlerUIThread postHandler, AbstractLogger logger);
-	abstract protected void drawBitmap(Bitmap bmp, String url, HandlerUIThread postHandler, AbstractLogger logger);
+	abstract protected void drawDefaultPicture(String url, HandlerUIThread postHandler);
+	abstract protected void drawBitmap(Bitmap bmp, String url, HandlerUIThread postHandler);
 	
 	protected PictureLoaderHandler(StorageTransform bitmapStorageTransform, BitmapTransform bitmapTransform) {
 		this.mStorageTransform = bitmapStorageTransform;
@@ -29,10 +28,9 @@ public abstract class PictureLoaderHandler {
 	 * 
 	 * @param downloadManager
 	 * @param newURL
-	 * @param logger TODO
 	 * @return true if the URL is new for this target
 	 */
-	abstract protected boolean setLoadingNewURL(DownloadManager downloadManager, String newURL, AbstractLogger logger);
+	abstract protected boolean setLoadingNewURL(DownloadManager downloadManager, String newURL);
 	/**
 	 * 
 	 * @return
