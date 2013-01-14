@@ -26,14 +26,12 @@ import android.os.Environment;
 import android.text.TextUtils;
 
 import com.levelup.FileUtils;
-import com.levelup.HandlerUIThread;
-import com.levelup.OOMHandler;
 import com.levelup.picturecache.DownloadManager.JobsMonitor;
 
 public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem> implements JobsMonitor {
 
 	protected static final String TAG = "PictureCache";
-	
+
 	private static final int MIN_ADD_BEFORE_PURGE = 7;
 
 	/**
@@ -72,7 +70,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	private static Boolean mDirAsserted = Boolean.FALSE;
 
 	private final File mCacheFolder;
-	final HandlerUIThread postHandler;
+	final AbstractUIHandler postHandler;
+	final OutOfMemoryHandler ooHandler;
 
 	private int mCacheSizeLongterm;
 	private int mCacheSizeEternal;
@@ -220,12 +219,20 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		return new String[] {key.serialize()};
 	}
 
-	protected PictureCache(Context context, HandlerUIThread postHandler, int sizeShortTerm, int sizeLongTerm, int sizeEternal, Logger logger) {
+	protected PictureCache(Context context, AbstractUIHandler postHandler, OutOfMemoryHandler ooHandler, int sizeShortTerm, int sizeLongTerm, int sizeEternal, Logger logger) {
 		super(context, DATABASE_NAME, DATABASE_VERSION, logger);
 
 		LogManager.setLogger(logger);
 		this.mContext = context;
 		this.postHandler = postHandler;
+		if (ooHandler==null)
+			this.ooHandler = new OutOfMemoryHandler() {
+			// do nothing
+			@Override
+			public void onOutOfMemoryError(OutOfMemoryError e) {}
+		};
+		else
+			this.ooHandler = ooHandler;
 
 		File olddir = new File(Environment.getExternalStorageDirectory(), "/Android/data/"+context.getPackageName()+"/cache");
 		if (olddir.exists())
@@ -495,7 +502,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		}*/
 
 			File file = getCachedFile(key, URL, itemDate);
-			if (file!=null && file.exists() && file.canRead() && loader.canDirectLoad(file)) {
+			if (file!=null && file.exists() && file.canRead() && loader.canDirectLoad(file, postHandler)) {
 				try {
 					Bitmap bmp = BitmapFactory.decodeFile(file.getAbsolutePath());
 					if (bmp!=null) {
@@ -506,7 +513,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				} catch (OutOfMemoryError e) {
 					loader.drawDefaultPicture(URL, postHandler);
 					LogManager.logger.w(TAG, "can't decode "+file,e);
-					OOMHandler.handleOutOfMemory(getContext(), postHandler, e);
+					ooHandler.onOutOfMemoryError(e);
 					return;
 				}
 			}
@@ -821,7 +828,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 						LogManager.logger.e(TAG, "getPicture exception:" + e.getMessage(), e);
 					} catch (OutOfMemoryError e) {
 						LogManager.logger.w(TAG, "Could not decode image " + URL, e);
-						OOMHandler.handleOutOfMemory(mContext, postHandler, e);
+						ooHandler.onOutOfMemoryError(e);
 					}
 				}
 				//else LogManager.logger.i(key.toString()+" not found in "+mData.size()+" cache elements");

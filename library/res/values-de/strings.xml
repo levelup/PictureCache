@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-  <string name="oom_alert">RAM wird knapp</string>
-  <string name="oom_warning">RAM vollgelaufen!</string>
-</resources>

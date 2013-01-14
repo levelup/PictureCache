@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-  <string name="oom_alert">Praca z niską ilością pamięci</string>
-  <string name="oom_warning">Brak wolnej pamięci!</string>
-</resources>

@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-  <string name="oom_alert">Poca memoria virtual</string>
-  <string name="oom_warning">¡Memoria virtual agotada!</string>
-</resources>

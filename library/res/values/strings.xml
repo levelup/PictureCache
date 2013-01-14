@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="oom_alert">Running low on memory</string>
-    <string name="oom_warning">Memory exhausted!</string>
-</resources>

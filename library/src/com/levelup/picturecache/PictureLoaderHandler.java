@@ -4,12 +4,11 @@ import java.io.File;
 
 import android.graphics.Bitmap;
 
-import com.levelup.HandlerUIThread;
 
 public abstract class PictureLoaderHandler {
 
-	abstract protected void drawDefaultPicture(String url, HandlerUIThread postHandler);
-	abstract protected void drawBitmap(Bitmap bmp, String url, HandlerUIThread postHandler);
+	abstract protected void drawDefaultPicture(String url, AbstractUIHandler postHandler);
+	abstract protected void drawBitmap(Bitmap bmp, String url, AbstractUIHandler postHandler);
 	
 	protected PictureLoaderHandler(StorageTransform bitmapStorageTransform, BitmapTransform bitmapTransform) {
 		this.mStorageTransform = bitmapStorageTransform;
@@ -36,7 +35,7 @@ public abstract class PictureLoaderHandler {
 	 * @return
 	 */
 	abstract protected String getLoadingURL();
-	abstract protected boolean canDirectLoad(File file);
+	abstract protected boolean canDirectLoad(File file, AbstractUIHandler uiHandler);
 	
 	protected boolean isDownloadAllowed() {
 		return true;

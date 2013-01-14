@@ -4,9 +4,9 @@ import java.io.File;
 
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.os.Handler;
 import android.widget.ImageView;
 
-import com.levelup.HandlerUIThread;
 
 public class ImageViewLoader extends PictureLoaderHandler {
 	protected final ImageView view;
@@ -132,7 +132,7 @@ public class ImageViewLoader extends PictureLoaderHandler {
 			}
 		};
 
-		synchronized void drawInView(HandlerUIThread postHandler, ImageViewLoader viewLoader) {
+		synchronized void drawInView(AbstractUIHandler postHandler, ImageViewLoader viewLoader) {
 			if (mDrawInUI == null) {
 				mDrawInUI = new DrawInUI(viewLoader);
 				mDrawInUI.setPendingDraw(mPendingDraw, mPendingUrl);
@@ -141,7 +141,8 @@ public class ImageViewLoader extends PictureLoaderHandler {
 			}
 
 			if (DEBUG_VIEW_LOADING) LogManager.logger.i(PictureCache.TAG, viewLoader+" drawInView run mDrawInUI bitmap:"+mDrawInUI.mPendingDraw+" for "+mDrawInUI.mPendingUrl);
-			postHandler.removeCallbacks(mDrawInUI);
+			if (postHandler instanceof Handler)
+				((Handler) postHandler).removeCallbacks(mDrawInUI);
 			postHandler.runOnUIThread(mDrawInUI);
 		}
 	}
@@ -177,13 +178,13 @@ public class ImageViewLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	public final void drawDefaultPicture(String url, HandlerUIThread postHandler) {
+	public final void drawDefaultPicture(String url, AbstractUIHandler postHandler) {
 		if (DEBUG_VIEW_LOADING) LogManager.logger.d(PictureCache.TAG, this+" drawDefaultPicture");
 		showDrawable(postHandler, null, url);
 	}
 
 	@Override
-	public final void drawBitmap(Bitmap bmp, String url, HandlerUIThread postHandler) {
+	public final void drawBitmap(Bitmap bmp, String url, AbstractUIHandler postHandler) {
 		if (DEBUG_VIEW_LOADING) LogManager.logger.d(PictureCache.TAG, this+" drawBitmap "+view+" with "+bmp);
 		showDrawable(postHandler, bmp, url);
 	}
@@ -205,7 +206,7 @@ public class ImageViewLoader extends PictureLoaderHandler {
 		view.setImageBitmap(bmp);
 	}
 
-	private void showDrawable(HandlerUIThread postHandler, Bitmap customBitmap, String url) {
+	private void showDrawable(AbstractUIHandler postHandler, Bitmap customBitmap, String url) {
 		synchronized (this) {
 			ViewTag tag = (ViewTag) view.getTag();
 			if (tag==null) {
@@ -257,7 +258,7 @@ public class ImageViewLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	protected boolean canDirectLoad(File file) {
-		return !HandlerUIThread.isUIThread() || file.length() < MAX_SIZE_IN_UI_THREAD;
+	protected boolean canDirectLoad(File file, AbstractUIHandler uiHandler) {
+		return !uiHandler.isUIThread() || file.length() < MAX_SIZE_IN_UI_THREAD;
 	}
 }

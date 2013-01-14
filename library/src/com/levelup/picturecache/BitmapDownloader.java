@@ -21,8 +21,6 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.util.FloatMath;
 
-import com.levelup.OOMHandler;
-
 class BitmapDownloader extends Thread {
 
 	private static final boolean DEBUG_BITMAP_DOWNLOADER = false;
@@ -182,7 +180,7 @@ class BitmapDownloader extends Thread {
 			}
 		} catch (OutOfMemoryError e) {
 			LogManager.logger.e(PictureCache.TAG, "Failed to load " + mURL, e);
-			OOMHandler.handleOutOfMemory(mCache.getContext(), mCache.postHandler, e);
+			mCache.ooHandler.onOutOfMemoryError(e);
 			/*} catch (InterruptedException e) {
 			LogManager.logger.e(PictureCache.TAG, "Interrupted while loading " + mURL, e);*/
 		} catch (AbortDownload e) {
@@ -385,7 +383,7 @@ class BitmapDownloader extends Thread {
 			LogManager.logger.w(PictureCache.TAG, "host not found in "+mURL, e);
 		} catch (OutOfMemoryError e) {
 			LogManager.logger.w(PictureCache.TAG, "Could not decode image " + mURL, e);
-			OOMHandler.handleOutOfMemory(mCache.getContext(), mCache.postHandler, e);
+			mCache.ooHandler.onOutOfMemoryError(e);
 		} catch (IOException e) {
 			LogManager.logger.e(PictureCache.TAG, "Could not read " + mURL, e);
 		} finally {

@@ -5,7 +5,6 @@ import java.util.Random;
 
 import android.graphics.Bitmap;
 
-import com.levelup.HandlerUIThread;
 
 public class PrecacheImageLoader extends PictureLoaderHandler {
 	
@@ -19,10 +18,10 @@ public class PrecacheImageLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	public void drawDefaultPicture(String url, HandlerUIThread postHandler) {}
+	public void drawDefaultPicture(String url, AbstractUIHandler postHandler) {}
 
 	@Override
-	public void drawBitmap(Bitmap bmp, String url, HandlerUIThread postHandler) {}
+	public void drawBitmap(Bitmap bmp, String url, AbstractUIHandler postHandler) {}
 
 	@Override
 	public boolean equals(Object o) {
@@ -52,7 +51,7 @@ public class PrecacheImageLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	protected boolean canDirectLoad(File file) {
+	protected boolean canDirectLoad(File file, AbstractUIHandler uiHandler) {
 		return true;
 	}
 }
