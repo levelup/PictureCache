@@ -143,7 +143,7 @@ public class ImageViewLoader extends PictureLoaderHandler {
 			if (DEBUG_VIEW_LOADING) LogManager.logger.i(PictureCache.TAG, viewLoader+" drawInView run mDrawInUI bitmap:"+mDrawInUI.mPendingDraw+" for "+mDrawInUI.mPendingUrl);
 			if (postHandler instanceof Handler)
 				((Handler) postHandler).removeCallbacks(mDrawInUI);
-			postHandler.runOnUIThread(mDrawInUI);
+			postHandler.runOnUiThread(mDrawInUI);
 		}
 	}
 

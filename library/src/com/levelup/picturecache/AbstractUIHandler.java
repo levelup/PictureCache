@@ -8,7 +8,7 @@ public interface AbstractUIHandler {
 	 * run the code in the UI thread
 	 * @param runnable
 	 */
-	void runOnUIThread(Runnable runnable);
+	void runOnUiThread(Runnable runnable);
 	/**
 	 * indicates if we are running on the UI thread
 	 * @return
