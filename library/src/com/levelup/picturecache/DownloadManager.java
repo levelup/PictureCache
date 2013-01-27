@@ -17,7 +17,7 @@ class DownloadManager implements JobMonitor {
 	private static final boolean DEBUG_DOWNLOADER = false;
 
 	abstract interface JobsMonitor {
-		abstract void onNewBitmapLoaded(HashMap<CacheVariant,Bitmap> newBitmaps, String url, long cacheDate, int type);
+		abstract void onNewBitmapLoaded(HashMap<CacheVariant,Bitmap> newBitmaps, String url, long cacheDate, LifeSpan lifeSpan);
 	}
 
 	private final Hashtable<String, BitmapDownloader> mJobs = new Hashtable<String, BitmapDownloader>();
@@ -27,20 +27,20 @@ class DownloadManager implements JobMonitor {
 		mMonitor = monitor;
 	}
 
-	void addDownloadTarget(PictureCache cache, String URL, PictureLoaderHandler loadHandler, CacheKey key, long itemDate, int cacheType) {
+	void addDownloadTarget(PictureCache cache, String URL, PictureLoaderHandler loadHandler, CacheKey key, long itemDate, LifeSpan lifeSpan) {
 		// find out if that URL is already loading, if so add the view to the recipient
 		synchronized (mJobs) {
 			// add job by URL
 			BitmapDownloader downloader = mJobs.get(URL);
 			if (DEBUG_DOWNLOADER) LogManager.logger.i(PictureCache.TAG, "add loader:"+loadHandler+" to downloader:"+downloader);
-			final boolean targetAdded = downloader!=null && downloader.addTarget(loadHandler, key, itemDate, cacheType);
+			final boolean targetAdded = downloader!=null && downloader.addTarget(loadHandler, key, itemDate, lifeSpan);
 			if (!targetAdded) {
 				if (DEBUG_DOWNLOADER) LogManager.logger.i(PictureCache.TAG, "add new downloader for "+URL+" key:"+key+" loader:"+loadHandler+" jobs:"+mJobs);
 				// create a fresh new one if an old one is not ready to accept our loadHandler
 				downloader = new BitmapDownloader(URL, cache);
 				downloader.setMonitor(this);
 				mJobs.put(URL, downloader);
-				downloader.addTarget(loadHandler, key, itemDate, cacheType);
+				downloader.addTarget(loadHandler, key, itemDate, lifeSpan);
 			}
 			if (DEBUG_DOWNLOADER) {
 				downloader = mJobs.get(URL);
@@ -84,7 +84,7 @@ class DownloadManager implements JobMonitor {
 
 	public void onJobFinishedWithNewBitmaps(BitmapDownloader downloader, HashMap<CacheVariant,Bitmap> newBitmaps) {
 		if (mMonitor!=null)
-			mMonitor.onNewBitmapLoaded(newBitmaps, downloader.getURL(), downloader.getItemDate(), downloader.getType());
+			mMonitor.onNewBitmapLoaded(newBitmaps, downloader.getURL(), downloader.getItemDate(), downloader.getLifeSpan());
 
 		synchronized (mJobs) {
 			if (mJobs.containsKey(downloader.getURL())) {

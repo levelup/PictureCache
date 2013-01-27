@@ -16,9 +16,9 @@ class CacheItem {
 	 */
 	final String URL;
 	/**
-	 *  the type of URL (short term 0 / long term 1 / eternal 2) see {@link CacheType}
+	 *  the storage life span of URL see {@link LifeSpan}
 	 */
-	int type;
+	LifeSpan lifeSpan;
 	/**
 	 * the last logical item date using to the cache item (if applicable)
 	 */
@@ -35,7 +35,7 @@ class CacheItem {
 	
 	@Override
 	public String toString() {
-		return type+":"+URL+":"+getFileSize()+":"+path;
+		return lifeSpan+":"+URL+":"+getFileSize()+":"+path;
 	}
 	
 	long getFileSize() {
@@ -44,7 +44,7 @@ class CacheItem {
 
 	public CacheItem copyWithNewPath(File dst) {
 		CacheItem copy = new CacheItem(dst, URL);
-		copy.type = type;
+		copy.lifeSpan = lifeSpan;
 		copy.remoteDate = remoteDate;
 		copy.lastAccessDate = lastAccessDate;
 		return copy;

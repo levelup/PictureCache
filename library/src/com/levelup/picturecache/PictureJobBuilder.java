@@ -8,7 +8,7 @@ public class PictureJobBuilder {
 	private String mURL;
 	private String mUUID;
 	private long mFreshDate;
-	private int mLifeType;
+	private LifeSpan mLifeSpan;
 	private int mDimension;
 	private boolean mWidthBased;
 	private int mExtensionMode;
@@ -31,13 +31,10 @@ public class PictureJobBuilder {
 
 	/**
 	 * set for how long the item should remain in the cache
-	 * <p>
-	 * see {@link CacheType}
-	 * @param type can be {@link CacheType#CACHE_SHORTTERM},  {@link CacheType#CACHE_LONGTERM} or {@link CacheType#CACHE_ETERNAL}
-	 * @return
+	 * @return the {@link PictureJobBuilder} being created
 	 */
-	public PictureJobBuilder setLifeType(int type) {
-		mLifeType = type;
+	public PictureJobBuilder setLifeType(LifeSpan lifeSpan) {
+		mLifeSpan = lifeSpan;
 		return this;
 	}
 
@@ -79,6 +76,6 @@ public class PictureJobBuilder {
 			return;
 		}
 
-		cache.getPicture(mURL, key, mFreshDate, mHandler, mLifeType);
+		cache.getPicture(mURL, key, mFreshDate, mHandler, mLifeSpan);
 	}
 }

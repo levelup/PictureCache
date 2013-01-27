@@ -64,8 +64,8 @@ class BitmapDownloader extends Thread {
 	private JobMonitor mMonitor;
 
 	// locked by mTargets
-	/** see {@link CacheType} values */
-	private Integer mType;
+	/** see {@link LifeSpan} values */
+	private LifeSpan mLifeSpan;
 	private long mItemDate;
 
 	private boolean mCanDownload;
@@ -88,8 +88,8 @@ class BitmapDownloader extends Thread {
 	String getURL() {
 		return mURL;
 	}
-	int getType() {
-		return mType;
+	LifeSpan getLifeSpan() {
+		return mLifeSpan;
 	}
 	long getItemDate() {
 		return mItemDate;
@@ -230,10 +230,10 @@ class BitmapDownloader extends Thread {
 	 * @param loadHandler
 	 * @param key
 	 * @param itemDate
-	 * @param type
+	 * @param lifeSpan
 	 * @return
 	 */
-	boolean addTarget(PictureLoaderHandler loadHandler, CacheKey key, long itemDate, int type)
+	boolean addTarget(PictureLoaderHandler loadHandler, CacheKey key, long itemDate, LifeSpan lifeSpan)
 	{
 		DownloadTarget newTarget = new DownloadTarget(loadHandler, key);
 		//LogManager.logger.i(PictureCache.TAG, "add recipient view "+view+" for " + mURL);
@@ -255,8 +255,8 @@ class BitmapDownloader extends Thread {
 
 			if (mItemDate < itemDate)
 				mItemDate = itemDate;
-			if (mType==null || CacheType.isStrictlyLowerThan(mType, type))
-				mType = Integer.valueOf(type);
+			if (mLifeSpan==null || mLifeSpan.isStrictlyLowerThan(lifeSpan))
+				mLifeSpan = lifeSpan;
 		}
 
 		if (!mIsThreadStarted) {

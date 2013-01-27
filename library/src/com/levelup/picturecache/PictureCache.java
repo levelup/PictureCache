@@ -136,12 +136,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			if (!TextUtils.isEmpty(path)) {
 				CacheItem val = new CacheItem(new File(path), c.getString(indexURL));
 				if (val.path.exists()) {
-					int typeIdx = c.getInt(indexType);
-					if (typeIdx<0) {
-						LogManager.logger.w(TAG, "unknown cache type "+typeIdx);
-						val.type = CacheType.CACHE_SHORTTERM;
-					} else
-						val.type = typeIdx;
+					val.lifeSpan = LifeSpan.fromStorage(c.getInt(indexType));
 					val.remoteDate = c.getLong(indexRemoteDate);
 					val.lastAccessDate = c.getLong(indexDate);
 
@@ -154,12 +149,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			if (!TextUtils.isEmpty(pathr)) {
 				CacheItem val = new CacheItem(new File(pathr), c.getString(indexURL));
 				if (val.path.exists()) {
-					int typeIdx = c.getInt(indexType);
-					if (typeIdx<0) {
-						LogManager.logger.w(TAG, "unknown cache type "+typeIdx);
-						val.type = CacheType.CACHE_SHORTTERM;
-					} else
-						val.type = typeIdx;
+					val.lifeSpan = LifeSpan.fromStorage(c.getInt(indexType));
 					val.remoteDate = c.getLong(indexRemoteDate);
 					val.lastAccessDate = c.getLong(indexDate);
 
@@ -177,12 +167,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				return null;
 			}
 			CacheItem val = new CacheItem(new File(path), c.getString(indexURL));
-			int typeIdx = c.getInt(indexType);
-			if (typeIdx<0) {
-				LogManager.logger.w(TAG, "unknown cache type "+typeIdx);
-				val.type = CacheType.CACHE_SHORTTERM;
-			} else
-				val.type = typeIdx;
+			val.lifeSpan = LifeSpan.fromStorage(c.getInt(indexType));
 			val.remoteDate = c.getLong(indexRemoteDate);
 			val.lastAccessDate = c.getLong(indexDate);
 
@@ -202,7 +187,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		ContentValues values = new ContentValues(6);
 		values.put("UUID", data.getKey().serialize());
 		values.put("SRC_URL", data.getValue().URL);
-		values.put("TYPE", data.getValue().type);
+		values.put("TYPE", data.getValue().lifeSpan.toStorage());
 		values.put("PATH", data.getValue().path.getAbsolutePath());
 		values.put("REMOTE_DATE", data.getValue().remoteDate);
 		values.put("DATE", data.getValue().lastAccessDate);
@@ -358,16 +343,16 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		}
 	}
 
-	private int getCacheMaxSize(int type) {
-		if (type == CacheType.CACHE_LONGTERM)
+	private int getCacheMaxSize(LifeSpan lifeSpan) {
+		if (lifeSpan == LifeSpan.LONGTERM)
 			return mCacheSizeLongterm;
-		else if (type == CacheType.CACHE_ETERNAL)
+		else if (lifeSpan == LifeSpan.ETERNAL)
 			return mCacheSizeEternal;
 		else
 			return mCacheSizeShortterm;
 	}
 
-	private long getCacheSize(int type) {
+	private long getCacheSize(LifeSpan lifeSpan) {
 		long result = 0;
 		mDataLock.lock();
 		try {
@@ -375,7 +360,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			Entry<CacheKey, CacheItem> k;
 			while (v.hasNext()) {
 				k = v.next();
-				if (k.getValue().type!=type) continue;
+				if (k.getValue().lifeSpan!=lifeSpan) continue;
 				result += k.getValue().getFileSize();
 			}
 		} catch (Throwable e) {
@@ -387,11 +372,11 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		return result;
 	}
 
-	private Entry<CacheKey, CacheItem> getCacheOldestEntry(int type) {
+	private Entry<CacheKey, CacheItem> getCacheOldestEntry(LifeSpan lifeSpan) {
 		//LogManager.logger.d(TAG, "getCacheOldest in");
 		Entry<CacheKey, CacheItem> result = null;
 		for (Entry<CacheKey, CacheItem> k : getMap().entrySet()) {
-			if (!CacheType.isStrictlyLowerThan(type, k.getValue().type) && (result==null || result.getValue().lastAccessDate > k.getValue().lastAccessDate))
+			if (!lifeSpan.isStrictlyLowerThan(k.getValue().lifeSpan) && (result==null || result.getValue().lastAccessDate > k.getValue().lastAccessDate))
 				result = k;
 		}
 		//LogManager.logger.e(TAG, "getCacheOldest out with "+result);
@@ -400,31 +385,30 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 	private static class RemoveExpired implements InMemoryDbOperation<Map.Entry<CacheKey,CacheItem>> {
 
-		private final Integer cacheType;
+		private final LifeSpan lifeSpan;
 
 		RemoveExpired() {
-			this.cacheType = null;
+			this.lifeSpan = null;
 		}
-		RemoveExpired(int cacheType) {
-			this.cacheType = cacheType;
+		RemoveExpired(LifeSpan cacheType) {
+			this.lifeSpan = cacheType;
 		}
 
 		@Override
 		public void runInMemoryDbOperation(InMemoryDbHelper<Entry<CacheKey, CacheItem>> db) {
 			PictureCache cache = (PictureCache) db;
-			if (cacheType!=null)
-				makeRoom(cache, cacheType);
+			if (lifeSpan!=null)
+				makeRoom(cache, lifeSpan);
 			else {
-				makeRoom(cache, CacheType.CACHE_SHORTTERM);
-				makeRoom(cache, CacheType.CACHE_LONGTERM);
-				makeRoom(cache, CacheType.CACHE_ETERNAL);
+				for (LifeSpan lifeSpan : LifeSpan.values())
+					makeRoom(cache, lifeSpan);
 			}
 		}
 
-		private static void makeRoom(PictureCache cache, int type) {
+		private static void makeRoom(PictureCache cache, LifeSpan lifeSpan) {
 			try {
-				long TotalSize = cache.getCacheSize(type);
-				int MaxSize = cache.getCacheMaxSize(type);
+				long TotalSize = cache.getCacheSize(lifeSpan);
+				int MaxSize = cache.getCacheMaxSize(lifeSpan);
 				if (MaxSize!=0 && TotalSize > MaxSize) {
 					// make room in the DB/cache for this new element
 					while (TotalSize > MaxSize) {
@@ -433,7 +417,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 						Entry<CacheKey, CacheItem> entry;
 						cache.mDataLock.lock();
 						try {
-							entry = cache.getCacheOldestEntry(type);
+							entry = cache.getCacheOldestEntry(lifeSpan);
 							if (entry==null)
 								break;
 						} finally {
@@ -455,7 +439,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 					}
 				}
 			} catch (NullPointerException e) {
-				LogManager.logger.w(TAG, "can't make room for type:"+type,e);
+				LogManager.logger.w(TAG, "can't make room for type:"+lifeSpan,e);
 			}
 			//LogManager.logger.d(TAG, "makeroom done");
 		}
@@ -467,9 +451,9 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @param key
 	 * @param itemDate use to store the previous item for the same {@link key}
 	 * @param loader
-	 * @param cacheType see {@link CacheType}
+	 * @param lifeSpan see {@link LifeSpan}
 	 */
-	void getPicture(String URL, CacheKey key, long itemDate, PictureLoaderHandler loader, int cacheType)
+	void getPicture(String URL, CacheKey key, long itemDate, PictureLoaderHandler loader, LifeSpan lifeSpan)
 	{
 		mDataLock.lock();
 		try {
@@ -522,7 +506,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 			// we could not read from the cache, load the URL
 			if (key!=null)
-				mJobManager.addDownloadTarget(this, URL, loader, key, itemDate, cacheType);
+				mJobManager.addDownloadTarget(this, URL, loader, key, itemDate, lifeSpan);
 		} finally {
 			mDataLock.unlock();
 		}
@@ -534,16 +518,16 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @param URL
 	 * @param UUID
 	 * @param itemDate
-	 * @param type how long the item should remain in the cache, can be {@link CacheType#CACHE_SHORTTERM},  {@link CacheType#CACHE_LONGTERM} or {@link CacheType#CACHE_ETERNAL}
+	 * @param lifeSpan how long the item should remain in the cache, can be {@link LifeSpan#SHORTTERM},  {@link LifeSpan#LONGTERM} or {@link LifeSpan#ETERNAL}
 	 * @param height
 	 * @param extensionMode
 	 */
-	public void loadPictureWithFixedHeight(PictureLoaderHandler handler, String URL, String UUID, long itemDate, int type, int height, int extensionMode) {
+	public void loadPictureWithFixedHeight(PictureLoaderHandler handler, String URL, String UUID, long itemDate, LifeSpan lifeSpan, int height, int extensionMode) {
 		PictureJobBuilder builder = new PictureJobBuilder(handler);
 		builder.setURL(URL);
 		builder.setUUID(UUID);
 		builder.setFreshDate(itemDate);
-		builder.setLifeType(type);
+		builder.setLifeType(lifeSpan);
 		builder.setExtensionMode(extensionMode);
 		builder.setDimension(height, false);
 		try {
@@ -559,17 +543,17 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @param URL
 	 * @param UUID
 	 * @param itemDate
-	 * @param type how long the item should remain in the cache, can be {@link CacheType#CACHE_SHORTTERM},  {@link CacheType#CACHE_LONGTERM} or {@link CacheType#CACHE_ETERNAL}
+	 * @param lifeSpan how long the item should remain in the cache, can be {@link LifeSpan#SHORTTERM},  {@link LifeSpan#LONGTERM} or {@link LifeSpan#ETERNAL}
 	 * @param width
 	 * @param rotation
 	 * @param extensionMode
 	 */
-	public void loadPictureWithMaxWidth(PictureLoaderHandler handler, String URL, String UUID, long itemDate, int type, int width, float rotation, int extensionMode) {
+	public void loadPictureWithMaxWidth(PictureLoaderHandler handler, String URL, String UUID, long itemDate, LifeSpan lifeSpan, int width, float rotation, int extensionMode) {
 		PictureJobBuilder builder = new PictureJobBuilder(handler);
 		builder.setURL(URL);
 		builder.setUUID(UUID);
 		builder.setFreshDate(itemDate);
-		builder.setLifeType(type);
+		builder.setLifeType(lifeSpan);
 		builder.setExtensionMode(extensionMode);
 		builder.setDimension(width, true);
 		builder.setRotation(rotation);
@@ -678,7 +662,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		return null;
 	}
 
-	private boolean moveCachedFiles(CacheKey srcKey, CacheKey dstKey, int cacheType) {
+	private boolean moveCachedFiles(CacheKey srcKey, CacheKey dstKey, LifeSpan lifeSpan) {
 		LogManager.logger.v(TAG, "Copy "+srcKey+" to "+dstKey);
 		if (getMap().containsKey(dstKey)) {
 			LogManager.logger.d(TAG, "item "+dstKey+" already exists in the DB");
@@ -695,7 +679,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 					if (src.renameTo(dst)) {
 						v = v.copyWithNewPath(dst);
-						v.type = cacheType;
+						v.lifeSpan = lifeSpan;
 						return put(dstKey, v)!=null;
 					} else {
 						LogManager.logger.e(TAG, "Failed to rename path "+src+" to "+dst);
@@ -718,7 +702,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	}
 
 	@Override
-	public void onNewBitmapLoaded(HashMap<CacheVariant,Bitmap> newBitmaps, String url, long remoteDate, final int type) {
+	public void onNewBitmapLoaded(HashMap<CacheVariant,Bitmap> newBitmaps, String url, long remoteDate, final LifeSpan lifeSpan) {
 		// handle the storing and adding to the cache
 		// save the bitmap for later use
 		long fileSizeAdded = 0;
@@ -738,8 +722,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 						if (val.remoteDate < remoteDate)
 							val.remoteDate = remoteDate;
 
-						if (CacheType.isStrictlyLowerThan(val.type, type))
-							val.type = type;
+						if (val.lifeSpan.isStrictlyLowerThan(lifeSpan))
+							val.lifeSpan = lifeSpan;
 
 						val.lastAccessDate = System.currentTimeMillis();
 						notifyItemChanged(variant.key);
@@ -750,7 +734,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 					} else {
 						val = new CacheItem(variant.path, url);
 						val.remoteDate = remoteDate;
-						val.type = type;
+						val.lifeSpan = lifeSpan;
 						val.lastAccessDate = System.currentTimeMillis();
 						//LogManager.logger.v(TAG, "adding image " + key.toString() +" type:"+type+" bmpIsNew:"+bmpIsNew+" rbmpIsNew:"+rbmpIsNew+" url:"+url);
 						put(variant.key, val);
@@ -770,19 +754,19 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		//LogManager.logger.i("BitmapLoaded outFile:"+outFile);
 		if (fileSizeAdded!=0) {
 			final boolean needsPurge;
-			if (type==CacheType.CACHE_LONGTERM)
+			if (lifeSpan==LifeSpan.LONGTERM)
 				needsPurge = (mPurgeCounterLongterm.incrementAndGet() > MIN_ADD_BEFORE_PURGE);
-			else if (type == CacheType.CACHE_SHORTTERM)
+			else if (lifeSpan == LifeSpan.SHORTTERM)
 				needsPurge = (mPurgeCounterShortterm.incrementAndGet() > MIN_ADD_BEFORE_PURGE);
 			else
 				needsPurge = false;
 
 			if (needsPurge) {
-				if (type==CacheType.CACHE_LONGTERM)
+				if (lifeSpan==LifeSpan.LONGTERM)
 					mPurgeCounterLongterm.set(0);
-				else if (type==CacheType.CACHE_SHORTTERM)
+				else if (lifeSpan==LifeSpan.SHORTTERM)
 					mPurgeCounterShortterm.set(0);
-				scheduleCustomOperation(new RemoveExpired(type));
+				scheduleCustomOperation(new RemoveExpired(lifeSpan));
 			}
 		}
 	}
@@ -811,7 +795,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 								v = getMap().get(oldVersionKey);
 								if (v==null)
 									// the old version doesn't exist in the cache, copy the current content in there
-									moveCachedFiles(key, oldVersionKey, CacheType.CACHE_SHORTTERM);
+									moveCachedFiles(key, oldVersionKey, LifeSpan.SHORTTERM);
 								remove(key); // this one is not valid anymore
 							} else {
 								// use the old image from the cache
