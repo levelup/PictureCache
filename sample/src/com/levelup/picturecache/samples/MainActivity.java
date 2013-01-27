@@ -27,6 +27,9 @@ public class MainActivity extends Activity implements AbstractUIHandler {
 		uiThread = Thread.currentThread().getId();
 		mCache = new MyPictureCache(this, this);
 
+		/*
+		 * the most basic image loading call
+		 */
 		findViewById(R.id.loadAvatar1).setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -39,7 +42,22 @@ public class MainActivity extends Activity implements AbstractUIHandler {
 
 			}
 		});
+		/*
+		 * unload the picture by loading the null URL
+		 * when the URL is null, a UUID is necessary
+		 */
+		findViewById(R.id.resetAvatar1).setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				ImageView avatar = (ImageView) findViewById(R.id.avatar1);
+				ImageViewLoader loader = new ImageViewLoader(avatar, null, null, null);
+				mCache.loadPictureWithFixedHeight(loader, null, "empty", 0, CacheType.CACHE_LONGTERM, (48*screenDpi)/160, MyPictureCache.EXT_MODE_AUTO);
+			}
+		});
 
+		/*
+		 * image loading with a custom PictureLoaderHandler
+		 */
 		findViewById(R.id.loadAvatar2).setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -52,7 +70,22 @@ public class MainActivity extends Activity implements AbstractUIHandler {
 
 			}
 		});
+		/*
+		 * unload the picture by loading the null URL, the default view will be displayed (ie R.drawable.picholder)
+		 * when the URL is null, a UUID is necessary
+		 */
+		findViewById(R.id.resetAvatar2).setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				ImageView avatar = (ImageView) findViewById(R.id.avatar2);
+				ImageViewLoaderDefaultResource loader = new ImageViewLoaderDefaultResource(avatar, R.drawable.picholder, null, null);
+				mCache.loadPictureWithFixedHeight(loader, null, "empty", 0, CacheType.CACHE_LONGTERM, (96*screenDpi)/160, MyPictureCache.EXT_MODE_AUTO);
+			}
+		});
 
+		/*
+		 * clear the data in the cache
+		 */
 		findViewById(R.id.clearCache).setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
