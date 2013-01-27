@@ -14,6 +14,7 @@ import st.gaw.db.InMemoryDbHelper;
 import st.gaw.db.InMemoryDbOperation;
 import st.gaw.db.InMemoryHashmapDb;
 import st.gaw.db.Logger;
+import st.gaw.db.LoggerDefault;
 import st.gaw.db.MapEntry;
 import android.content.ContentValues;
 import android.content.Context;
@@ -222,7 +223,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	protected PictureCache(Context context, AbstractUIHandler postHandler, OutOfMemoryHandler ooHandler, int sizeShortTerm, int sizeLongTerm, int sizeEternal, Logger logger) {
 		super(context, DATABASE_NAME, DATABASE_VERSION, logger);
 
-		LogManager.setLogger(logger);
+		LogManager.setLogger(logger==null ? new LoggerDefault() : logger);
 		this.mContext = context;
 		this.postHandler = postHandler;
 		if (ooHandler==null)
