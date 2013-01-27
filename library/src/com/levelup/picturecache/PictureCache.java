@@ -16,6 +16,7 @@ import st.gaw.db.InMemoryHashmapDb;
 import st.gaw.db.Logger;
 import st.gaw.db.LoggerDefault;
 import st.gaw.db.MapEntry;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.ReceiverCallNotAllowedException;
@@ -29,6 +30,9 @@ import android.text.TextUtils;
 import com.levelup.FileUtils;
 import com.levelup.picturecache.DownloadManager.JobsMonitor;
 
+/**
+ * base class to use the picture cache to load images and keep a persistent cache 
+ */
 public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem> implements JobsMonitor {
 
 	public static final String TAG = "PictureCache";
@@ -191,6 +195,16 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		return new String[] {key.serialize()};
 	}
 
+	/**
+	 * constructor of a PictureCache
+	 * @param context context of the application, may also be used to get a {@link ContentResolver}
+	 * @param postHandler handler to run some code in the UI thread and also determine if we're in the UI thread or not
+	 * @param sizeShortTerm size in bytes of the amount of storage available for short term cache files
+	 * @param sizeLongTerm size in bytes of the amount of storage available for long term cache files
+	 * @param sizeEternal size in bytes of the amount of storage available for files that should always remain in cache
+	 * @param logger a {@Logger} object used to send all the logs generated inside the cache, may be null
+	 * @param ooHandler a {@link OutOfMemoryHandler} object used to notify when we are short on memory, may be null
+	 */
 	protected PictureCache(Context context, AbstractUIHandler postHandler, int sizeShortTerm, int sizeLongTerm, int sizeEternal, Logger logger, OutOfMemoryHandler ooHandler) {
 		super(context, DATABASE_NAME, DATABASE_VERSION, logger);
 
