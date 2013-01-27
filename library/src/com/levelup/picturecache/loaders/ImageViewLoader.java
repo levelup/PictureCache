@@ -4,7 +4,6 @@ import java.io.File;
 
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
-import android.os.Handler;
 import android.widget.ImageView;
 
 import com.levelup.picturecache.AbstractUIHandler;
@@ -20,144 +19,7 @@ public class ImageViewLoader extends PictureLoaderHandler {
 	protected final Drawable defaultDrawable;
 
 	private static final long MAX_SIZE_IN_UI_THREAD = 19000;
-	private static final boolean DEBUG_VIEW_LOADING = false;
-
-	public static class ViewTag {
-		private final String url;
-		private final StorageTransform storageTransform;
-		private final BitmapTransform displayTransform;
-
-		private boolean isLoaded;
-		private boolean isDefault;
-
-		// pending draw data
-		private Bitmap mPendingDraw;
-		private String mPendingUrl;
-		private DrawInUI mDrawInUI;
-
-
-		public ViewTag(String url, StorageTransform storageTransform, BitmapTransform displayTransform) {
-			this.url = url;
-			this.displayTransform = displayTransform;
-			this.storageTransform = storageTransform;
-		}
-
-		public void setPendingDraw(Bitmap pendingDraw, String pendingUrl) {
-			if (mDrawInUI!=null)
-				mDrawInUI.setPendingDraw(pendingDraw, pendingUrl);
-			else {
-				if (DEBUG_VIEW_LOADING) LogManager.getLogger().i(PictureCache.TAG, "temporary store pending draw:"+pendingDraw+" for "+pendingUrl);
-				this.mPendingDraw = pendingDraw;
-				this.mPendingUrl = pendingUrl;
-			}
-		}
-
-		public boolean isUrlLoaded() {
-			return isLoaded;
-		}
-
-		public void setUrlIsLoaded(boolean set) {
-			isLoaded = set;
-		}
-
-		public boolean isDefault() {
-			return isDefault;
-		}
-
-		public boolean setAndGetIsDefault(boolean set) {
-			boolean old = isDefault;
-			isDefault = set;
-			return old;
-		}
-
-		void recoverStateFrom(ViewTag oldTag) {
-			setAndGetIsDefault(oldTag.isDefault());
-			mDrawInUI = oldTag.mDrawInUI;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this==o) return true;
-			if (!(o instanceof ViewTag)) return false;
-			ViewTag tag = (ViewTag) o;
-			return url!=null && url.equals(tag.url)
-					&& ((displayTransform==null && tag.displayTransform==null) || (displayTransform!=null && displayTransform.equals(tag.displayTransform)))
-					&& ((storageTransform==null && tag.storageTransform==null) || (storageTransform!=null && storageTransform.equals(tag.storageTransform)))
-					;
-		}
-
-		@Override
-		public String toString() {
-			return "ViewTag:"+url+(isDefault?"_def":"");
-		}
-
-		private static class DrawInUI implements Runnable {
-			private final ImageViewLoader viewLoader;
-
-			// pending draw data
-			private Bitmap mPendingDraw;
-			private String mPendingUrl;
-
-			DrawInUI(ImageViewLoader view) {
-				this.viewLoader = view;
-			}
-
-			public void setPendingDraw(Bitmap pendingDraw, String pendingUrl) {
-				synchronized (viewLoader) {
-					this.mPendingDraw = pendingDraw;
-					this.mPendingUrl = pendingUrl;
-				}
-			}
-
-			@Override
-			public void run() {
-				synchronized (viewLoader) {
-					boolean skipDrawing = false;
-					final ViewTag tag = (ViewTag) viewLoader.view.getTag();
-					if (tag!=null) {
-						if (mPendingDraw!=null && mPendingUrl!=null && (tag.url==null || !mPendingUrl.equals(tag.url))) {
-							skipDrawing = true;
-							if (DEBUG_VIEW_LOADING) LogManager.getLogger().e(PictureCache.TAG, viewLoader+" skip drawing "+mPendingUrl+" instead of "+tag.url+" with "+mPendingDraw);
-							//throw new IllegalStateException(ImageViewLoader.this+" try to draw "+mPendingUrl+" instead of "+tag.url+" with "+mPendingDraw);
-						}
-					}
-
-					if (!skipDrawing) {
-						boolean wasAlreadyDefault = false; // false: by default nothing is drawn
-						if (tag!=null) {
-							wasAlreadyDefault = tag.setAndGetIsDefault(mPendingDraw==null);
-							tag.setUrlIsLoaded(mPendingDraw!=null);
-						}
-
-						if (DEBUG_VIEW_LOADING) LogManager.getLogger().e(PictureCache.TAG, viewLoader+" drawing "+(mPendingDraw==null ? "default view" : mPendingDraw)+" tag:"+tag);
-
-						if (mPendingDraw==null) {
-							if (!wasAlreadyDefault)
-								viewLoader.displayDefaultView();
-							else if (DEBUG_VIEW_LOADING) LogManager.getLogger().e(PictureCache.TAG, viewLoader+" saved a default drawing");
-						} else
-							viewLoader.displayCustomBitmap(mPendingDraw);
-					}
-
-					mPendingDraw = null;
-				}
-			}
-		};
-
-		synchronized void drawInView(AbstractUIHandler postHandler, ImageViewLoader viewLoader) {
-			if (mDrawInUI == null) {
-				mDrawInUI = new DrawInUI(viewLoader);
-				mDrawInUI.setPendingDraw(mPendingDraw, mPendingUrl);
-				mPendingDraw = null;
-				mPendingUrl = null;
-			}
-
-			if (DEBUG_VIEW_LOADING) LogManager.getLogger().i(PictureCache.TAG, viewLoader+" drawInView run mDrawInUI bitmap:"+mDrawInUI.mPendingDraw+" for "+mDrawInUI.mPendingUrl);
-			if (postHandler instanceof Handler)
-				((Handler) postHandler).removeCallbacks(mDrawInUI);
-			postHandler.runOnUiThread(mDrawInUI);
-		}
-	}
+	static final boolean DEBUG_VIEW_LOADING = false;
 
 	public ImageViewLoader(ImageView view, Drawable defaultDrawable, StorageTransform storageTransform, BitmapTransform loadTransform) {
 		super(storageTransform, loadTransform);
@@ -220,9 +82,9 @@ public class ImageViewLoader extends PictureLoaderHandler {
 
 	private void showDrawable(AbstractUIHandler postHandler, Bitmap customBitmap, String url) {
 		synchronized (this) {
-			ViewTag tag = (ViewTag) view.getTag();
+			ImageViewLoadingTag tag = (ImageViewLoadingTag) view.getTag();
 			if (tag==null) {
-				tag = new ViewTag(url, getStorageTransform(), getDisplayTransform());
+				tag = new ImageViewLoadingTag(url, getStorageTransform(), getDisplayTransform());
 				view.setTag(tag);
 			}
 			tag.setPendingDraw(customBitmap, url);
@@ -232,11 +94,11 @@ public class ImageViewLoader extends PictureLoaderHandler {
 
 	@Override
 	public String setLoadingURL(String newURL) {
-		ViewTag newTag = new ViewTag(newURL, getStorageTransform(), getDisplayTransform());
+		ImageViewLoadingTag newTag = new ImageViewLoadingTag(newURL, getStorageTransform(), getDisplayTransform());
 
-		ViewTag oldTag = null;
+		ImageViewLoadingTag oldTag = null;
 		synchronized (this) {
-			oldTag = (ViewTag) view.getTag();
+			oldTag = (ImageViewLoadingTag) view.getTag();
 			if (newTag.equals(oldTag)) {
 				if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.TAG, this+" setting the same picture in "+view+" isLoaded:"+oldTag.isUrlLoaded());
 				return newURL; // no need to do anything
@@ -263,7 +125,7 @@ public class ImageViewLoader extends PictureLoaderHandler {
 
 	@Override
 	public String getLoadingURL() {
-		ViewTag tag = (ViewTag) view.getTag();
+		ImageViewLoadingTag tag = (ImageViewLoadingTag) view.getTag();
 		if (tag==null)
 			return null;
 		return tag.url;
