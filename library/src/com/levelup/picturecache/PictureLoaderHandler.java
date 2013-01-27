@@ -38,11 +38,10 @@ public abstract class PictureLoaderHandler {
 	
 	/**
 	 * called to tell the loader which URL is being loaded in the target
-	 * @param downloadManager
 	 * @param newURL
-	 * @return true if the URL is new for this target
+	 * @return the URL that was previously loading, null if there wasn't any
 	 */
-	abstract protected boolean setLoadingNewURL(DownloadManager downloadManager, String newURL);
+	abstract protected String setLoadingURL(String newURL);
 	/**
 	 * 
 	 * @return

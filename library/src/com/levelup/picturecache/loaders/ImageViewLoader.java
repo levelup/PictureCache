@@ -8,7 +8,6 @@ import android.os.Handler;
 import android.widget.ImageView;
 
 import com.levelup.picturecache.AbstractUIHandler;
-import com.levelup.picturecache.DownloadManager;
 import com.levelup.picturecache.LogManager;
 import com.levelup.picturecache.PictureCache;
 import com.levelup.picturecache.PictureLoaderHandler;
@@ -69,6 +68,11 @@ public class ImageViewLoader extends PictureLoaderHandler {
 			boolean old = isDefault;
 			isDefault = set;
 			return old;
+		}
+
+		void recoverStateFrom(ViewTag oldTag) {
+			setAndGetIsDefault(oldTag.isDefault());
+			mDrawInUI = oldTag.mDrawInUI;
 		}
 
 		@Override
@@ -227,34 +231,34 @@ public class ImageViewLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	public boolean setLoadingNewURL(DownloadManager downloadManager, String newURL) {
+	public String setLoadingURL(String newURL) {
 		ViewTag newTag = new ViewTag(newURL, getStorageTransform(), getDisplayTransform());
 
-		ViewTag currentTag = null;
+		ViewTag oldTag = null;
 		synchronized (this) {
-			currentTag = (ViewTag) view.getTag();
-			if (newTag.equals(currentTag)) {
-				if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.TAG, this+" setting the same picture in "+view+" isLoaded:"+currentTag.isUrlLoaded());
-				return !currentTag.isUrlLoaded(); // no need to do anything
+			oldTag = (ViewTag) view.getTag();
+			if (newTag.equals(oldTag)) {
+				if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.TAG, this+" setting the same picture in "+view+" isLoaded:"+oldTag.isUrlLoaded());
+				return newURL; // no need to do anything
 			}
 
-			if (currentTag!=null) { // the previous URL loading is not good for this view anymore
-				if (DEBUG_VIEW_LOADING) LogManager.getLogger().i(PictureCache.TAG, this+" the old picture in "+view+" doesn't match "+newURL+" was "+currentTag+" isDefault:"+currentTag.isDefault());
+			if (oldTag!=null) {
+				if (DEBUG_VIEW_LOADING) LogManager.getLogger().i(PictureCache.TAG, this+" the old picture in "+view+" doesn't match "+newURL+" was "+oldTag+" isDefault:"+oldTag.isDefault());
 				// keep the previous state of the tag
-				newTag.setAndGetIsDefault(currentTag.isDefault());
-				newTag.mDrawInUI = currentTag.mDrawInUI;
+				newTag.recoverStateFrom(oldTag);
 			}
 
 			view.setTag(newTag);
 		}
 		if (DEBUG_VIEW_LOADING) LogManager.getLogger().e(PictureCache.TAG, this+" set loading "+view+" with "+newURL+" tag:"+newTag);
 
-		if (currentTag!=null) { // the previous URL loading is not good for this view anymore
-			if (DEBUG_VIEW_LOADING) LogManager.getLogger().i(PictureCache.TAG, this+" the old picture in "+view+" doesn't match "+newURL+" was "+currentTag+" isDefault:"+currentTag.isDefault());
-			boolean wasRunning = downloadManager.cancelDownloadForLoader(this, currentTag.url);
-			if (wasRunning && DEBUG_VIEW_LOADING) LogManager.getLogger().w(PictureCache.TAG, this+" canceled a load running");
+		if (oldTag!=null) {
+			if (DEBUG_VIEW_LOADING)
+				// the previous URL loading is not good for this view anymore
+				LogManager.getLogger().i(PictureCache.TAG, this+" the old picture in "+view+" doesn't match "+newURL+" was "+oldTag+" isDefault:"+oldTag.isDefault());
 		}
-		return true;
+
+		return oldTag!=null ? oldTag.url : null;
 	}
 
 	@Override

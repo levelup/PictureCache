@@ -6,7 +6,6 @@ import android.graphics.Bitmap;
 import android.widget.RemoteViews;
 
 import com.levelup.picturecache.AbstractUIHandler;
-import com.levelup.picturecache.DownloadManager;
 import com.levelup.picturecache.PictureLoaderHandler;
 import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
 import com.levelup.picturecache.transforms.storage.StorageTransform;
@@ -54,12 +53,10 @@ public class RemoteViewLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	public boolean setLoadingNewURL(DownloadManager downloadManager, String newURL) {
-		if (newURL!=null && newURL.equals(mLoadingUrl))
-			return false;
-		downloadManager.cancelDownloadForLoader(this, mLoadingUrl);
+	public String setLoadingURL(String newURL) {
+		String oldLoadingUrl = mLoadingUrl;
 		mLoadingUrl = newURL;
-		return true;
+		return oldLoadingUrl;
 	}
 
 	@Override

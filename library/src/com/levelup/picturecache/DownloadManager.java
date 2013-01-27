@@ -12,7 +12,7 @@ import android.text.TextUtils;
 
 import com.levelup.picturecache.BitmapDownloader.JobMonitor;
 
-public class DownloadManager implements JobMonitor {
+class DownloadManager implements JobMonitor {
 
 	private static final boolean DEBUG_DOWNLOADER = false;
 
@@ -55,7 +55,7 @@ public class DownloadManager implements JobMonitor {
 	 * @param URL TODO
 	 * @return true if there was a task loading
 	 */
-	public boolean cancelDownloadForLoader(PictureLoaderHandler loadHandler, String URL) {
+	boolean cancelDownloadForLoader(PictureLoaderHandler loadHandler, String URL) {
 		synchronized (mJobs) {
 			if (DEBUG_DOWNLOADER) LogManager.logger.i(PictureCache.TAG, "cancelDownloadForLoader for "+URL+" loadHandler:"+loadHandler);
 			if (!TextUtils.isEmpty(URL)) {

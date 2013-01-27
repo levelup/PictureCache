@@ -459,9 +459,14 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			}
 
 			//LogManager.logger.v(TAG, "load "+URL+" in "+target+" key:"+key);
-			if (!loader.setLoadingNewURL(mJobManager, URL)) {
+			String previouslyLoading = loader.setLoadingURL(URL); 
+			if (URL.equals(previouslyLoading)) {
 				//LogManager.logger.v(TAG, loader+" no need to draw anything");
 				return; // no need to do anything the image is the same or downloading for it
+			}
+			
+			if (previouslyLoading!=null) {
+				mJobManager.cancelDownloadForLoader(loader, previouslyLoading);
 			}
 
 			/*if (URL.startsWith("android.resource://")) {
@@ -567,8 +572,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 */
 	public void removePictureLoader(PictureLoaderHandler loader, String oldURL) {
 		if (loader!=null) {
+			loader.setLoadingURL(null);
 			mJobManager.cancelDownloadForLoader(loader, oldURL);
-			loader.setLoadingNewURL(mJobManager, null);
 		}
 	}
 
