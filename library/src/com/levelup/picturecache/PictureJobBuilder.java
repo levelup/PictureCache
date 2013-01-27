@@ -13,7 +13,6 @@ public class PictureJobBuilder {
 	private boolean mWidthBased;
 	private StorageType mExtensionMode = StorageType.AUTO;
 	protected final PictureLoaderHandler mHandler;
-	protected float mRotation;
 
 	protected PictureJobBuilder(PictureLoaderHandler handler) {
 		this.mHandler = handler;
@@ -51,11 +50,6 @@ public class PictureJobBuilder {
 
 	public PictureJobBuilder setExtensionMode(StorageType extensionMode) {
 		mExtensionMode = extensionMode;
-		return this;
-	}
-
-	public PictureJobBuilder setRotation(float rotation) {
-		mRotation = rotation;
 		return this;
 	}
 

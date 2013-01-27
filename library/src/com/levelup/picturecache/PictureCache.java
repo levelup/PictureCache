@@ -29,6 +29,9 @@ import android.text.TextUtils;
 
 import com.levelup.FileUtils;
 import com.levelup.picturecache.DownloadManager.JobsMonitor;
+import com.levelup.picturecache.loaders.ImageViewLoader;
+import com.levelup.picturecache.loaders.PrecacheImageLoader;
+import com.levelup.picturecache.loaders.RemoteViewLoader;
 
 /**
  * base class to use the picture cache to load images and keep a persistent cache 
@@ -519,13 +522,14 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 	/**
 	 * helper method to load a height based picture using the cache
-	 * @param handler
-	 * @param URL
-	 * @param UUID
-	 * @param itemDate
+	 * @see {@link PictureJobBuilder}
+	 * @param handler the handler used to display the loaded/placeholder bitmap on the target, see {@link ImageViewLoader}, {@link RemoteViewLoader} or {@link PrecacheImageLoader}
+	 * @param URL the bitmap URL to load into the handler (may be null if UUID is not null)
+	 * @param UUID a unique ID representing the element in the cache (may be null if URL is not null)
+	 * @param itemDate the date in which the item was created, this is used to purge images older than this one from the cache
 	 * @param lifeSpan how long the item should remain in the cache, can be {@link LifeSpan#SHORTTERM},  {@link LifeSpan#LONGTERM} or {@link LifeSpan#ETERNAL}
-	 * @param height
-	 * @param extensionMode
+	 * @param height the height of the image to store in the cache
+	 * @param extensionMode the kind of file type we are loading, can be {@link StorageType#AUTO}, {@link StorageType#PNG} or {@link StorageType#JPEG}
 	 */
 	public void loadPictureWithFixedHeight(PictureLoaderHandler handler, String URL, String UUID, long itemDate, LifeSpan lifeSpan, int height, StorageType extensionMode) {
 		PictureJobBuilder builder = new PictureJobBuilder(handler);
@@ -544,16 +548,16 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 	/**
 	 * helper method to load a width based picture using the cache
-	 * @param handler
-	 * @param URL
-	 * @param UUID
-	 * @param itemDate
+	 * @see {@link PictureJobBuilder}
+	 * @param handler the handler used to display the loaded/placeholder bitmap on the target, see {@link ImageViewLoader}, {@link RemoteViewLoader} or {@link PrecacheImageLoader}
+	 * @param URL the bitmap URL to load into the handler (may be null if UUID is not null)
+	 * @param UUID a unique ID representing the element in the cache (may be null if URL is not null)
+	 * @param itemDate the date in which the item was created, this is used to purge images older than this one from the cache
 	 * @param lifeSpan how long the item should remain in the cache, can be {@link LifeSpan#SHORTTERM},  {@link LifeSpan#LONGTERM} or {@link LifeSpan#ETERNAL}
-	 * @param width
-	 * @param rotation
-	 * @param extensionMode
+	 * @param width the width of the image to store in the cache
+	 * @param extensionMode the kind of file type we are loading, can be {@link StorageType#AUTO}, {@link StorageType#PNG} or {@link StorageType#JPEG}
 	 */
-	public void loadPictureWithMaxWidth(PictureLoaderHandler handler, String URL, String UUID, long itemDate, LifeSpan lifeSpan, int width, float rotation, StorageType extensionMode) {
+	public void loadPictureWithMaxWidth(PictureLoaderHandler handler, String URL, String UUID, long itemDate, LifeSpan lifeSpan, int width, StorageType extensionMode) {
 		PictureJobBuilder builder = new PictureJobBuilder(handler);
 		builder.setURL(URL);
 		builder.setUUID(UUID);
@@ -561,7 +565,6 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		builder.setLifeType(lifeSpan);
 		builder.setExtensionMode(extensionMode);
 		builder.setDimension(width, true);
-		builder.setRotation(rotation);
 		try {
 			builder.startLoading(this);
 		} catch (NoSuchAlgorithmException e) {
