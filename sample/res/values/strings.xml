@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">PictureCache Samples</string>
+    <string name="load_picture">Load Picture</string>
+    <string name="load_picture_with_default">With Placeholder &amp; Background</string>
+    <string name="clear_cache">Clear Cache</string>
+    
+</resources>
