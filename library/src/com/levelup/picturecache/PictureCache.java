@@ -43,6 +43,14 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	private static final int MIN_ADD_BEFORE_PURGE = 7;
 
 	/**
+	 * size in bytes of the amount of storage available for files of the specified {@link LifeSpan}
+	 * @param lifeSpan type of {@link LifeSpan}
+	 * @return the amount available in bytes
+	 * @see {@link #notifyStorageSizeChanged()}
+	 */
+	protected abstract int getCacheMaxSize(LifeSpan lifeSpan);
+
+	/**
 	 * return a different uuid for when the original uuid just got a new URL. this way we can keep the old and new versions in the cache
 	 * @param uuid base UUID
 	 * @param URL old URL
@@ -80,10 +88,6 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	private final File mCacheFolder;
 	final AbstractUIHandler postHandler;
 	final OutOfMemoryHandler ooHandler;
-
-	private int mCacheSizeLongterm;
-	private int mCacheSizeEternal;
-	private int mCacheSizeShortterm;
 
 	private DownloadManager mJobManager;
 	private Context mContext;
@@ -202,13 +206,10 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * constructor of a PictureCache
 	 * @param context context of the application, may also be used to get a {@link ContentResolver}
 	 * @param postHandler handler to run some code in the UI thread and also determine if we're in the UI thread or not
-	 * @param sizeShortTerm size in bytes of the amount of storage available for short term cache files
-	 * @param sizeLongTerm size in bytes of the amount of storage available for long term cache files
-	 * @param sizeEternal size in bytes of the amount of storage available for files that should always remain in cache
 	 * @param logger a {@Logger} object used to send all the logs generated inside the cache, may be null
 	 * @param ooHandler a {@link OutOfMemoryHandler} object used to notify when we are short on memory, may be null
 	 */
-	protected PictureCache(Context context, AbstractUIHandler postHandler, int sizeShortTerm, int sizeLongTerm, int sizeEternal, Logger logger, OutOfMemoryHandler ooHandler) {
+	protected PictureCache(Context context, AbstractUIHandler postHandler, Logger logger, OutOfMemoryHandler ooHandler) {
 		super(context, DATABASE_NAME, DATABASE_VERSION, logger);
 
 		LogManager.setLogger(logger==null ? new LoggerDefault() : logger);
@@ -241,9 +242,6 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 		mJobManager = new DownloadManager();
 		mJobManager.setMonitor(this);
-		mCacheSizeEternal = sizeEternal;
-		mCacheSizeLongterm = sizeLongTerm;
-		mCacheSizeShortterm = sizeShortTerm;
 
 		File olddb = context.getDatabasePath(OLD_DATABASE_NAME);
 		if (olddb.exists()) {
@@ -344,15 +342,6 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				}
 			}
 		}
-	}
-
-	private int getCacheMaxSize(LifeSpan lifeSpan) {
-		if (lifeSpan == LifeSpan.LONGTERM)
-			return mCacheSizeLongterm;
-		else if (lifeSpan == LifeSpan.ETERNAL)
-			return mCacheSizeEternal;
-		else
-			return mCacheSizeShortterm;
 	}
 
 	private long getCacheSize(LifeSpan lifeSpan) {
@@ -701,11 +690,10 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		return false;
 	}
 
-	protected void setCacheSize(int longTermSize, int shortTermSize, int eternalSize) {
-		mCacheSizeLongterm = longTermSize;
-		mCacheSizeEternal = eternalSize;
-		mCacheSizeShortterm = shortTermSize;
-		LogManager.logger.d(TAG, this + " New cache size:" + mCacheSizeLongterm + " / " + mCacheSizeShortterm + " / " + mCacheSizeEternal);
+	/**
+	 * indicate that the values returned by {@link #getCacheMaxSize(LifeSpan)} have changed
+	 */
+	protected void notifyStorageSizeChanged() {
 		scheduleCustomOperation(new RemoveExpired());
 	}
 
