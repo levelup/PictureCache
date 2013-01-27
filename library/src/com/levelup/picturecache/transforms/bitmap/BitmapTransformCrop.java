@@ -1,14 +1,20 @@
-package com.levelup.picturecache;
+package com.levelup.picturecache.transforms.bitmap;
 
 import android.graphics.Bitmap;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 
+/** crop the Bitmap to fit inside the width/height provided in the constructor */
 public class BitmapTransformCrop implements BitmapTransform {
 
 	private final int width;
 	private final int height;
 	
+	/**
+	 * constructor of a {@link BitmapTransform} that crops the image to fill the whole target rectangle and keeps the aspect ratio
+	 * @param width width of the target in pixels 
+	 * @param height height of the target in pixels
+	 */
 	public BitmapTransformCrop(int width, int height) {
 		this.width = width;
 		this.height = height;

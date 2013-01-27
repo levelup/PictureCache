@@ -31,7 +31,7 @@ import com.levelup.picturecache.DownloadManager.JobsMonitor;
 
 public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem> implements JobsMonitor {
 
-	protected static final String TAG = "PictureCache";
+	public static final String TAG = "PictureCache";
 
 	private static final int MIN_ADD_BEFORE_PURGE = 7;
 

@@ -1,4 +1,7 @@
-package com.levelup.picturecache;
+package com.levelup.picturecache.transforms.bitmap;
+
+import com.levelup.picturecache.LogManager;
+import com.levelup.picturecache.PictureCache;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -9,17 +12,27 @@ import android.graphics.RectF;
 import android.graphics.Bitmap.Config;
 import android.graphics.PorterDuff.Mode;
 
+/**
+ * create a square version with rounded corner of the Bitmap to transform
+ * <p>
+ * the Bitmap is cropped of its bigger dimension to create the square
+ */
 public class BitmapTransformSquareRoundedCorner implements BitmapTransform {
 
-	private static BitmapTransformSquareRoundedCorner instance;
+	private final int roundRadius;
 	
-	public static synchronized BitmapTransformSquareRoundedCorner getInstance() {
-		if (instance==null)
-			instance = new BitmapTransformSquareRoundedCorner();
-		return instance;
+	/** default constructor with a radius of 4 */
+	public BitmapTransformSquareRoundedCorner() {
+		this(4);
 	}
 	
-	private BitmapTransformSquareRoundedCorner() {}
+	/**
+	 * constructor of the {@link BitmapTransform} with the specified radius for the rounded corner
+	 * @param roundRadius
+	 */
+	public BitmapTransformSquareRoundedCorner(int roundRadius) {
+		this.roundRadius = roundRadius;
+	}
 	
 	@Override
 	public Bitmap transformBitmap(Bitmap bitmap) {
@@ -40,10 +53,10 @@ public class BitmapTransformSquareRoundedCorner implements BitmapTransform {
 			bitmap = Bitmap.createBitmap(bitmap, x, y, size, size);
 		}
 
-		return getRoundedCornerBitmap(bitmap);
+		return getRoundedCornerBitmap(bitmap, roundRadius);
 	}
 	
-	private static Bitmap getRoundedCornerBitmap(Bitmap bitmap) {
+	public static Bitmap getRoundedCornerBitmap(Bitmap bitmap, float roundRadius) {
 		// Get the pictures info
 		//mLogger.d( "Bitmap size: w: " + bitmap.getWidth() + " h: " + bitmap.getHeight() );
 
@@ -53,17 +66,16 @@ public class BitmapTransformSquareRoundedCorner implements BitmapTransform {
 
 			final Paint paint = new Paint();
 			final RectF rectF = new RectF(0, 0, bitmap.getWidth(), bitmap.getHeight());
-			final float roundPx = 4;
 
 			paint.setAntiAlias(true);
 			paint.setColor(Color.BLACK);
-			canvas.drawRoundRect(rectF, roundPx, roundPx, paint);
+			canvas.drawRoundRect(rectF, roundRadius, roundRadius, paint);
 
 			paint.setXfermode(new PorterDuffXfermode(Mode.SRC_IN));
 			canvas.drawBitmap(bitmap, 0, 0, paint);
 			return output;
 		} catch (Throwable e) {
-			//mLogger.e( "getRoundedCornerBitmap exception", e);
+			LogManager.getLogger().e(PictureCache.TAG, "getRoundedCornerBitmap exception", e);
 		}
 
 		return bitmap;
