@@ -16,7 +16,7 @@ import com.levelup.picturecache.transforms.storage.StorageTransform;
 
 
 public class ImageViewLoader extends PictureLoaderHandler {
-	protected final ImageView view;
+	private final ImageView view;
 	protected final Drawable defaultDrawable;
 
 	private static final long MAX_SIZE_IN_UI_THREAD = 19000;
@@ -166,7 +166,7 @@ public class ImageViewLoader extends PictureLoaderHandler {
 		this.defaultDrawable = defaultDrawable;
 	}
 
-	public ImageView getView() {
+	public ImageView getImageView() {
 		return view;
 	}
 
