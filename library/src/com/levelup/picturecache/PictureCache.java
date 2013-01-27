@@ -191,7 +191,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		return new String[] {key.serialize()};
 	}
 
-	protected PictureCache(Context context, AbstractUIHandler postHandler, OutOfMemoryHandler ooHandler, int sizeShortTerm, int sizeLongTerm, int sizeEternal, Logger logger) {
+	protected PictureCache(Context context, AbstractUIHandler postHandler, int sizeShortTerm, int sizeLongTerm, int sizeEternal, Logger logger, OutOfMemoryHandler ooHandler) {
 		super(context, DATABASE_NAME, DATABASE_VERSION, logger);
 
 		LogManager.setLogger(logger==null ? new LoggerDefault() : logger);

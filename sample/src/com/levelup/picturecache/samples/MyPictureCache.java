@@ -12,7 +12,7 @@ public class MyPictureCache extends PictureCache {
 	private static final int CACHE_SIZE_ETERNAL   =  80000; //  80kb 
 	
 	public MyPictureCache(Context context, AbstractUIHandler postHandler) {
-		super(context, postHandler, null, CACHE_SIZE_SHORTTERM, CACHE_SIZE_LONGTERM, CACHE_SIZE_ETERNAL, null);
+		super(context, postHandler, CACHE_SIZE_SHORTTERM, CACHE_SIZE_LONGTERM, CACHE_SIZE_ETERNAL, null, null);
 	}
 
 	@Override
