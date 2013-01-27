@@ -84,20 +84,6 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	private AtomicInteger mPurgeCounterLongterm = new AtomicInteger();
 	private AtomicInteger mPurgeCounterShortterm = new AtomicInteger();
 
-	/**
-	 * select the storage format automatically
-	 */
-	public static final int EXT_MODE_AUTO = 0;
-	/**
-	 * store the picture in the cache as a JPEG
-	 */
-	public static final int EXT_MODE_JPEG = 1;
-	/**
-	 * store the picture in the cache as a PNG
-	 */
-	public static final int EXT_MODE_PNG  = 2;
-
-
 	@Override
 	protected String getMainTableName() {
 		return TABLE_NAME;
@@ -140,7 +126,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 					val.remoteDate = c.getLong(indexRemoteDate);
 					val.lastAccessDate = c.getLong(indexDate);
 
-					CacheKey key = CacheKey.newUUIDBasedKey(c.getString(indexUUID), c.getInt(indexHeight), widthBased, PictureCache.EXT_MODE_AUTO, null);
+					CacheKey key = CacheKey.newUUIDBasedKey(c.getString(indexUUID), c.getInt(indexHeight), widthBased, StorageType.AUTO, null);
 
 					put(key, val);
 				}
@@ -153,7 +139,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 					val.remoteDate = c.getLong(indexRemoteDate);
 					val.lastAccessDate = c.getLong(indexDate);
 
-					CacheKey key = CacheKey.newUUIDBasedKey(c.getString(indexUUID), c.getInt(indexHeight), widthBased, PictureCache.EXT_MODE_AUTO, "_r");
+					CacheKey key = CacheKey.newUUIDBasedKey(c.getString(indexUUID), c.getInt(indexHeight), widthBased, StorageType.AUTO, "_r");
 
 					put(key, val);
 				}
@@ -522,7 +508,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @param height
 	 * @param extensionMode
 	 */
-	public void loadPictureWithFixedHeight(PictureLoaderHandler handler, String URL, String UUID, long itemDate, LifeSpan lifeSpan, int height, int extensionMode) {
+	public void loadPictureWithFixedHeight(PictureLoaderHandler handler, String URL, String UUID, long itemDate, LifeSpan lifeSpan, int height, StorageType extensionMode) {
 		PictureJobBuilder builder = new PictureJobBuilder(handler);
 		builder.setURL(URL);
 		builder.setUUID(UUID);
@@ -548,7 +534,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @param rotation
 	 * @param extensionMode
 	 */
-	public void loadPictureWithMaxWidth(PictureLoaderHandler handler, String URL, String UUID, long itemDate, LifeSpan lifeSpan, int width, float rotation, int extensionMode) {
+	public void loadPictureWithMaxWidth(PictureLoaderHandler handler, String URL, String UUID, long itemDate, LifeSpan lifeSpan, int width, float rotation, StorageType extensionMode) {
 		PictureJobBuilder builder = new PictureJobBuilder(handler);
 		builder.setURL(URL);
 		builder.setUUID(UUID);
@@ -586,7 +572,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		}
 	}
 
-	public boolean saveInGallery(String UUID, int width, boolean widthBased, boolean Rounded, int extensionMode) throws IOException, SecurityException {
+	public boolean saveInGallery(String UUID, int width, boolean widthBased, boolean Rounded, StorageType extensionMode) throws IOException, SecurityException {
 		boolean succeeded = false;
 		CacheKey key = CacheKey.newUUIDBasedKey(UUID, width, widthBased, extensionMode, Rounded?"_r":null);
 		mDataLock.lock();
@@ -643,7 +629,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	}
 
 	private CacheItem getCacheItem(String UUID, int Height, boolean widthBased, boolean rounded) {
-		CacheKey key = CacheKey.newUUIDBasedKey(UUID, Height, widthBased, EXT_MODE_AUTO, rounded?"_r":null);
+		CacheKey key = CacheKey.newUUIDBasedKey(UUID, Height, widthBased, StorageType.AUTO, rounded?"_r":null);
 		return getMap().get(key);
 	}
 

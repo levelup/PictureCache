@@ -15,13 +15,13 @@ class CacheKey {
 	private final String UUID;          // key: the unique ID representing this item in the DB
 	private final int dimension;        // key: the target display height/width
 	private final boolean widthBased;   // key: whether it's width constrained or height constrained
-	private final byte extensionMode;   // see PictureCache.EXT_MODE_xxx
+	private final StorageType extensionMode;
 	private final String variantString;
 	private final int hashCode; // only compute the hascode once for speed efficiency
 
 	private static class UseUrlBasedConstructor extends RuntimeException {private static final long serialVersionUID = -2231632339742517427L;}
 
-	static CacheKey newUUIDBasedKey(String uuid, int height, boolean widthBased, int extensionMode, String variantString) throws UseUrlBasedConstructor {
+	static CacheKey newUUIDBasedKey(String uuid, int height, boolean widthBased, StorageType extensionMode, String variantString) throws UseUrlBasedConstructor {
 		if (TextUtils.isEmpty(uuid))
 			throw new UseUrlBasedConstructor();
 
@@ -29,7 +29,7 @@ class CacheKey {
 		return new CacheKey(uuid, height, widthBased, extensionMode, variantString);
 	}
 
-	static CacheKey newUrlBasedKey(String srcURL, int height, boolean widthBased, int extensionMode, String variantString) throws NoSuchAlgorithmException {
+	static CacheKey newUrlBasedKey(String srcURL, int height, boolean widthBased, StorageType extensionMode, String variantString) throws NoSuchAlgorithmException {
 		try {
 			MessageDigest digest = MessageDigest.getInstance("MD5");
 			byte[] md5 = digest.digest(srcURL.getBytes());
@@ -47,11 +47,11 @@ class CacheKey {
 		return new CacheKey(uuid, dimension, widthBased, extensionMode, variantString);
 	}
 
-	private CacheKey(String uuid, int height, boolean widthBased, int extensionMode, String variantString) {
+	private CacheKey(String uuid, int height, boolean widthBased, StorageType extensionMode, String variantString) {
 		this.UUID = uuid;
 		this.dimension = height;
 		this.widthBased = widthBased;
-		this.extensionMode = (byte) extensionMode;
+		this.extensionMode = extensionMode;
 		this.variantString = variantString;
 		this.hashCode = ((((widthBased ? 31 : 0) + (variantString==null ? 0 : variantString.hashCode())) * 31 + dimension) * 31 + UUID.hashCode());
 	}
@@ -114,8 +114,8 @@ class CacheKey {
 	}
 
 	private boolean isJPEG() {
-		if (extensionMode==PictureCache.EXT_MODE_JPEG) return true;
-		if (extensionMode==PictureCache.EXT_MODE_PNG) return false;
+		if (extensionMode==StorageType.JPEG) return true;
+		if (extensionMode==StorageType.PNG) return false;
 		return (widthBased && dimension > 150);
 	}
 
@@ -136,12 +136,12 @@ class CacheKey {
 		String uuid = parts[0];
 		int dimension = Integer.valueOf(parts[1]);
 		boolean widthBased = parts[2].equals("w");
-		int extensionMode = Integer.valueOf(parts[3]);
+		StorageType extensionMode = StorageType.fromStorage(Integer.valueOf(parts[3]));
 		String variantString = parts.length > 4 ? parts[4] : null;
 		return newUUIDBasedKey(uuid, dimension, widthBased, extensionMode, variantString);
 	}
 
 	public String serialize() {
-		return UUID+":"+dimension+":"+(widthBased?"w":"h")+":"+String.valueOf(extensionMode)+":"+(variantString==null?"":variantString);
+		return UUID+":"+dimension+":"+(widthBased?"w":"h")+":"+extensionMode.toStorage()+":"+(variantString==null?"":variantString);
 	}
 }

@@ -8,6 +8,7 @@ import android.widget.ImageView;
 import com.levelup.picturecache.AbstractUIHandler;
 import com.levelup.picturecache.LifeSpan;
 import com.levelup.picturecache.ImageViewLoader;
+import com.levelup.picturecache.StorageType;
 
 public class MainActivity extends Activity implements AbstractUIHandler {
 	
@@ -38,7 +39,7 @@ public class MainActivity extends Activity implements AbstractUIHandler {
 				mCache.loadPictureWithFixedHeight(loader, levelupAvatarURL, "twitter_levelup", 0,
 						LifeSpan.LONGTERM,
 						(48*screenDpi)/160,
-						MyPictureCache.EXT_MODE_AUTO);
+						StorageType.AUTO);
 
 			}
 		});
@@ -51,7 +52,7 @@ public class MainActivity extends Activity implements AbstractUIHandler {
 			public void onClick(View v) {
 				ImageView avatar = (ImageView) findViewById(R.id.avatar1);
 				ImageViewLoader loader = new ImageViewLoader(avatar, null, null, null);
-				mCache.loadPictureWithFixedHeight(loader, null, "empty", 0, LifeSpan.LONGTERM, (48*screenDpi)/160, MyPictureCache.EXT_MODE_AUTO);
+				mCache.loadPictureWithFixedHeight(loader, null, "empty", 0, LifeSpan.LONGTERM, (48*screenDpi)/160, StorageType.AUTO);
 			}
 		});
 
@@ -66,7 +67,7 @@ public class MainActivity extends Activity implements AbstractUIHandler {
 				mCache.loadPictureWithFixedHeight(loader, plumeAvatarURL, "twitter_plume", 0,
 						LifeSpan.LONGTERM,
 						(96*screenDpi)/160,
-						MyPictureCache.EXT_MODE_AUTO);
+						StorageType.AUTO);
 
 			}
 		});
@@ -79,7 +80,7 @@ public class MainActivity extends Activity implements AbstractUIHandler {
 			public void onClick(View v) {
 				ImageView avatar = (ImageView) findViewById(R.id.avatar2);
 				ImageViewLoaderDefaultResource loader = new ImageViewLoaderDefaultResource(avatar, R.drawable.picholder, null, null);
-				mCache.loadPictureWithFixedHeight(loader, null, "empty", 0, LifeSpan.LONGTERM, (96*screenDpi)/160, MyPictureCache.EXT_MODE_AUTO);
+				mCache.loadPictureWithFixedHeight(loader, null, "empty", 0, LifeSpan.LONGTERM, (96*screenDpi)/160, StorageType.AUTO);
 			}
 		});
 

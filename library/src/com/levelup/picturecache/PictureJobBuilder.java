@@ -11,7 +11,7 @@ public class PictureJobBuilder {
 	private LifeSpan mLifeSpan;
 	private int mDimension;
 	private boolean mWidthBased;
-	private int mExtensionMode;
+	private StorageType mExtensionMode;
 	protected final PictureLoaderHandler mHandler;
 	protected float mRotation;
 
@@ -49,7 +49,7 @@ public class PictureJobBuilder {
 		return this;
 	}
 
-	public PictureJobBuilder setExtensionMode(int extensionMode) {
+	public PictureJobBuilder setExtensionMode(StorageType extensionMode) {
 		mExtensionMode = extensionMode;
 		return this;
 	}
