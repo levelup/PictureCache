@@ -7,7 +7,12 @@ import com.levelup.picturecache.transforms.storage.StorageTransform;
 
 import android.graphics.Bitmap;
 
-
+/**
+ * base class for the loader used by the picture cache
+ * <p>
+ * a {@link PictureLoaderHandler} handles the display of the loaded Bitmap and the placeholder Bitmap during loading
+ * it also handles the Bitmaps transformations use for storage and/or display  
+ */
 public abstract class PictureLoaderHandler {
 
 	abstract protected void drawDefaultPicture(String url, AbstractUIHandler postHandler);
@@ -27,7 +32,7 @@ public abstract class PictureLoaderHandler {
 	}
 	
 	/**
-	 * 
+	 * called to tell the loader which URL is being loaded in the target
 	 * @param downloadManager
 	 * @param newURL
 	 * @return true if the URL is new for this target
