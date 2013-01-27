@@ -9,6 +9,8 @@ import com.levelup.picturecache.AbstractUIHandler;
 import com.levelup.picturecache.LifeSpan;
 import com.levelup.picturecache.StorageType;
 import com.levelup.picturecache.loaders.ImageViewLoader;
+import com.levelup.picturecache.loaders.ImageViewLoaderDefaultDrawable;
+import com.levelup.picturecache.loaders.ImageViewLoaderDefaultResource;
 
 public class MainActivity extends Activity implements AbstractUIHandler {
 	
@@ -35,7 +37,7 @@ public class MainActivity extends Activity implements AbstractUIHandler {
 			@Override
 			public void onClick(View v) {
 				ImageView avatar = (ImageView) findViewById(R.id.avatar1);
-				ImageViewLoader loader = new ImageViewLoader(avatar, null, null, null);
+				ImageViewLoader loader = new ImageViewLoaderDefaultDrawable(avatar, null, null, null);
 				mCache.loadPictureWithFixedHeight(loader, levelupAvatarURL, "twitter_levelup", 0,
 						LifeSpan.LONGTERM,
 						(48*screenDpi)/160,
@@ -51,7 +53,7 @@ public class MainActivity extends Activity implements AbstractUIHandler {
 			@Override
 			public void onClick(View v) {
 				ImageView avatar = (ImageView) findViewById(R.id.avatar1);
-				ImageViewLoader loader = new ImageViewLoader(avatar, null, null, null);
+				ImageViewLoader loader = new ImageViewLoaderDefaultDrawable(avatar, null, null, null);
 				mCache.loadPictureWithFixedHeight(loader, null, "empty", 0, LifeSpan.LONGTERM, (48*screenDpi)/160, StorageType.AUTO);
 			}
 		});

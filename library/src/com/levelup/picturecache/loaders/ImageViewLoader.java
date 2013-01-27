@@ -3,7 +3,6 @@ package com.levelup.picturecache.loaders;
 import java.io.File;
 
 import android.graphics.Bitmap;
-import android.graphics.drawable.Drawable;
 import android.widget.ImageView;
 
 import com.levelup.picturecache.AbstractUIHandler;
@@ -14,18 +13,16 @@ import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
 import com.levelup.picturecache.transforms.storage.StorageTransform;
 
 
-public class ImageViewLoader extends PictureLoaderHandler {
+public abstract class ImageViewLoader extends PictureLoaderHandler {
 	private final ImageView view;
-	protected final Drawable defaultDrawable;
 
 	private static final long MAX_SIZE_IN_UI_THREAD = 19000;
 	static final boolean DEBUG_VIEW_LOADING = false;
 
-	public ImageViewLoader(ImageView view, Drawable defaultDrawable, StorageTransform storageTransform, BitmapTransform loadTransform) {
+	public ImageViewLoader(ImageView view, StorageTransform storageTransform, BitmapTransform loadTransform) {
 		super(storageTransform, loadTransform);
 		if (view==null) throw new NullPointerException("empty view to load to, use PrecacheImageLoader");
 		this.view = view;
-		this.defaultDrawable = defaultDrawable;
 	}
 
 	public ImageView getImageView() {
@@ -67,10 +64,8 @@ public class ImageViewLoader extends PictureLoaderHandler {
 	 * display the default view, called in the UI thread
 	 * called under a lock on {@link view}
 	 */
-	protected void displayDefaultView() {
-		view.setImageDrawable(defaultDrawable);
-	}
-
+	protected abstract void displayDefaultView();
+	
 	/**
 	 * display this Bitmap in the view, called in the UI thread
 	 * @param bmp the Bitmap to display in {@link view}

@@ -14,19 +14,19 @@ import com.levelup.picturecache.transforms.storage.StorageTransform;
 public class RemoteViewLoader extends PictureLoaderHandler {
 	private final RemoteViews remoteViews;
 	private final int viewId;
-	private final int defaultView;
+	private final int defaultResourceId;
 	private String mLoadingUrl;
 
-	public RemoteViewLoader(RemoteViews remoteViews, int viewId, int defaultView, StorageTransform storageTransform, BitmapTransform loadTransform) {
+	public RemoteViewLoader(RemoteViews remoteViews, int viewId, int defaultDrawableResId, StorageTransform storageTransform, BitmapTransform loadTransform) {
 		super(storageTransform, loadTransform);
 		this.remoteViews = remoteViews;
 		this.viewId = viewId;
-		this.defaultView = defaultView;
+		this.defaultResourceId = defaultDrawableResId;
 	}
 
 	@Override
 	public void drawDefaultPicture(String url, AbstractUIHandler postHandler) {
-		remoteViews.setImageViewResource(viewId, defaultView);
+		remoteViews.setImageViewResource(viewId, defaultResourceId);
 	}
 
 	@Override
