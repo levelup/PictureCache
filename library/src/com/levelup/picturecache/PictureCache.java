@@ -335,11 +335,10 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 					if (mCacheFolder.exists() && mCacheFolder.isDirectory())
 						mDirAsserted = Boolean.TRUE;
 					else {
-						mDirAsserted = Boolean.valueOf(mCacheFolder.mkdirs());
+						mDirAsserted = mCacheFolder.mkdirs();
 						//LogManager.logger.w(TAG, "cache dir=" + dir.getAbsolutePath()+" asserted:"+DirAsserted);
 						if (mDirAsserted) {
-							File noMedia = new File(mCacheFolder, ".nomedia");
-							noMedia.createNewFile();
+							new File(mCacheFolder, ".nomedia").createNewFile();
 						}
 					}
 
