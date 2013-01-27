@@ -1,9 +1,15 @@
-package com.levelup.picturecache;
+package com.levelup.picturecache.loaders;
 
 import java.io.File;
 
 import android.graphics.Bitmap;
 import android.widget.RemoteViews;
+
+import com.levelup.picturecache.AbstractUIHandler;
+import com.levelup.picturecache.DownloadManager;
+import com.levelup.picturecache.PictureLoaderHandler;
+import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
+import com.levelup.picturecache.transforms.storage.StorageTransform;
 
 
 public class RemoteViewLoader extends PictureLoaderHandler {

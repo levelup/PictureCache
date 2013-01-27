@@ -1,9 +1,15 @@
-package com.levelup.picturecache;
+package com.levelup.picturecache.loaders;
 
 import java.io.File;
 import java.util.Random;
 
 import android.graphics.Bitmap;
+
+import com.levelup.picturecache.AbstractUIHandler;
+import com.levelup.picturecache.DownloadManager;
+import com.levelup.picturecache.PictureLoaderHandler;
+import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
+import com.levelup.picturecache.transforms.storage.StorageTransform;
 
 
 public class PrecacheImageLoader extends PictureLoaderHandler {

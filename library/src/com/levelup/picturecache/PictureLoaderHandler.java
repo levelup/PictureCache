@@ -2,6 +2,9 @@ package com.levelup.picturecache;
 
 import java.io.File;
 
+import com.levelup.picturecache.loaders.ImageViewLoader;
+import com.levelup.picturecache.loaders.PrecacheImageLoader;
+import com.levelup.picturecache.loaders.RemoteViewLoader;
 import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
 import com.levelup.picturecache.transforms.storage.StorageTransform;
 
@@ -11,7 +14,9 @@ import android.graphics.Bitmap;
  * base class for the loader used by the picture cache
  * <p>
  * a {@link PictureLoaderHandler} handles the display of the loaded Bitmap and the placeholder Bitmap during loading
- * it also handles the Bitmaps transformations use for storage and/or display  
+ * it also handles the Bitmaps transformations use for storage and/or display
+ * <p>
+ * @see {@link ImageViewLoader}, {@link RemoteViewLoader} or {@link PrecacheImageLoader}
  */
 public abstract class PictureLoaderHandler {
 

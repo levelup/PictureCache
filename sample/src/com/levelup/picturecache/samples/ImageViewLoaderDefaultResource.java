@@ -2,7 +2,7 @@ package com.levelup.picturecache.samples;
 
 import android.widget.ImageView;
 
-import com.levelup.picturecache.ImageViewLoader;
+import com.levelup.picturecache.loaders.ImageViewLoader;
 import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
 import com.levelup.picturecache.transforms.storage.StorageTransform;
 

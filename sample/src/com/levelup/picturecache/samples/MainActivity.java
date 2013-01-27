@@ -7,8 +7,8 @@ import android.widget.ImageView;
 
 import com.levelup.picturecache.AbstractUIHandler;
 import com.levelup.picturecache.LifeSpan;
-import com.levelup.picturecache.ImageViewLoader;
 import com.levelup.picturecache.StorageType;
+import com.levelup.picturecache.loaders.ImageViewLoader;
 
 public class MainActivity extends Activity implements AbstractUIHandler {
 	
