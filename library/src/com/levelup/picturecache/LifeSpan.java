@@ -8,13 +8,19 @@ package com.levelup.picturecache;
  */
 public enum LifeSpan {
 	/** the item can be removed from the cache as soon as we need room */
-	SHORTTERM,
-	
+	SHORTTERM(0),
+
 	/** the item remains as long as there is room for other long term and short term items */
-	LONGTERM,
-	
+	LONGTERM(1),
+
 	/** the item should remain forever in the cache (unless there's no room for all eternal files) */
-	ETERNAL;
+	ETERNAL(2);
+
+	LifeSpan(int storageValue) {
+		this.storageValue = storageValue;
+	}
+
+	private final int storageValue;
 
 	/**
 	 * 
@@ -23,16 +29,16 @@ public enum LifeSpan {
 	 * @return true if value is lower (but not equal) to otherValue
 	 */
 	boolean isStrictlyLowerThan(LifeSpan otherValue) {
-		return ordinal() < otherValue.ordinal();
+		return storageValue < otherValue.storageValue;
 	}
-	
+
 	int toStorage() {
-		return ordinal();
+		return storageValue;
 	}
-	
+
 	static LifeSpan fromStorage(int storedValue) {
-		if (storedValue<0 || storedValue>=LifeSpan.values().length) {
-			LogManager.logger.w(PictureCache.TAG, "unknown cache life span value "+storedValue);
+		if (storedValue < 0 || storedValue >= LifeSpan.values().length) {
+			LogManager.logger.w(PictureCache.TAG, "unknown cache life span value " + storedValue);
 			return SHORTTERM;
 		}
 		return LifeSpan.values()[storedValue];
