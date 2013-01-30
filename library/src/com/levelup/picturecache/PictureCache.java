@@ -511,7 +511,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 	/**
 	 * helper method to load a height based picture using the cache
-	 * @see {@link PictureJobBuilder}
+	 * @see {@link PictureJob}
 	 * @param handler the handler used to display the loaded/placeholder bitmap on the target, see {@link ImageViewLoader}, {@link RemoteViewLoader} or {@link PrecacheImageLoader}
 	 * @param URL the bitmap URL to load into the handler (may be null if UUID is not null)
 	 * @param UUID a unique ID representing the element in the cache (may be null if URL is not null)
@@ -521,15 +521,16 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @param extensionMode the kind of file type we are loading, can be {@link StorageType#AUTO}, {@link StorageType#PNG} or {@link StorageType#JPEG}
 	 */
 	public void loadPictureWithFixedHeight(PictureLoaderHandler handler, String URL, String UUID, long itemDate, LifeSpan lifeSpan, int height, StorageType extensionMode) {
-		PictureJobBuilder builder = new PictureJobBuilder(handler);
-		builder.setURL(URL);
-		builder.setUUID(UUID);
-		builder.setFreshDate(itemDate);
-		builder.setLifeType(lifeSpan);
-		builder.setExtensionMode(extensionMode);
-		builder.setDimension(height, false);
+		PictureJob pictureJob = new PictureJob.Builder(handler)
+			.setURL(URL).setUUID(UUID)
+			.setFreshDate(itemDate)
+			.setLifeType(lifeSpan)
+			.setExtensionMode(extensionMode)
+			.setDimension(height, false)
+			.build();
+		
 		try {
-			builder.startLoading(this);
+			pictureJob.startLoading(this);
 		} catch (NoSuchAlgorithmException e) {
 			LogManager.logger.d(TAG, "can't load picture", e);
 		}
@@ -537,7 +538,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 	/**
 	 * helper method to load a width based picture using the cache
-	 * @see {@link PictureJobBuilder}
+	 * @see {@link PictureJob}
 	 * @param handler the handler used to display the loaded/placeholder bitmap on the target, see {@link ImageViewLoader}, {@link RemoteViewLoader} or {@link PrecacheImageLoader}
 	 * @param URL the bitmap URL to load into the handler (may be null if UUID is not null)
 	 * @param UUID a unique ID representing the element in the cache (may be null if URL is not null)
@@ -547,15 +548,16 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @param extensionMode the kind of file type we are loading, can be {@link StorageType#AUTO}, {@link StorageType#PNG} or {@link StorageType#JPEG}
 	 */
 	public void loadPictureWithMaxWidth(PictureLoaderHandler handler, String URL, String UUID, long itemDate, LifeSpan lifeSpan, int width, StorageType extensionMode) {
-		PictureJobBuilder builder = new PictureJobBuilder(handler);
-		builder.setURL(URL);
-		builder.setUUID(UUID);
-		builder.setFreshDate(itemDate);
-		builder.setLifeType(lifeSpan);
-		builder.setExtensionMode(extensionMode);
-		builder.setDimension(width, true);
+		PictureJob pictureJob = new PictureJob.Builder(handler)
+			.setURL(URL)
+			.setUUID(UUID)
+			.setFreshDate(itemDate)
+			.setLifeType(lifeSpan)
+			.setExtensionMode(extensionMode)
+			.setDimension(width, true)
+			.build();
 		try {
-			builder.startLoading(this);
+			pictureJob.startLoading(this);
 		} catch (NoSuchAlgorithmException e) {
 			LogManager.logger.d(TAG, "can't load picture", e);
 		}
