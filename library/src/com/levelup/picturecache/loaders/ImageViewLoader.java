@@ -119,7 +119,11 @@ public abstract class ImageViewLoader extends PictureLoaderHandler {
 				LogManager.getLogger().i(PictureCache.TAG, this+" the old picture in "+view+" doesn't match "+newURL+" was "+oldTag+" isDefault:"+oldTag.isDefault());
 		}
 
-		return oldTag!=null ? oldTag.url : null;
+		if (oldTag==null || oldTag.url==null)
+			return null;
+		if (oldTag.url.equals(newURL))
+			return null; // hack for now as the PictureCache will consider it's the same URL and do nothing, but the transforms have changed
+		return oldTag.url;
 	}
 
 	@Override
