@@ -302,7 +302,7 @@ class BitmapDownloader extends Thread {
 		} else {
 			int finalHeight = key.getBitmapHeight(srcWidth, srcHeight);
 
-			if (srcHeight > finalHeight*2) {
+			if (finalHeight>0 && srcHeight > finalHeight*2) {
 				//LogManager.logger.e(PictureCache.TAG, " Picture scaling by: " + scale +" from Height:" + opts.outHeight + " to "+finalHeight+" for "+mURL);
 				opts.inSampleSize = (int) FloatMath.floor((float)srcHeight / finalHeight);
 			}
