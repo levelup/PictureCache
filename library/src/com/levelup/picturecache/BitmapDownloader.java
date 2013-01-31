@@ -255,7 +255,10 @@ class BitmapDownloader extends Thread {
 
 			if (mItemDate < itemDate)
 				mItemDate = itemDate;
-			if (mLifeSpan==null || mLifeSpan.isStrictlyLowerThan(lifeSpan))
+			
+			if (mLifeSpan==null)
+				mLifeSpan = lifeSpan;
+			else if (mLifeSpan.compare(lifeSpan)<0)
 				mLifeSpan = lifeSpan;
 		}
 

@@ -367,9 +367,10 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	private Entry<CacheKey, CacheItem> getCacheOldestEntry(LifeSpan lifeSpan) {
 		//LogManager.logger.d(TAG, "getCacheOldest in");
 		Entry<CacheKey, CacheItem> result = null;
-		for (Entry<CacheKey, CacheItem> k : getMap().entrySet()) {
-			if (!lifeSpan.isStrictlyLowerThan(k.getValue().lifeSpan) && (result==null || result.getValue().lastAccessDate > k.getValue().lastAccessDate))
-				result = k;
+		for (Entry<CacheKey, CacheItem> entry : getMap().entrySet()) {
+			final CacheItem item = entry.getValue();
+			if (lifeSpan==item.lifeSpan && (result==null || result.getValue().lastAccessDate > item.lastAccessDate))
+				result = entry;
 		}
 		//LogManager.logger.e(TAG, "getCacheOldest out with "+result);
 		return result;
@@ -700,7 +701,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	}
 
 	@Override
-	public void onNewBitmapLoaded(HashMap<CacheVariant,Bitmap> newBitmaps, String url, long remoteDate, final LifeSpan lifeSpan) {
+	public void onNewBitmapLoaded(HashMap<CacheVariant,Bitmap> newBitmaps, String url, long remoteDate, LifeSpan lifeSpan) {
 		// handle the storing and adding to the cache
 		// save the bitmap for later use
 		long fileSizeAdded = 0;
@@ -720,7 +721,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 						if (val.remoteDate < remoteDate)
 							val.remoteDate = remoteDate;
 
-						if (val.lifeSpan.isStrictlyLowerThan(lifeSpan))
+						if (val.lifeSpan.compare(lifeSpan)<0)
 							val.lifeSpan = lifeSpan;
 
 						val.lastAccessDate = System.currentTimeMillis();
