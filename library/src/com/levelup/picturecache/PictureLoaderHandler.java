@@ -20,7 +20,25 @@ import android.graphics.Bitmap;
  */
 public abstract class PictureLoaderHandler {
 
+	/**
+	 * called when the default drawable should be displayed, while the bitmap is loading
+	 * <p>
+	 * this method may be called outside of the UI thread
+	 * 
+	 * @param url URL being loaded
+	 * @param postHandler handler to use to run code in the UI thread
+	 */
 	abstract protected void drawDefaultPicture(String url, AbstractUIHandler postHandler);
+	
+	/**
+	 * called when the downloaded {@link Bitmap} should be displayed 
+	 * <p>
+	 * this method may be called outside of the UI thread
+	 * 
+	 * @param bmp bitmap to display
+	 * @param url URL corresponding to the bitmap
+	 * @param postHandler handler to use to run code in the UI thread
+	 */
 	abstract protected void drawBitmap(Bitmap bmp, String url, AbstractUIHandler postHandler);
 	
 	protected PictureLoaderHandler(StorageTransform bitmapStorageTransform, BitmapTransform bitmapTransform) {
