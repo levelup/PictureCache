@@ -16,31 +16,42 @@ public enum LifeSpan {
 	/** the item should remain forever in the cache (unless there's no room for all eternal files) */
 	ETERNAL(2);
 
-	LifeSpan(int storageValue) {
+	private LifeSpan(int storageValue) {
 		this.storageValue = storageValue;
 	}
 
 	private final int storageValue;
 
 	/**
-	 * 
-	 * @param value
-	 * @param otherValue
-	 * @return true if value is lower (but not equal) to otherValue
+	 * compare {@link LifeSpan} items like Comparable does
+	 * @param o item to compare with
+	 * @return 0 if equals, negative if o has a longer life span, positive otherwise
 	 */
-	boolean isStrictlyLowerThan(LifeSpan otherValue) {
-		return storageValue < otherValue.storageValue;
+	public int compare(LifeSpan o) {
+		return storageValue - o.storageValue;
 	}
-
+	
+	/**
+	 * get the value that can be stored persistently
+	 * @see also {@link #fromStorage(int)}} 
+	 * @return
+	 */
 	int toStorage() {
 		return storageValue;
 	}
 
+	/**
+	 * get the {@link LifeSpan} for the stored value
+	 * @param storedValue
+	 * @see {@link #toStorage()}
+	 * @return
+	 */
 	static LifeSpan fromStorage(int storedValue) {
-		if (storedValue < 0 || storedValue >= LifeSpan.values().length) {
-			LogManager.logger.w(PictureCache.TAG, "unknown cache life span value " + storedValue);
-			return SHORTTERM;
+		for (LifeSpan lifeSpan : LifeSpan.values()) {
+			if (lifeSpan.storageValue == storedValue)
+				return lifeSpan;
 		}
-		return LifeSpan.values()[storedValue];
+		LogManager.logger.w(PictureCache.TAG, "unknown cache life span value " + storedValue);
+		return SHORTTERM;
 	}
 }

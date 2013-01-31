@@ -11,20 +11,32 @@ public enum StorageType {
 	/** store the image in the cache as a PNG */
 	PNG(2);
 
-	StorageType(int storageValue) {
+	private StorageType(int storageValue) {
 		this.storageValue = storageValue;
 	}
 
 	private final int storageValue;
 
+	/**
+	 * get the {@link StorageType} for the stored value
+	 * @param storedValue
+	 * @see {@link #toStorage()}
+	 * @return
+	 */
 	public static StorageType fromStorage(int storedValue) {
-		if (storedValue < 0 || storedValue >= StorageType.values().length) {
-			LogManager.logger.w(PictureCache.TAG, "unknown cache life span value " + storedValue);
-			return AUTO;
+		for (StorageType lifeSpan : StorageType.values()) {
+			if (lifeSpan.storageValue == storedValue)
+				return lifeSpan;
 		}
-		return StorageType.values()[storedValue];
+		LogManager.logger.w(PictureCache.TAG, "unknown cache life span value " + storedValue);
+		return AUTO;
 	}
 
+	/**
+	 * get the value that can be stored persistently
+	 * @see also {@link #fromStorage(int)}} 
+	 * @return
+	 */
 	public int toStorage() {
 		return storageValue;
 	}
