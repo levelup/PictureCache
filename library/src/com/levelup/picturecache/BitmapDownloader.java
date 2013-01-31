@@ -348,15 +348,13 @@ class BitmapDownloader extends Thread {
 					is = conn.getInputStream();
 				} catch (FileNotFoundException fe) {
 					LogManager.logger.i(PictureCache.TAG, "cache URL not found "+mURL);
-					return false;
 				} catch (Exception ee) {
 					LogManager.logger.w(PictureCache.TAG, "cache error opening "+mURL, ee);
-					return false;
 				}
 			}
 
 			if (is==null) {
-				LogManager.logger.w(PictureCache.TAG, "impossible to get a stream for "+mURL);
+				LogManager.logger.d(PictureCache.TAG, "impossible to get a stream for "+mURL);
 				return false;
 			}
 

@@ -39,6 +39,7 @@ import com.levelup.picturecache.loaders.RemoteViewLoader;
 public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem> implements JobsMonitor {
 
 	public static final String TAG = "PictureCache";
+	final static boolean DEBUG_CACHE = false & BuildConfig.DEBUG;
 
 	private static final int MIN_ADD_BEFORE_PURGE = 7;
 
@@ -206,7 +207,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * constructor of a PictureCache
 	 * @param context context of the application, may also be used to get a {@link ContentResolver}
 	 * @param postHandler handler to run some code in the UI thread and also determine if we're in the UI thread or not
-	 * @param logger a {@Logger} object used to send all the logs generated inside the cache, may be null
+	 * @param logger a {@link Logger} object used to send all the logs generated inside the cache, may be null
 	 * @param ooHandler a {@link OutOfMemoryHandler} object used to notify when we are short on memory, may be null
 	 */
 	protected PictureCache(Context context, AbstractUIHandler postHandler, Logger logger, OutOfMemoryHandler ooHandler) {
@@ -417,6 +418,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 							cache.mDataLock.unlock();
 						}
 
+						if (DEBUG_CACHE) LogManager.logger.i(TAG, "remove "+entry+" from the cache for "+lifeSpan);
 						CacheItem item = cache.remove(entry.getKey());
 						if (item!=null) {
 							File f = item.path;
@@ -513,7 +515,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	/**
 	 * helper method to load a height based picture using the cache
 	 * @see {@link PictureJob}
-	 * @param handler the handler used to display the loaded/placeholder bitmap on the target, see {@link ImageViewLoader}, {@link RemoteViewLoader} or {@link PrecacheImageLoader}
+	 * @param handler the handler used to display the loaded bitmap/placeholder on the target, see {@link ImageViewLoader}, {@link RemoteViewLoader} or {@link PrecacheImageLoader}
 	 * @param URL the bitmap URL to load into the handler (may be null if UUID is not null)
 	 * @param UUID a unique ID representing the element in the cache (may be null if URL is not null)
 	 * @param itemDate the date in which the item was created, this is used to purge images older than this one from the cache
@@ -540,7 +542,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	/**
 	 * helper method to load a width based picture using the cache
 	 * @see {@link PictureJob}
-	 * @param handler the handler used to display the loaded/placeholder bitmap on the target, see {@link ImageViewLoader}, {@link RemoteViewLoader} or {@link PrecacheImageLoader}
+	 * @param handler the handler used to display the loaded bitmap/placeholder on the target, see {@link ImageViewLoader}, {@link RemoteViewLoader} or {@link PrecacheImageLoader}
 	 * @param URL the bitmap URL to load into the handler (may be null if UUID is not null)
 	 * @param UUID a unique ID representing the element in the cache (may be null if URL is not null)
 	 * @param itemDate the date in which the item was created, this is used to purge images older than this one from the cache
@@ -746,7 +748,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 				//LogManager.logger.i("saved bmp to "+outFile.getAbsolutePath());
 			} catch (IOException e) {
-				LogManager.logger.e(TAG, "failed to save "+url+" as "+variant, e);
+				LogManager.logger.i(TAG, "failed to save "+url+" as "+variant, e);
 			}
 		}
 
