@@ -96,7 +96,7 @@ public class PictureJob {
 	 * Retrieve picture into cache
 	 * 
 	 * @param cache
-	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchAlgorithmException if the UUID is {@code null} and the URL cannot be used
 	 */
 	public void startLoading(PictureCache cache) throws NoSuchAlgorithmException {
 		CacheKey key = buildKey();

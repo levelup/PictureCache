@@ -50,6 +50,7 @@ public class ViewBackgroundLoader<V extends View> extends PictureLoaderHandler {
 		postHandler.runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
+				// TODO use the ImageViewLoadingTag
 				view.setBackgroundResource(defaultResId);
 			}
 		});
@@ -60,6 +61,7 @@ public class ViewBackgroundLoader<V extends View> extends PictureLoaderHandler {
 		postHandler.runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
+				// TODO use the ImageViewLoadingTag
 				if (url.equals(mLoadingUrl)) {
 					BitmapDrawable drawable = new BitmapDrawable(bmp);
 					view.setBackgroundDrawable(drawable);
@@ -70,6 +72,7 @@ public class ViewBackgroundLoader<V extends View> extends PictureLoaderHandler {
 
 	@Override
 	protected String setLoadingURL(String newURL) {
+		// TODO use the ImageViewLoadingTag
 		String oldLoadingUrl = mLoadingUrl;
 		mLoadingUrl = newURL;
 		return oldLoadingUrl;
@@ -77,6 +80,7 @@ public class ViewBackgroundLoader<V extends View> extends PictureLoaderHandler {
 
 	@Override
 	protected String getLoadingURL() {
+		// TODO use the ImageViewLoadingTag
 		return mLoadingUrl;
 	}
 
