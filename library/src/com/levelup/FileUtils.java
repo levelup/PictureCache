@@ -19,10 +19,10 @@ public class FileUtils {
 			LogManager.getLogger().w(logTag, "source of copy "+dst.getAbsolutePath()+" doesn't exist");
 			return;
 		}
-	
+
 		FileChannel inChannel = new FileInputStream(src).getChannel();
 		FileChannel outChannel = new FileOutputStream(dst, false).getChannel();
-	
+
 		try {
 			if (inChannel.transferTo(0, inChannel.size(), outChannel)==0)
 				LogManager.getLogger().e(logTag, "nothing copied in "+dst.getAbsolutePath());
@@ -31,5 +31,21 @@ public class FileUtils {
 			inChannel.close();
 			outChannel.close();
 		}
+	}
+
+	public static boolean deleteDirectory(File path) {
+		if (path.exists()) {
+			File[] files = path.listFiles();
+			if (files!=null) {
+				for(File file : files) {
+					if (file.isDirectory())
+						deleteDirectory(file);
+					else
+						file.delete();
+				}
+			}
+			return path.delete();
+		}
+		return true;
 	}
 }

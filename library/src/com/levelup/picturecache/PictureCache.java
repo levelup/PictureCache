@@ -335,7 +335,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 						if (oldDir.exists()) {
 							new Thread() {
 								public void run() {
-									deleteDirectory(oldDir);
+									FileUtils.deleteDirectory(oldDir);
 								}
 							}.start();
 						}
@@ -614,25 +614,11 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		return succeeded;
 	}
 
-	public static boolean deleteDirectory(File path) {
-		if (path.exists()) {
-			File[] files = path.listFiles();
-			for(File file : files) {
-				if (file.isDirectory())
-					deleteDirectory(file);
-				else
-					file.delete();
-			}
-			return path.delete();
-		}
-		return false;
-	}
-
 	@Override
 	protected void onDataCleared() {
 		super.onDataCleared();
 		try {
-			deleteDirectory(mCacheFolder);
+			FileUtils.deleteDirectory(mCacheFolder);
 			synchronized (mDirAsserted) {
 				mDirAsserted = Boolean.FALSE;
 			}
