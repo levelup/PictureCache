@@ -6,5 +6,7 @@
     <string name="load_picture_with_default">With Placeholder &amp; Background</string>
     <string name="clear_cache">Clear Cache</string>
     <string name="reset">Reset</string>
+    <string name="list_view_sample">List View Sample</string>
+    
     
 </resources>

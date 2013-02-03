@@ -1,6 +1,7 @@
 package com.levelup.picturecache.samples;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
@@ -93,6 +94,16 @@ public class MainActivity extends Activity implements AbstractUIHandler {
 			@Override
 			public void onClick(View v) {
 				mCache.clear();
+			}
+		});
+
+		/*
+		 * launch the list view sample
+		 */
+		findViewById(R.id.listViewSample).setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				startActivity(new Intent(getApplicationContext(), ListViewSample.class));
 			}
 		});
 	}

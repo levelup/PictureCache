@@ -62,16 +62,26 @@
             android:text="@string/reset" />
     </LinearLayout>
 
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
 
         <Button
             android:id="@+id/clearCache"
-            android:layout_width="0dp"
-            android:layout_height="fill_parent"
-            android:layout_weight="1"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
             android:text="@string/clear_cache" />
-    </LinearLayout>
+    </FrameLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+
+        <Button
+            android:id="@+id/listViewSample"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/list_view_sample" />
+    </FrameLayout>
 
 </LinearLayout>
