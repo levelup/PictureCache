@@ -8,11 +8,19 @@ import com.levelup.picturecache.PictureCache;
 
 public class MyPictureCache extends PictureCache {
 
-	private static final int CACHE_SIZE_SHORTTERM = 200000; // 200kb 
-	private static final int CACHE_SIZE_LONGTERM  = 100000; // 100kb 
-	private static final int CACHE_SIZE_ETERNAL   =  80000; //  80kb 
+	private static final int CACHE_SIZE_SHORTTERM = 200000; // 200kb
+	private static final int CACHE_SIZE_LONGTERM  = 100000; // 100kb
+	private static final int CACHE_SIZE_ETERNAL   =  80000; //  80kb
+
+	private static MyPictureCache instance;
 	
-	public MyPictureCache(Context context, AbstractUIHandler postHandler) {
+	static synchronized MyPictureCache getInstance(Context context, AbstractUIHandler postHandler) {
+		if (instance == null)
+			instance = new MyPictureCache(context, postHandler);
+		return instance;
+	}
+	
+	private MyPictureCache(Context context, AbstractUIHandler postHandler) {
 		super(context, postHandler, null, null);
 	}
 
