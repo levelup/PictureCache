@@ -8,7 +8,7 @@ import com.levelup.picturecache.PictureCache;
 
 public class MyPictureCache extends PictureCache {
 
-	private static final int CACHE_SIZE_SHORTTERM = 200000; // 200kb
+	private static final int CACHE_SIZE_SHORTTERM = 800000; // 800kb
 	private static final int CACHE_SIZE_LONGTERM  = 100000; // 100kb
 	private static final int CACHE_SIZE_ETERNAL   =  80000; //  80kb
 
