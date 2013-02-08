@@ -87,7 +87,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	private static Boolean mDirAsserted = Boolean.FALSE;
 
 	private final File mCacheFolder;
-	final AbstractUIHandler postHandler;
+	final UIHandler postHandler;
 	final OutOfMemoryHandler ooHandler;
 
 	private DownloadManager mJobManager;
@@ -210,7 +210,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @param logger a {@link Logger} object used to send all the logs generated inside the cache, may be null
 	 * @param ooHandler a {@link OutOfMemoryHandler} object used to notify when we are short on memory, may be null
 	 */
-	protected PictureCache(Context context, AbstractUIHandler postHandler, Logger logger, OutOfMemoryHandler ooHandler) {
+	protected PictureCache(Context context, UIHandler postHandler, Logger logger, OutOfMemoryHandler ooHandler) {
 		super(context, DATABASE_NAME, DATABASE_VERSION, logger);
 
 		LogManager.setLogger(logger==null ? new LoggerDefault() : logger);

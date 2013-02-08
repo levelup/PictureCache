@@ -5,7 +5,7 @@ import java.io.File;
 import android.graphics.Bitmap;
 import android.widget.ImageView;
 
-import com.levelup.picturecache.AbstractUIHandler;
+import com.levelup.picturecache.UIHandler;
 import com.levelup.picturecache.LogManager;
 import com.levelup.picturecache.PictureCache;
 import com.levelup.picturecache.PictureLoaderHandler;
@@ -53,13 +53,13 @@ public abstract class ImageViewLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	public final void drawDefaultPicture(String url, AbstractUIHandler postHandler) {
+	public final void drawDefaultPicture(String url, UIHandler postHandler) {
 		if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.TAG, this+" drawDefaultPicture");
 		showDrawable(postHandler, null, url);
 	}
 
 	@Override
-	public final void drawBitmap(Bitmap bmp, String url, AbstractUIHandler postHandler) {
+	public final void drawBitmap(Bitmap bmp, String url, UIHandler postHandler) {
 		if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.TAG, this+" drawBitmap "+view+" with "+bmp);
 		showDrawable(postHandler, bmp, url);
 	}
@@ -69,7 +69,7 @@ public abstract class ImageViewLoader extends PictureLoaderHandler {
 	 * called under a lock on {@link view}
 	 */
 	protected abstract void displayDefaultView();
-	
+
 	/**
 	 * display this Bitmap in the view, called in the UI thread
 	 * @param bmp the Bitmap to display in {@link view}
@@ -79,7 +79,7 @@ public abstract class ImageViewLoader extends PictureLoaderHandler {
 		view.setImageBitmap(bmp);
 	}
 
-	private void showDrawable(AbstractUIHandler postHandler, Bitmap customBitmap, String url) {
+	private void showDrawable(UIHandler postHandler, Bitmap customBitmap, String url) {
 		synchronized (this) {
 			ImageViewLoadingTag tag = (ImageViewLoadingTag) view.getTag();
 			if (tag==null) {
@@ -135,7 +135,7 @@ public abstract class ImageViewLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	protected boolean canDirectLoad(File file, AbstractUIHandler uiHandler) {
+	protected boolean canDirectLoad(File file, UIHandler uiHandler) {
 		return !uiHandler.isUIThread() || file.length() < MAX_SIZE_IN_UI_THREAD;
 	}
 }

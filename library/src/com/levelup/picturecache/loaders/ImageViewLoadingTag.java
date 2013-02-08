@@ -3,7 +3,7 @@ package com.levelup.picturecache.loaders;
 import android.graphics.Bitmap;
 import android.os.Handler;
 
-import com.levelup.picturecache.AbstractUIHandler;
+import com.levelup.picturecache.UIHandler;
 import com.levelup.picturecache.LogManager;
 import com.levelup.picturecache.PictureCache;
 import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
@@ -130,7 +130,7 @@ class ImageViewLoadingTag {
 		}
 	};
 
-	synchronized void drawInView(AbstractUIHandler postHandler, ImageViewLoader viewLoader) {
+	void drawInView(UIHandler postHandler, ImageViewLoader viewLoader) {
 		if (mDrawInUI == null) {
 			mDrawInUI = new DrawInUI(viewLoader);
 			mDrawInUI.setPendingDraw(mPendingDraw, mPendingUrl);

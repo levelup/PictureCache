@@ -5,14 +5,14 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 
-import com.levelup.picturecache.AbstractUIHandler;
+import com.levelup.picturecache.UIHandler;
 import com.levelup.picturecache.LifeSpan;
 import com.levelup.picturecache.StorageType;
 import com.levelup.picturecache.loaders.ImageViewLoader;
 import com.levelup.picturecache.loaders.ImageViewLoaderDefaultDrawable;
 import com.levelup.picturecache.loaders.ImageViewLoaderDefaultResource;
 
-public class MainActivity extends Activity implements AbstractUIHandler {
+public class MainActivity extends Activity implements UIHandler {
 	
 	private MyPictureCache mCache;
 	private long uiThread;
