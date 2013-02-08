@@ -89,7 +89,7 @@ class ImageViewLoadingTag {
 		}
 
 		public void setPendingDraw(Bitmap pendingDraw, String pendingUrl) {
-			synchronized (viewLoader) {
+			synchronized (viewLoader.getImageView()) {
 				this.mPendingDraw = pendingDraw;
 				this.mPendingUrl = pendingUrl;
 			}
@@ -97,7 +97,7 @@ class ImageViewLoadingTag {
 
 		@Override
 		public void run() {
-			synchronized (viewLoader) {
+			synchronized (viewLoader.getImageView()) {
 				boolean skipDrawing = false;
 				final ImageViewLoadingTag tag = (ImageViewLoadingTag) viewLoader.getImageView().getTag();
 				if (tag!=null) {

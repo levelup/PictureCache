@@ -80,7 +80,7 @@ public abstract class ImageViewLoader extends PictureLoaderHandler {
 	}
 
 	private void showDrawable(UIHandler postHandler, Bitmap customBitmap, String url) {
-		synchronized (this) {
+		synchronized (view) {
 			ImageViewLoadingTag tag = (ImageViewLoadingTag) view.getTag();
 			if (tag==null) {
 				tag = new ImageViewLoadingTag(url, getStorageTransform(), getDisplayTransform());
@@ -96,7 +96,7 @@ public abstract class ImageViewLoader extends PictureLoaderHandler {
 		ImageViewLoadingTag newTag = new ImageViewLoadingTag(newURL, getStorageTransform(), getDisplayTransform());
 
 		ImageViewLoadingTag oldTag = null;
-		synchronized (this) {
+		synchronized (view) {
 			oldTag = (ImageViewLoadingTag) view.getTag();
 			if (newTag.equals(oldTag)) {
 				if (oldTag.isUrlLoaded() || oldTag.isBitmapPending()) {
