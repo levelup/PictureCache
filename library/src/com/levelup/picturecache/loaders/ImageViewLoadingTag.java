@@ -143,4 +143,8 @@ class ImageViewLoadingTag {
 			((Handler) postHandler).removeCallbacks(mDrawInUI);
 		postHandler.runOnUiThread(mDrawInUI);
 	}
+
+	public boolean isBitmapPending() {
+		return mPendingDraw!=null;
+	}
 }

@@ -99,8 +99,11 @@ public abstract class ImageViewLoader extends PictureLoaderHandler {
 		synchronized (this) {
 			oldTag = (ImageViewLoadingTag) view.getTag();
 			if (newTag.equals(oldTag)) {
-				if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.TAG, this+" setting the same picture in "+view+" isLoaded:"+oldTag.isUrlLoaded());
-				return newURL; // no need to do anything
+				if (oldTag.isUrlLoaded() || oldTag.isBitmapPending()) {
+					if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.TAG, this+" setting the same picture in "+view+" isLoaded:"+oldTag.isUrlLoaded()+" drawPending:"+oldTag.isBitmapPending());
+					return newURL; // no need to do anything
+				}
+				return null; // hack for now as the PictureCache will consider it's the same URL and do nothing, but it's the same URL loading as before
 			}
 
 			if (oldTag!=null) {
@@ -113,11 +116,6 @@ public abstract class ImageViewLoader extends PictureLoaderHandler {
 		}
 		if (DEBUG_VIEW_LOADING) LogManager.getLogger().e(PictureCache.TAG, this+" set loading "+view+" with "+newURL+" tag:"+newTag);
 
-		if (oldTag!=null) {
-			if (DEBUG_VIEW_LOADING)
-				// the previous URL loading is not good for this view anymore
-				LogManager.getLogger().i(PictureCache.TAG, this+" the old picture in "+view+" doesn't match "+newURL+" was "+oldTag+" isDefault:"+oldTag.isDefault());
-		}
 
 		if (oldTag==null || oldTag.url==null)
 			return null;
