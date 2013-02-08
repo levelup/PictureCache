@@ -200,9 +200,7 @@ class BitmapDownloader extends Thread {
 					for (DownloadTarget target : mTargets) {
 						//LogManager.logger.i(PictureCache.TAG, false, "ViewUpdate "+mURL);
 						PictureLoaderHandler j = target.loadHandler;
-						Bitmap bitmap = null;
-						if (target.fileInCache!=null)
-							bitmap = targetBitmaps.get(target.mKey);
+						Bitmap bitmap = targetBitmaps.get(target.mKey);
 
 						if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.i(PictureCache.TAG, this+" display "+bitmap+" in "+target.loadHandler);
 						//LogManager.logger.i(PictureCache.TAG, "display "+mURL+" in "+j+" abort:"+abortRequested);
