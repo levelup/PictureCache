@@ -3,16 +3,25 @@ package com.levelup.picturecache.samples;
 import android.content.Context;
 
 import com.levelup.picturecache.UIHandler;
+import com.levelup.picturecache.LifeSpan;
 import com.levelup.picturecache.PictureCache;
 
 public class MyPictureCache extends PictureCache {
 
-	private static final int CACHE_SIZE_SHORTTERM = 200000; // 200kb 
-	private static final int CACHE_SIZE_LONGTERM  = 100000; // 100kb 
-	private static final int CACHE_SIZE_ETERNAL   =  80000; //  80kb 
+	private static final int CACHE_SIZE_SHORTTERM = 800000; // 800kb
+	private static final int CACHE_SIZE_LONGTERM  = 100000; // 100kb
+	private static final int CACHE_SIZE_ETERNAL   =  80000; //  80kb
+
+	private static MyPictureCache instance;
 	
-	public MyPictureCache(Context context, UIHandler postHandler) {
-		super(context, postHandler, CACHE_SIZE_SHORTTERM, CACHE_SIZE_LONGTERM, CACHE_SIZE_ETERNAL, null, null);
+	static synchronized MyPictureCache getInstance(Context context, UIHandler postHandler) {
+		if (instance == null)
+			instance = new MyPictureCache(context, postHandler);
+		return instance;
+	}
+	
+	private MyPictureCache(Context context, UIHandler postHandler) {
+		super(context, postHandler, null, null);
 	}
 
 	@Override
@@ -23,6 +32,16 @@ public class MyPictureCache extends PictureCache {
 	@Override
 	protected String getAppName() {
 		return getContext().getString(R.string.app_name);
+	}
+
+	@Override
+	protected int getCacheMaxSize(LifeSpan lifeSpan) {
+		switch (lifeSpan) {
+		case ETERNAL: return CACHE_SIZE_ETERNAL;
+		case LONGTERM: return CACHE_SIZE_LONGTERM;
+		case SHORTTERM: return CACHE_SIZE_SHORTTERM;
+		}
+		return 0;
 	}
 
 }

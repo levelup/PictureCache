@@ -1,21 +1,20 @@
 package com.levelup.picturecache.samples;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 
-import com.levelup.picturecache.UIHandler;
 import com.levelup.picturecache.LifeSpan;
 import com.levelup.picturecache.StorageType;
 import com.levelup.picturecache.loaders.ImageViewLoader;
 import com.levelup.picturecache.loaders.ImageViewLoaderDefaultDrawable;
 import com.levelup.picturecache.loaders.ImageViewLoaderDefaultResource;
 
-public class MainActivity extends Activity implements UIHandler {
+public class MainActivity extends Activity {
 	
 	private MyPictureCache mCache;
-	private long uiThread;
 
 	static final String levelupAvatarURL = "https://si0.twimg.com/profile_images/1584807085/LevelUp-Logo-Avatarv5.png"; // '_normal' / '_bigger' / ''
 	static final String plumeAvatarURL = "https://si0.twimg.com/profile_images/2794557097/a073ce673f72cb8fc1aa189ad7f28fd6.png"; // '_normal' / '_bigger' / ''
@@ -27,8 +26,7 @@ public class MainActivity extends Activity implements UIHandler {
 		
 		final int screenDpi = getResources().getDisplayMetrics().densityDpi;
 		
-		uiThread = Thread.currentThread().getId();
-		mCache = new MyPictureCache(this, this);
+		mCache = MyPictureCache.getInstance(this, new UIHandlerThread());
 
 		/*
 		 * the most basic image loading call
@@ -95,10 +93,15 @@ public class MainActivity extends Activity implements UIHandler {
 				mCache.clear();
 			}
 		});
-	}
 
-	@Override
-	public boolean isUIThread() {
-		return uiThread == Thread.currentThread().getId();
+		/*
+		 * launch the list view sample
+		 */
+		findViewById(R.id.listViewSample).setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				startActivity(new Intent(getApplicationContext(), ListViewSample.class));
+			}
+		});
 	}
 }
