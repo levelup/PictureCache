@@ -107,7 +107,8 @@ public abstract class ImageViewLoader extends PictureLoaderHandler {
 			}
 
 			if (oldTag!=null) {
-				if (DEBUG_VIEW_LOADING) LogManager.getLogger().i(PictureCache.TAG, this+" the old picture in "+view+" doesn't match "+newURL+" was "+oldTag+" isDefault:"+oldTag.isDefault());
+				// the previous URL loading is not good for this view anymore
+				if (DEBUG_VIEW_LOADING) LogManager.getLogger().i(PictureCache.TAG, this+" the old picture in "+view+" doesn't match "+newURL+" was "+oldTag+" isLoaded:"+oldTag.isUrlLoaded()+" drawPending:"+oldTag.isBitmapPending());
 				// keep the previous state of the tag
 				newTag.recoverStateFrom(oldTag);
 			}

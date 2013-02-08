@@ -583,6 +583,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 */
 	public void removePictureLoader(PictureLoaderHandler loader, String oldURL) {
 		if (loader!=null) {
+			if (DEBUG_CACHE) LogManager.logger.i(TAG, "removePictureLoader "+loader+" with old URL "+oldURL);
 			loader.setLoadingURL(null);
 			mJobManager.cancelDownloadForLoader(loader, oldURL);
 		}

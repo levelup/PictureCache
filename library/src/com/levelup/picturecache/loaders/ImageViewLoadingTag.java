@@ -115,7 +115,7 @@ class ImageViewLoadingTag {
 						tag.setUrlIsLoaded(mPendingDraw!=null);
 					}
 
-					if (ImageViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().e(PictureCache.TAG, viewLoader+" drawing "+(mPendingDraw==null ? "default view" : mPendingDraw)+" tag:"+tag);
+					if (ImageViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().e(PictureCache.TAG, this+" / "+viewLoader+" drawing "+(mPendingDraw==null ? "default view" : mPendingDraw)+" tag:"+tag);
 
 					if (mPendingDraw==null) {
 						if (!wasAlreadyDefault)
@@ -132,13 +132,14 @@ class ImageViewLoadingTag {
 
 	void drawInView(UIHandler postHandler, ImageViewLoader viewLoader) {
 		if (mDrawInUI == null) {
+			if (ImageViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.TAG, viewLoader+" create new DrawInUI with "+mPendingDraw+" for "+mPendingUrl);
 			mDrawInUI = new DrawInUI(viewLoader);
 			mDrawInUI.setPendingDraw(mPendingDraw, mPendingUrl);
 			mPendingDraw = null;
 			mPendingUrl = null;
 		}
 
-		if (ImageViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().i(PictureCache.TAG, viewLoader+" drawInView run mDrawInUI bitmap:"+mDrawInUI.mPendingDraw+" for "+mDrawInUI.mPendingUrl);
+		if (ImageViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().i(PictureCache.TAG, mDrawInUI+" / "+viewLoader+" drawInView run mDrawInUI bitmap:"+mDrawInUI.mPendingDraw+" for "+mDrawInUI.mPendingUrl);
 		if (postHandler instanceof Handler)
 			((Handler) postHandler).removeCallbacks(mDrawInUI);
 		postHandler.runOnUiThread(mDrawInUI);

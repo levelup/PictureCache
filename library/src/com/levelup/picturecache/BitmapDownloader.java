@@ -140,6 +140,7 @@ class BitmapDownloader extends Thread {
 									// we need the dimensions of the downloaded file
 									tmpFileOptions.inJustDecodeBounds = true;
 									BitmapFactory.decodeFile(downloadToFile.getAbsolutePath(), tmpFileOptions);
+									if (DEBUG_BITMAP_DOWNLOADER && tmpFileOptions.outHeight <= 0) LogManager.logger.i(PictureCache.TAG, this+" failed to get dimensions from "+downloadToFile);
 								}
 							} finally {
 								if (!downloaded)
@@ -172,8 +173,10 @@ class BitmapDownloader extends Thread {
 							CacheVariant variant = new CacheVariant(target.fileInCache, target.mKey);
 							targetNewBitmaps.put(variant, bitmap);
 						}
-					} else
+					} else {
+						if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.d(PictureCache.TAG, this+" failed to get a bitmap for:"+target);
 						targetBitmaps.remove(target.mKey);
+					}
 				}
 
 				if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.i(PictureCache.TAG, this+" target:"+target+" fileInCache:"+target.fileInCache+" bitmap:"+targetBitmaps.get(target.mKey));
@@ -202,7 +205,8 @@ class BitmapDownloader extends Thread {
 						PictureLoaderHandler j = target.loadHandler;
 						Bitmap bitmap = targetBitmaps.get(target.mKey);
 
-						if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.i(PictureCache.TAG, this+" display "+bitmap+" in "+target.loadHandler);
+						if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.i(PictureCache.TAG, this+" display "+bitmap+" in "+target.loadHandler+" file:"+target.fileInCache+" key:"+target.mKey);
+						if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.v(PictureCache.TAG, this+"  targets:"+mTargets+" bitmaps:"+targetBitmaps);
 						//LogManager.logger.i(PictureCache.TAG, "display "+mURL+" in "+j+" abort:"+abortRequested);
 						if (bitmap!=null) {
 							if (j.getDisplayTransform()!=null)
@@ -238,7 +242,7 @@ class BitmapDownloader extends Thread {
 		if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.e(PictureCache.TAG, this+" addTarget "+loadHandler+" key:"+key);
 		synchronized (mTargets) {
 			if (mAborting) {
-				if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.e(PictureCache.TAG, this+ "is aborting");
+				if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.w(PictureCache.TAG, this+ " is aborting");
 				return false;
 			}
 
@@ -262,15 +266,14 @@ class BitmapDownloader extends Thread {
 
 		if (!mIsThreadStarted) {
 			mIsThreadStarted = true;
-			if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.d(PictureCache.TAG, this+" start thread");
+			if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.d(PictureCache.TAG, this+" start loading thread");
 			//LogManager.logger.i(PictureCache.TAG, "start download job for " + mURL);
 			start();
 		}
 		return true;
 	}
 
-	boolean removeTarget(PictureLoaderHandler target)
-	{
+	boolean removeTarget(PictureLoaderHandler target) {
 		synchronized (mTargets) {
 
 			boolean deleted = false;
@@ -319,6 +322,7 @@ class BitmapDownloader extends Thread {
 	private void checkAbort() {
 		synchronized (mTargets) {
 			if (mTargets.isEmpty()) {
+				if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.i(PictureCache.TAG, this+ " no more targets, aborting");
 				mAborting = true;
 				throw new AbortDownload();
 			}
