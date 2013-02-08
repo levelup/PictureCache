@@ -125,7 +125,7 @@ class ImageViewLoadingTag {
 						viewLoader.displayCustomBitmap(mPendingDraw);
 				}
 
-				mPendingDraw = null;
+				//TODO: could cause memory leaks ?  mPendingDraw = null;
 			}
 		}
 	};
