@@ -452,7 +452,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	{
 		mDataLock.lock();
 		try {
-			//LogManager.logger.d(TAG, "getting picture "+URL+" into "+target+" key:"+key);
+			if (DEBUG_CACHE) LogManager.logger.d(TAG, "getting picture "+URL+" into "+loader+" key:"+key);
 			if (TextUtils.isEmpty(URL)) {
 				// get the URL matching the UUID if we don't have a forced one
 				CacheItem v = getMap().get(key);
@@ -461,7 +461,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				//LogManager.logger.i("no URL specified for "+key+" using "+URL);
 			}
 			if (TextUtils.isEmpty(URL)) {
-				LogManager.logger.d(TAG, "no URL specified/known for "+key+" using default");
+				LogManager.logger.i(TAG, "no URL specified/known for "+key+" using default");
 				removePictureLoader(loader, null);
 				loader.drawDefaultPicture(null, postHandler);
 				return;
@@ -470,7 +470,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			//LogManager.logger.v(TAG, "load "+URL+" in "+target+" key:"+key);
 			String previouslyLoading = loader.setLoadingURL(URL); 
 			if (URL.equals(previouslyLoading)) {
-				//LogManager.logger.v(TAG, loader+" no need to draw anything");
+				if (DEBUG_CACHE) LogManager.logger.v(TAG, loader+" no need to draw anything");
 				return; // no need to do anything the image is the same or downloading for it
 			}
 			
@@ -490,7 +490,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				try {
 					Bitmap bmp = BitmapFactory.decodeFile(file.getAbsolutePath());
 					if (bmp!=null) {
-						//LogManager.logger.d(TAG, "using direct file for URL "+URL+" file:"+file);
+						if (DEBUG_CACHE) LogManager.logger.d(TAG, "using direct file for URL "+URL+" file:"+file);
 						loader.drawBitmap(bmp, URL, postHandler);
 						return;
 					}
@@ -769,12 +769,12 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				CacheItem v = getMap().get(key);
 
 				//if (URL!=null && !URL.contains("/profile_images/"))
-				//LogManager.logger.v(TAG, " found cache item "+v);
+				if (DEBUG_CACHE) LogManager.logger.v(TAG, key+" found cache item "+v+" for URL "+URL);
 				if (v!=null) {
 					try {
 						if (URL!=null && !URL.equals(v.URL)) {
 							// the URL for the cached item changed
-							//LogManager.logger.v(TAG, key+" changed from "+v.URL+" to "+URL+" v.touitID:"+v.touitDate +" touitDate:"+touitDate);
+							if (DEBUG_CACHE) LogManager.logger.v(TAG, key+" changed from "+v.URL+" to "+URL+" v.touitlastAccessDate:"+v.lastAccessDate +" remoteDate:"+v.remoteDate+" was "+itemDate);
 							if (v.remoteDate < itemDate) {
 								// the item in the Cache is older than this request, the image changed for a newer one
 								// we need to mark the old one as short term with a UUID that has the picture ID inside
