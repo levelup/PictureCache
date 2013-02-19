@@ -1,16 +1,15 @@
 package com.levelup.picturecache.transforms.bitmap;
 
+import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
+import android.graphics.BitmapShader;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import android.graphics.Shader.TileMode;
+
 import com.levelup.picturecache.LogManager;
 import com.levelup.picturecache.PictureCache;
-
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.PorterDuffXfermode;
-import android.graphics.RectF;
-import android.graphics.Bitmap.Config;
-import android.graphics.PorterDuff.Mode;
 
 /**
  * create a square version with rounded corner of the Bitmap to transform
@@ -64,15 +63,19 @@ public class BitmapTransformSquareRoundedCorner implements BitmapTransform {
 			Bitmap output = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Config.ARGB_8888);
 			final Canvas canvas = new Canvas(output);
 
+			final BitmapShader shader;
+			shader = new BitmapShader(bitmap, TileMode.CLAMP, TileMode.CLAMP);
+
 			final Paint paint = new Paint();
-			final RectF rectF = new RectF(0, 0, bitmap.getWidth(), bitmap.getHeight());
-
 			paint.setAntiAlias(true);
-			paint.setColor(Color.BLACK);
-			canvas.drawRoundRect(rectF, roundRadius, roundRadius, paint);
+			paint.setShader(shader);
 
-			paint.setXfermode(new PorterDuffXfermode(Mode.SRC_IN));
-			canvas.drawBitmap(bitmap, 0, 0, paint);
+			final RectF rect = new RectF(0.0f, 0.0f, bitmap.getWidth(), bitmap.getHeight());
+
+			// rect contains the bounds of the shape
+			// radius is the radius in pixels of the rounded corners
+			// paint contains the shader that will texture the shape
+			canvas.drawRoundRect(rect, roundRadius, roundRadius, paint);
 			return output;
 		} catch (Throwable e) {
 			LogManager.getLogger().e(PictureCache.TAG, "getRoundedCornerBitmap exception", e);
