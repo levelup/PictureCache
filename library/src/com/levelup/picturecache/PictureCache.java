@@ -785,6 +785,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 									// the old version doesn't exist in the cache, copy the current content in there
 									moveCachedFiles(key, oldVersionKey, LifeSpan.SHORTTERM);
 								remove(key); // this one is not valid anymore
+								v = null; // don't use the old file
 							} else {
 								// use the old image from the cache
 								String dstUUID = getOldPicUUID(key.getUUID(), URL);
