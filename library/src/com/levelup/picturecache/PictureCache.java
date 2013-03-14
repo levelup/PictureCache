@@ -38,7 +38,7 @@ import com.levelup.picturecache.loaders.RemoteViewLoader;
  */
 public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem> implements JobsMonitor {
 
-	public static final String TAG = "PictureCache";
+	public static final String LOG_TAG = "PictureCache";
 	final static boolean DEBUG_CACHE = false & BuildConfig.DEBUG;
 
 	private static final int MIN_ADD_BEFORE_PURGE = 7;
@@ -161,7 +161,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		} else {
 			final String path = c.getString(indexPath);
 			if (TextUtils.isEmpty(path)) {
-				LogManager.logger.w(TAG, "trying to load an empty cache item for "+c.getString(indexURL));
+				LogManager.logger.w(LOG_TAG, "trying to load an empty cache item for "+c.getString(indexURL));
 				return null;
 			}
 			CacheItem val = new CacheItem(new File(path), c.getString(indexURL));
@@ -178,7 +178,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	@Override
 	protected ContentValues getValuesFromData(Entry<CacheKey, CacheItem> data, SQLiteDatabase dbToFill) throws RuntimeException {
 		if (data.getValue().path==null) {
-			LogManager.logger.w(TAG, "cache item has an empty path :"+data.getKey()+" / "+data.getValue());
+			LogManager.logger.w(LOG_TAG, "cache item has an empty path :"+data.getKey()+" / "+data.getValue());
 			throw new RuntimeException("empty path for "+data);
 		}
 
@@ -257,7 +257,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 	@Override
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-		LogManager.logger.w(TAG, "Upgrading PictureCache from " + oldVersion + " to " + newVersion);
+		LogManager.logger.w(LOG_TAG, "Upgrading PictureCache from " + oldVersion + " to " + newVersion);
 	}
 
 	File getCachedFilepath(CacheKey key) throws SecurityException, IOException
@@ -272,9 +272,9 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		try {
 			assertFolderExists();
 		} catch (SecurityException e) {
-			LogManager.logger.e(TAG, "getTempDir() cannot access the dir ", e);
+			LogManager.logger.e(LOG_TAG, "getTempDir() cannot access the dir ", e);
 		} catch (IOException e) {
-			LogManager.logger.e(TAG, "getTempDir() cannot access the dir ", e);
+			LogManager.logger.e(LOG_TAG, "getTempDir() cannot access the dir ", e);
 		}
 		return mCacheFolder;
 	}
@@ -305,7 +305,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				}
 				dstDir.mkdirs();
 			} catch (SecurityException e) {
-				LogManager.logger.e(TAG, "getPictureDir() cannot access the dir ", e);
+				LogManager.logger.e(LOG_TAG, "getPictureDir() cannot access the dir ", e);
 			}
 		}
 		return dstDir;
@@ -358,7 +358,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			}
 		} catch (Throwable e) {
 			// workaround to avoid locking mData during read/write in the DB
-			LogManager.logger.e(TAG, "getCacheSize failed", e);
+			LogManager.logger.e(LOG_TAG, "getCacheSize failed", e);
 		} finally {
 			mDataLock.unlock();
 		}
@@ -418,7 +418,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 							cache.mDataLock.unlock();
 						}
 
-						if (DEBUG_CACHE) LogManager.logger.i(TAG, "remove "+entry+" from the cache for "+lifeSpan);
+						if (DEBUG_CACHE) LogManager.logger.i(LOG_TAG, "remove "+entry+" from the cache for "+lifeSpan);
 						CacheItem item = cache.remove(entry.getKey());
 						if (item!=null) {
 							File f = item.path;
@@ -434,7 +434,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 					}
 				}
 			} catch (NullPointerException e) {
-				LogManager.logger.w(TAG, "can't make room for type:"+lifeSpan,e);
+				LogManager.logger.w(LOG_TAG, "can't make room for type:"+lifeSpan,e);
 			}
 			//LogManager.logger.d(TAG, "makeroom done");
 		}
@@ -452,7 +452,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	{
 		mDataLock.lock();
 		try {
-			if (DEBUG_CACHE) LogManager.logger.d(TAG, "getting picture "+URL+" into "+loader+" key:"+key);
+			if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "getting picture "+URL+" into "+loader+" key:"+key);
 			if (TextUtils.isEmpty(URL)) {
 				// get the URL matching the UUID if we don't have a forced one
 				CacheItem v = getMap().get(key);
@@ -461,7 +461,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				//LogManager.logger.i("no URL specified for "+key+" using "+URL);
 			}
 			if (TextUtils.isEmpty(URL)) {
-				LogManager.logger.i(TAG, "no URL specified/known for "+key+" using default");
+				LogManager.logger.i(LOG_TAG, "no URL specified/known for "+key+" using default");
 				removePictureLoader(loader, null);
 				loader.drawDefaultPicture(null, postHandler);
 				return;
@@ -470,7 +470,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			//LogManager.logger.v(TAG, "load "+URL+" in "+target+" key:"+key);
 			String previouslyLoading = loader.setLoadingURL(URL); 
 			if (URL.equals(previouslyLoading)) {
-				if (DEBUG_CACHE) LogManager.logger.v(TAG, loader+" no need to draw anything");
+				if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, loader+" no need to draw anything");
 				return; // no need to do anything the image is the same or downloading for it
 			}
 			
@@ -490,13 +490,13 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				try {
 					Bitmap bmp = BitmapFactory.decodeFile(file.getAbsolutePath());
 					if (bmp!=null) {
-						if (DEBUG_CACHE) LogManager.logger.d(TAG, "using direct file for URL "+URL+" file:"+file);
+						if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using direct file for URL "+URL+" file:"+file);
 						loader.drawBitmap(bmp, URL, postHandler);
 						return;
 					}
 				} catch (OutOfMemoryError e) {
 					loader.drawDefaultPicture(URL, postHandler);
-					LogManager.logger.w(TAG, "can't decode "+file,e);
+					LogManager.logger.w(LOG_TAG, "can't decode "+file,e);
 					ooHandler.onOutOfMemoryError(e);
 					return;
 				}
@@ -535,7 +535,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		try {
 			pictureJob.startLoading(this);
 		} catch (NoSuchAlgorithmException e) {
-			LogManager.logger.d(TAG, "can't load picture", e);
+			LogManager.logger.d(LOG_TAG, "can't load picture", e);
 		}
 	}
 
@@ -562,7 +562,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		try {
 			pictureJob.startLoading(this);
 		} catch (NoSuchAlgorithmException e) {
-			LogManager.logger.d(TAG, "can't load picture", e);
+			LogManager.logger.d(LOG_TAG, "can't load picture", e);
 		}
 	}
 
@@ -583,7 +583,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 */
 	public void removePictureLoader(PictureLoaderHandler loader, String oldURL) {
 		if (loader!=null) {
-			if (DEBUG_CACHE) LogManager.logger.i(TAG, "removePictureLoader "+loader+" with old URL "+oldURL);
+			if (DEBUG_CACHE) LogManager.logger.i(LOG_TAG, "removePictureLoader "+loader+" with old URL "+oldURL);
 			loader.setLoadingURL(null);
 			mJobManager.cancelDownloadForLoader(loader, oldURL);
 		}
@@ -598,14 +598,14 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			if (v!=null && v.path!=null) {
 				if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
 					File dst = new File(getPictureDir(), key.getFilename());
-					FileUtils.copyFile(v.path, dst, TAG);
+					FileUtils.copyFile(v.path, dst, LOG_TAG);
 					succeeded = true;
 
 					try {
 						GalleryScanner saver = new GalleryScanner(getContext());
 						saver.scan(dst);
 					} catch (ReceiverCallNotAllowedException e) {
-						LogManager.logger.w(TAG, "could not start the gallery scanning");
+						LogManager.logger.w(LOG_TAG, "could not start the gallery scanning");
 					}
 				}
 			}
@@ -625,9 +625,9 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			}
 			assertFolderExists();
 		} catch (SecurityException e) {
-			LogManager.logger.e(TAG, "clearCache exception", e);
+			LogManager.logger.e(LOG_TAG, "clearCache exception", e);
 		} catch (IOException e) {
-			LogManager.logger.e(TAG, "clearCache could not recreate the cache folder", e);
+			LogManager.logger.e(LOG_TAG, "clearCache could not recreate the cache folder", e);
 		}
 	}
 
@@ -652,9 +652,9 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	}
 
 	private boolean moveCachedFiles(CacheKey srcKey, CacheKey dstKey, LifeSpan lifeSpan) {
-		LogManager.logger.v(TAG, "Copy "+srcKey+" to "+dstKey);
+		LogManager.logger.v(LOG_TAG, "Copy "+srcKey+" to "+dstKey);
 		if (getMap().containsKey(dstKey)) {
-			LogManager.logger.d(TAG, "item "+dstKey+" already exists in the DB");
+			LogManager.logger.d(LOG_TAG, "item "+dstKey+" already exists in the DB");
 			return false;
 		}
 
@@ -671,13 +671,13 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 						v.lifeSpan = lifeSpan;
 						return put(dstKey, v)!=null;
 					} else {
-						LogManager.logger.e(TAG, "Failed to rename path "+src+" to "+dst);
+						LogManager.logger.e(LOG_TAG, "Failed to rename path "+src+" to "+dst);
 					}
 					//else LogManager.logger.d(TAG, false, "keep the old version of "+newKey);
 				}
 			}
 		} catch (Throwable e) {
-			LogManager.logger.e(TAG, "failed to copy " + srcKey + " to " + dstKey, e);
+			LogManager.logger.e(LOG_TAG, "failed to copy " + srcKey + " to " + dstKey, e);
 		}
 		return false;
 	}
@@ -735,7 +735,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 				//LogManager.logger.i("saved bmp to "+outFile.getAbsolutePath());
 			} catch (IOException e) {
-				LogManager.logger.i(TAG, "failed to save "+url+" as "+variant, e);
+				LogManager.logger.i(LOG_TAG, "failed to save "+url+" as "+variant, e);
 			}
 		}
 
@@ -769,12 +769,12 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				CacheItem v = getMap().get(key);
 
 				//if (URL!=null && !URL.contains("/profile_images/"))
-				if (DEBUG_CACHE) LogManager.logger.v(TAG, key+" found cache item "+v+" for URL "+URL);
+				if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, key+" found cache item "+v+" for URL "+URL);
 				if (v!=null) {
 					try {
 						if (URL!=null && !URL.equals(v.URL)) {
 							// the URL for the cached item changed
-							if (DEBUG_CACHE) LogManager.logger.v(TAG, key+" changed from "+v.URL+" to "+URL+" v.touitlastAccessDate:"+v.lastAccessDate +" remoteDate:"+v.remoteDate+" was "+itemDate);
+							if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, key+" changed from "+v.URL+" to "+URL+" v.touitlastAccessDate:"+v.lastAccessDate +" remoteDate:"+v.remoteDate+" was "+itemDate);
 							if (v.remoteDate < itemDate) {
 								// the item in the Cache is older than this request, the image changed for a newer one
 								// we need to mark the old one as short term with a UUID that has the picture ID inside
@@ -798,9 +798,9 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 						if (v!=null)
 							return v.path;
 					} catch (SecurityException e) {
-						LogManager.logger.e(TAG, "getPicture exception:" + e.getMessage(), e);
+						LogManager.logger.e(LOG_TAG, "getPicture exception:" + e.getMessage(), e);
 					} catch (OutOfMemoryError e) {
-						LogManager.logger.w(TAG, "Could not decode image " + URL, e);
+						LogManager.logger.w(LOG_TAG, "Could not decode image " + URL, e);
 						ooHandler.onOutOfMemoryError(e);
 					}
 				}

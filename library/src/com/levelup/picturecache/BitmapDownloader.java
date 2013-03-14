@@ -140,7 +140,7 @@ class BitmapDownloader extends Thread {
 									// we need the dimensions of the downloaded file
 									tmpFileOptions.inJustDecodeBounds = true;
 									BitmapFactory.decodeFile(downloadToFile.getAbsolutePath(), tmpFileOptions);
-									if (DEBUG_BITMAP_DOWNLOADER && tmpFileOptions.outHeight <= 0) LogManager.logger.i(PictureCache.TAG, this+" failed to get dimensions from "+downloadToFile);
+									if (DEBUG_BITMAP_DOWNLOADER && tmpFileOptions.outHeight <= 0) LogManager.logger.i(PictureCache.LOG_TAG, this+" failed to get dimensions from "+downloadToFile);
 								}
 							} finally {
 								if (!downloaded)
@@ -174,22 +174,22 @@ class BitmapDownloader extends Thread {
 							targetNewBitmaps.put(variant, bitmap);
 						}
 					} else {
-						if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.d(PictureCache.TAG, this+" failed to get a bitmap for:"+target);
+						if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.d(PictureCache.LOG_TAG, this+" failed to get a bitmap for:"+target);
 						targetBitmaps.remove(target.mKey);
 					}
 				}
 
-				if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.i(PictureCache.TAG, this+" target:"+target+" fileInCache:"+target.fileInCache+" bitmap:"+targetBitmaps.get(target.mKey));
+				if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.i(PictureCache.LOG_TAG, this+" target:"+target+" fileInCache:"+target.fileInCache+" bitmap:"+targetBitmaps.get(target.mKey));
 			}
 		} catch (OutOfMemoryError e) {
-			LogManager.logger.e(PictureCache.TAG, "Failed to load " + mURL, e);
+			LogManager.logger.e(PictureCache.LOG_TAG, "Failed to load " + mURL, e);
 			mCache.ooHandler.onOutOfMemoryError(e);
 			/*} catch (InterruptedException e) {
 			LogManager.logger.e(PictureCache.TAG, "Interrupted while loading " + mURL, e);*/
 		} catch (AbortDownload e) {
 			// do nothing
 		} catch (Throwable e) {
-			LogManager.logger.e(PictureCache.TAG, "exception on "+mURL, e);
+			LogManager.logger.e(PictureCache.LOG_TAG, "exception on "+mURL, e);
 		} finally {
 			try {
 				// tell the monitor we are done
@@ -197,7 +197,7 @@ class BitmapDownloader extends Thread {
 				//LogManager.logger.i(PictureCache.TAG, "send display bitmap "+mURL+" aborted:"+abortRequested.get()+" size:"+reqTargets.size());
 				//LogManager.logger.i(PictureCache.TAG, "ViewUpdate loop "+mURL+" aborted:"+abortRequested.get()+" size:"+reqTargets.size()+" bmp:"+bmp+" rbmp:"+rbmp);
 				synchronized (mTargets) {
-					if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.e(PictureCache.TAG, this+" finished loading targets:"+mTargets+" bitmaps:"+targetBitmaps);
+					if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.e(PictureCache.LOG_TAG, this+" finished loading targets:"+mTargets+" bitmaps:"+targetBitmaps);
 
 					mAborting = true; // after this point new targets are not OK for this job
 					for (DownloadTarget target : mTargets) {
@@ -205,8 +205,8 @@ class BitmapDownloader extends Thread {
 						PictureLoaderHandler j = target.loadHandler;
 						Bitmap bitmap = targetBitmaps.get(target.mKey);
 
-						if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.i(PictureCache.TAG, this+" display "+bitmap+" in "+target.loadHandler+" file:"+target.fileInCache+" key:"+target.mKey);
-						if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.v(PictureCache.TAG, this+"  targets:"+mTargets+" bitmaps:"+targetBitmaps);
+						if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.i(PictureCache.LOG_TAG, this+" display "+bitmap+" in "+target.loadHandler+" file:"+target.fileInCache+" key:"+target.mKey);
+						if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.v(PictureCache.LOG_TAG, this+"  targets:"+mTargets+" bitmaps:"+targetBitmaps);
 						//LogManager.logger.i(PictureCache.TAG, "display "+mURL+" in "+j+" abort:"+abortRequested);
 						if (bitmap!=null) {
 							if (j.getDisplayTransform()!=null)
@@ -239,16 +239,16 @@ class BitmapDownloader extends Thread {
 	{
 		DownloadTarget newTarget = new DownloadTarget(loadHandler, key);
 		//LogManager.logger.i(PictureCache.TAG, "add recipient view "+view+" for " + mURL);
-		if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.e(PictureCache.TAG, this+" addTarget "+loadHandler+" key:"+key);
+		if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.e(PictureCache.LOG_TAG, this+" addTarget "+loadHandler+" key:"+key);
 		synchronized (mTargets) {
 			if (mAborting) {
-				if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.w(PictureCache.TAG, this+ " is aborting");
+				if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.w(PictureCache.LOG_TAG, this+ " is aborting");
 				return false;
 			}
 
 			if (mTargets.contains(newTarget)) {
 				// TODO: update the rounded/rotation status
-				if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.d(PictureCache.TAG, this+" target "+newTarget+" already pending");
+				if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.d(PictureCache.LOG_TAG, this+" target "+newTarget+" already pending");
 				return true;
 			}
 			mTargets.add(newTarget);
@@ -266,7 +266,7 @@ class BitmapDownloader extends Thread {
 
 		if (!mIsThreadStarted) {
 			mIsThreadStarted = true;
-			if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.d(PictureCache.TAG, this+" start loading thread");
+			if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.d(PictureCache.LOG_TAG, this+" start loading thread");
 			//LogManager.logger.i(PictureCache.TAG, "start download job for " + mURL);
 			start();
 		}
@@ -277,7 +277,7 @@ class BitmapDownloader extends Thread {
 		synchronized (mTargets) {
 
 			boolean deleted = false;
-			if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.e(PictureCache.TAG, this+" removeTarget "+target);
+			if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.e(PictureCache.LOG_TAG, this+" removeTarget "+target);
 			for (int i=0;i<mTargets.size();++i) {
 				if (mTargets.get(i).loadHandler.equals(target)) {
 					deleted = mTargets.remove(i)!=null;
@@ -285,7 +285,7 @@ class BitmapDownloader extends Thread {
 				}
 			}
 
-			if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.e(PictureCache.TAG, this+" removeTarget "+target+" = "+deleted+" remains:"+mTargets.size());
+			if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.e(PictureCache.LOG_TAG, this+" removeTarget "+target+" = "+deleted+" remains:"+mTargets.size());
 			if (deleted) {
 				//LogManager.logger.v(" deleted job view:"+target+" for "+mURL);
 				//target.setLoadingURL(mCache, mURL);
@@ -299,7 +299,7 @@ class BitmapDownloader extends Thread {
 	private BitmapFactory.Options getOutputOptions(int srcWidth, int srcHeight, CacheKey key) {
 		BitmapFactory.Options opts = new BitmapFactory.Options();
 		if (srcHeight <= 0) {
-			LogManager.logger.i(PictureCache.TAG, "could not get the dimension for " + mURL+" use raw decoding");
+			LogManager.logger.i(PictureCache.LOG_TAG, "could not get the dimension for " + mURL+" use raw decoding");
 		} else {
 			int finalHeight = key.getBitmapHeight(srcWidth, srcHeight);
 
@@ -322,7 +322,7 @@ class BitmapDownloader extends Thread {
 	private void checkAbort() {
 		synchronized (mTargets) {
 			if (mTargets.isEmpty()) {
-				if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.i(PictureCache.TAG, this+ " no more targets, aborting");
+				if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.i(PictureCache.LOG_TAG, this+ " no more targets, aborting");
 				mAborting = true;
 				throw new AbortDownload();
 			}
@@ -349,14 +349,14 @@ class BitmapDownloader extends Thread {
 				try {
 					is = conn.getInputStream();
 				} catch (FileNotFoundException fe) {
-					LogManager.logger.i(PictureCache.TAG, "cache URL not found "+mURL);
+					LogManager.logger.i(PictureCache.LOG_TAG, "cache URL not found "+mURL);
 				} catch (Exception ee) {
-					LogManager.logger.w(PictureCache.TAG, "cache error opening "+mURL, ee);
+					LogManager.logger.w(PictureCache.LOG_TAG, "cache error opening "+mURL, ee);
 				}
 			}
 
 			if (is==null) {
-				LogManager.logger.d(PictureCache.TAG, "impossible to get a stream for "+mURL);
+				LogManager.logger.d(PictureCache.LOG_TAG, "impossible to get a stream for "+mURL);
 				return false;
 			}
 
@@ -381,20 +381,20 @@ class BitmapDownloader extends Thread {
 
 			//LogManager.logger.v(" got direct:"+bmp);
 		} catch (MalformedURLException e) {
-			LogManager.logger.w(PictureCache.TAG, "bad URL " + mURL, e);
+			LogManager.logger.w(PictureCache.LOG_TAG, "bad URL " + mURL, e);
 		} catch (UnknownHostException e) {
-			LogManager.logger.w(PictureCache.TAG, "host not found in "+mURL, e);
+			LogManager.logger.w(PictureCache.LOG_TAG, "host not found in "+mURL, e);
 		} catch (OutOfMemoryError e) {
-			LogManager.logger.w(PictureCache.TAG, "Could not decode image " + mURL, e);
+			LogManager.logger.w(PictureCache.LOG_TAG, "Could not decode image " + mURL, e);
 			mCache.ooHandler.onOutOfMemoryError(e);
 		} catch (IOException e) {
-			LogManager.logger.e(PictureCache.TAG, "Could not read " + mURL, e);
+			LogManager.logger.e(PictureCache.LOG_TAG, "Could not read " + mURL, e);
 		} finally {
 			try {
 				if (is!=null)
 					is.close();
 			} catch (IOException e) {
-				LogManager.logger.e(PictureCache.TAG, "Could not close " + is, e);
+				LogManager.logger.e(PictureCache.LOG_TAG, "Could not close " + is, e);
 			}
 		}
 		return false;

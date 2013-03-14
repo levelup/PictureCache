@@ -51,7 +51,7 @@ public enum LifeSpan {
 			if (lifeSpan.storageValue == storedValue)
 				return lifeSpan;
 		}
-		LogManager.logger.w(PictureCache.TAG, "unknown cache life span value " + storedValue);
+		LogManager.logger.w(PictureCache.LOG_TAG, "unknown cache life span value " + storedValue);
 		return SHORTTERM;
 	}
 }

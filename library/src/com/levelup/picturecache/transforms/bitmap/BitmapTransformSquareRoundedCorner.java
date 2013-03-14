@@ -78,7 +78,7 @@ public class BitmapTransformSquareRoundedCorner implements BitmapTransform {
 			canvas.drawRoundRect(rect, roundRadius, roundRadius, paint);
 			return output;
 		} catch (Throwable e) {
-			LogManager.getLogger().e(PictureCache.TAG, "getRoundedCornerBitmap exception", e);
+			LogManager.getLogger().e(PictureCache.LOG_TAG, "getRoundedCornerBitmap exception", e);
 		}
 
 		return bitmap;

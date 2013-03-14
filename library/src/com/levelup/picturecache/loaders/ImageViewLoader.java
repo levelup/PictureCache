@@ -54,13 +54,13 @@ public abstract class ImageViewLoader extends PictureLoaderHandler {
 
 	@Override
 	public final void drawDefaultPicture(String url, UIHandler postHandler) {
-		if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.TAG, this+" drawDefaultPicture");
+		if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" drawDefaultPicture");
 		showDrawable(postHandler, null, url);
 	}
 
 	@Override
 	public final void drawBitmap(Bitmap bmp, String url, UIHandler postHandler) {
-		if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.TAG, this+" drawBitmap "+view+" with "+bmp);
+		if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" drawBitmap "+view+" with "+bmp);
 		showDrawable(postHandler, bmp, url);
 	}
 
@@ -100,7 +100,7 @@ public abstract class ImageViewLoader extends PictureLoaderHandler {
 			oldTag = (ImageViewLoadingTag) view.getTag();
 			if (newTag.equals(oldTag)) {
 				if (oldTag.isUrlLoaded() || oldTag.isBitmapPending()) {
-					if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.TAG, this+" setting the same picture in "+view+" isLoaded:"+oldTag.isUrlLoaded()+" drawPending:"+oldTag.isBitmapPending());
+					if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" setting the same picture in "+view+" isLoaded:"+oldTag.isUrlLoaded()+" drawPending:"+oldTag.isBitmapPending());
 					return newURL; // no need to do anything
 				}
 				return null; // hack for now as the PictureCache will consider it's the same URL and do nothing, but it's the same URL loading as before
@@ -108,14 +108,14 @@ public abstract class ImageViewLoader extends PictureLoaderHandler {
 
 			if (oldTag!=null) {
 				// the previous URL loading is not good for this view anymore
-				if (DEBUG_VIEW_LOADING) LogManager.getLogger().i(PictureCache.TAG, this+" the old picture in "+view+" doesn't match "+newURL+" was "+oldTag+" isLoaded:"+oldTag.isUrlLoaded()+" drawPending:"+oldTag.isBitmapPending());
+				if (DEBUG_VIEW_LOADING) LogManager.getLogger().i(PictureCache.LOG_TAG, this+" the old picture in "+view+" doesn't match "+newURL+" was "+oldTag+" isLoaded:"+oldTag.isUrlLoaded()+" drawPending:"+oldTag.isBitmapPending());
 				// keep the previous state of the tag
 				newTag.recoverStateFrom(oldTag);
 			}
 
 			view.setTag(newTag);
 		}
-		if (DEBUG_VIEW_LOADING) LogManager.getLogger().e(PictureCache.TAG, this+" set loading "+view+" with "+newURL+" tag:"+newTag);
+		if (DEBUG_VIEW_LOADING) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" set loading "+view+" with "+newURL+" tag:"+newTag);
 
 
 		if (oldTag==null || oldTag.url==null)
