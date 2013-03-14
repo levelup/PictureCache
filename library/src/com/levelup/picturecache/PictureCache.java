@@ -778,7 +778,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 						if (URL!=null && !URL.equals(v.URL)) {
 							// the URL for the cached item changed
 							if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, key+" changed from "+v.URL+" to "+URL+" v.touitlastAccessDate:"+v.lastAccessDate +" remoteDate:"+v.remoteDate+" was "+itemDate);
-							if (v.remoteDate < itemDate) {
+							if (v.remoteDate <= itemDate) { // '=' favor the newer url when dates are 0
 								// the item in the Cache is older than this request, the image changed for a newer one
 								// we need to mark the old one as short term with a UUID that has the picture ID inside
 								String dstUUID = getOldPicUUID(key.getUUID(), v.URL);
