@@ -11,8 +11,8 @@ import com.levelup.picturecache.transforms.storage.StorageTransform;
  * <p>
  * it also handles the Bitmaps transformations use for storage and/or display
  */
-public class ImageViewLoaderDefaultDrawable extends ImageViewLoader {
-	private final Drawable defaultDrawable;
+public class ImageViewLoaderDefaultDrawable extends
+		ViewLoaderDefaultDrawable<ImageView> {
 
 	/**
 	 * constructor of the {@link ImageViewLoaderDefaultDrawable}
@@ -21,16 +21,10 @@ public class ImageViewLoaderDefaultDrawable extends ImageViewLoader {
 	 * @param storageTransform the transformation to use before storing the bitmap in the cache
 	 * @param loadTransform the non-persistent transformation to use on the bitmap before displaying it
 	 */
-	public ImageViewLoaderDefaultDrawable(ImageView view, Drawable defaultDrawable, StorageTransform storageTransform, BitmapTransform loadTransform) {
-		super(view, storageTransform, loadTransform);
-		this.defaultDrawable = defaultDrawable;
+	public ImageViewLoaderDefaultDrawable(ImageView view,
+			Drawable defaultDrawable, StorageTransform storageTransform,
+			BitmapTransform loadTransform) {
+		super(view, defaultDrawable, storageTransform, loadTransform);
 	}
 
-	/**
-	 * display the default view, called in the UI thread
-	 * called under a lock on {@link view}
-	 */
-	protected void displayDefaultView() {
-		getImageView().setImageDrawable(defaultDrawable);
-	}
 }

@@ -3,13 +3,13 @@ package com.levelup.picturecache.loaders;
 import android.graphics.Bitmap;
 import android.os.Handler;
 
-import com.levelup.picturecache.UIHandler;
 import com.levelup.picturecache.LogManager;
 import com.levelup.picturecache.PictureCache;
+import com.levelup.picturecache.UIHandler;
 import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
 import com.levelup.picturecache.transforms.storage.StorageTransform;
 
-class ImageViewLoadingTag {
+class ViewLoadingTag {
 	final String url;
 	private final StorageTransform storageTransform;
 	private final BitmapTransform displayTransform;
@@ -22,7 +22,7 @@ class ImageViewLoadingTag {
 	private String mPendingUrl;
 	private DrawInUI mDrawInUI;
 
-	ImageViewLoadingTag(String url, StorageTransform storageTransform, BitmapTransform displayTransform) {
+	ViewLoadingTag(String url, StorageTransform storageTransform, BitmapTransform displayTransform) {
 		this.url = url;
 		this.displayTransform = displayTransform;
 		this.storageTransform = storageTransform;
@@ -56,7 +56,7 @@ class ImageViewLoadingTag {
 		return old;
 	}
 
-	void recoverStateFrom(ImageViewLoadingTag oldTag) {
+	void recoverStateFrom(ViewLoadingTag oldTag) {
 		setAndGetIsDefault(oldTag.isDefault());
 		mDrawInUI = oldTag.mDrawInUI;
 	}
@@ -64,8 +64,8 @@ class ImageViewLoadingTag {
 	@Override
 	public boolean equals(Object o) {
 		if (this==o) return true;
-		if (!(o instanceof ImageViewLoadingTag)) return false;
-		ImageViewLoadingTag tag = (ImageViewLoadingTag) o;
+		if (!(o instanceof ViewLoadingTag)) return false;
+		ViewLoadingTag tag = (ViewLoadingTag) o;
 		return url!=null && url.equals(tag.url)
 				&& ((displayTransform==null && tag.displayTransform==null) || (displayTransform!=null && displayTransform.equals(tag.displayTransform)))
 				&& ((storageTransform==null && tag.storageTransform==null) || (storageTransform!=null && storageTransform.equals(tag.storageTransform)))
@@ -78,13 +78,13 @@ class ImageViewLoadingTag {
 	}
 
 	private static class DrawInUI implements Runnable {
-		private final ImageViewLoader viewLoader;
+		private final ViewLoader<?> viewLoader;
 
 		// pending draw data
 		private Bitmap mPendingDraw;
 		private String mPendingUrl;
 
-		DrawInUI(ImageViewLoader view) {
+		DrawInUI(ViewLoader<?> view) {
 			this.viewLoader = view;
 		}
 
@@ -99,7 +99,7 @@ class ImageViewLoadingTag {
 		public void run() {
 			synchronized (viewLoader.getImageView()) {
 				boolean skipDrawing = false;
-				final ImageViewLoadingTag tag = (ImageViewLoadingTag) viewLoader.getImageView().getTag();
+				final ViewLoadingTag tag = (ViewLoadingTag) viewLoader.getImageView().getTag();
 				if (tag!=null) {
 					if (mPendingDraw!=null && mPendingUrl!=null && (tag.url==null || !mPendingUrl.equals(tag.url))) {
 						skipDrawing = true;
@@ -130,7 +130,7 @@ class ImageViewLoadingTag {
 		}
 	};
 
-	void drawInView(UIHandler postHandler, ImageViewLoader viewLoader) {
+	void drawInView(UIHandler postHandler, ViewLoader<?> viewLoader) {
 		if (mDrawInUI == null) {
 			if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, viewLoader+" create new DrawInUI with "+mPendingDraw+" for "+mPendingUrl);
 			mDrawInUI = new DrawInUI(viewLoader);
