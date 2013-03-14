@@ -165,7 +165,12 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				LogManager.logger.w(LOG_TAG, "trying to load an empty cache item for "+c.getString(indexURL));
 				return null;
 			}
-			CacheItem val = new CacheItem(new File(path), c.getString(indexURL));
+			File picSrc = new File(path);
+			if (!picSrc.exists() || !picSrc.isFile()) {
+				LogManager.logger.w(LOG_TAG, "trying to load a missing file for "+c.getString(indexURL));
+				return null;
+			}
+			CacheItem val = new CacheItem(picSrc, c.getString(indexURL));
 			val.lifeSpan = LifeSpan.fromStorage(c.getInt(indexType));
 			val.remoteDate = c.getLong(indexRemoteDate);
 			val.lastAccessDate = c.getLong(indexDate);
