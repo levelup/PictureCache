@@ -140,6 +140,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 					CacheKey key = CacheKey.newUUIDBasedKey(c.getString(indexUUID), c.getInt(indexHeight), widthBased, StorageType.AUTO, null);
 
 					put(key, val);
+				} else {
+					if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "missing cache file for undated item "+path);
 				}
 			}
 
@@ -702,6 +704,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				bmp.compress(variant.key.getCompression(), variant.key.getCompRatio(), fos);
 				fos.close();
 
+				if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "stored "+variant.key+" from "+url+" as "+variant.path); 
+				
 				mDataLock.lock();
 				try {
 					CacheItem val = getMap().get(variant.key);
@@ -779,6 +783,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 								// we need to mark the old one as short term with a UUID that has the picture ID inside
 								String dstUUID = getOldPicUUID(key.getUUID(), v.URL);
 								CacheKey oldVersionKey = key.copyWithNewUuid(dstUUID);
+								if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, key+" moved to "+oldVersionKey);
 								v = getMap().get(oldVersionKey);
 								if (v==null)
 									// the old version doesn't exist in the cache, copy the current content in there
@@ -789,6 +794,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 								// use the old image from the cache
 								String dstUUID = getOldPicUUID(key.getUUID(), URL);
 								key = key.copyWithNewUuid(dstUUID);
+								if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, key+" used");
 								v = getMap().get(key);
 							}
 						}
