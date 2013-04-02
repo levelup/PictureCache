@@ -20,6 +20,15 @@ public class StorageTransformWithBitmapTransform<T extends BitmapTransform> impl
 		this.variant = variantPostfix;
 	}
 
+	/**
+	 * constructor with a postfix variant based on the {@link BitmapTransform}
+	 * @param transform the {@link BitmapTransform} to apply to the Bitmap
+	 */
+	public StorageTransformWithBitmapTransform(T transform) {
+		this.transform = transform;
+		this.variant = transform.getVariant();
+	}
+
 	@Override
 	public String getVariantPostfix() {
 		return variant;

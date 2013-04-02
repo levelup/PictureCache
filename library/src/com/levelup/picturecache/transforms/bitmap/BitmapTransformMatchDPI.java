@@ -41,4 +41,8 @@ public class BitmapTransformMatchDPI implements BitmapTransform {
 		return bitmap;
 	}
 
+	@Override
+	public String getVariant() {
+		return "dpi_"+deviceDPI;
+	}
 }

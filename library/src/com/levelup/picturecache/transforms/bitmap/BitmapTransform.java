@@ -11,4 +11,10 @@ public interface BitmapTransform {
 	 * @return bitmap the transformed Bitmap, may be the same as the source if no transformation occured
 	 */
 	Bitmap transformBitmap(Bitmap bitmap);
+	
+	/**
+	 * Get a fancy display name for the transformation (unique per transformation equals)
+	 * @return
+	 */
+	String getVariant();
 }

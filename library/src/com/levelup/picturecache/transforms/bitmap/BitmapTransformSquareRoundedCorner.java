@@ -90,4 +90,8 @@ public class BitmapTransformSquareRoundedCorner implements BitmapTransform {
 		return false;
 	}
 	
+	@Override
+	public String getVariant() {
+		return "_r"+roundRadius;
+	}
 }

@@ -66,4 +66,9 @@ public class BitmapTransformCrop implements BitmapTransform {
 	public int hashCode() {
 		return width * 31 + height;
 	}
+	
+	@Override
+	public String getVariant() {
+		return "crop_"+width+"x"+height;
+	}
 }

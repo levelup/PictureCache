@@ -38,4 +38,8 @@ public class BitmapTransformRotate implements BitmapTransform {
 		return Float.floatToIntBits(mRotation);
 	}
 
+	@Override
+	public String getVariant() {
+		return "rot_"+mRotation;
+	}
 }
