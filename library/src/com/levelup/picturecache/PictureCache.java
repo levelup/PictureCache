@@ -176,20 +176,20 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			final CacheKey key = CacheKey.unserialize(c.getString(indexUUID));
 			final String path = c.getString(indexPath);
 			if (TextUtils.isEmpty(path)) {
-				LogManager.logger.w(LOG_TAG, "trying to load an empty cache item for "+c.getString(indexURL));
+				LogManager.logger.w(LOG_TAG, "trying to load an empty cache item for "+url);
+				remove(key); // make sure we don't use it again
 				return null;
 			}
 			File picSrc = new File(path);
-			if (!picSrc.exists() || !picSrc.isFile()) {
-				LogManager.logger.w(LOG_TAG, "trying to load a missing file for "+c.getString(indexURL));
-				return null;
-			}
-			CacheItem val = new CacheItem(picSrc, c.getString(indexURL));
+			CacheItem val = new CacheItem(picSrc, url);
 			val.lifeSpan = LifeSpan.fromStorage(c.getInt(indexType));
 			val.remoteDate = c.getLong(indexRemoteDate);
 			val.lastAccessDate = c.getLong(indexDate);
-
-			CacheKey key = CacheKey.unserialize(c.getString(indexUUID));
+			if (!picSrc.exists() || !picSrc.isFile()) {
+				LogManager.logger.w(LOG_TAG, "trying to load a missing file for "+val);
+				remove(key); // make sure we don't use it again
+				return null;
+			}
 
 			return new MapEntry<CacheKey, CacheItem>(key, val);
 		}
@@ -433,6 +433,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		}
 
 		private static void makeRoom(PictureCache cache, LifeSpan lifeSpan) {
+			if (DEBUG_CACHE) LogManager.logger.i(LOG_TAG, "start makeRoom for "+lifeSpan);
 			try {
 				long TotalSize = cache.getCacheSize(lifeSpan);
 				int MaxSize = cache.getCacheMaxSize(lifeSpan);
@@ -469,7 +470,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			} catch (NullPointerException e) {
 				LogManager.logger.w(LOG_TAG, "can't make room for type:"+lifeSpan,e);
 			}
-			//LogManager.logger.d(TAG, "makeroom done");
+			if (DEBUG_CACHE) LogManager.logger.i(LOG_TAG, "finished makeRoom for "+lifeSpan);
 		}
 	}
 
@@ -728,19 +729,21 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 	private boolean moveCachedFiles(CacheKey srcKey, CacheKey dstKey, LifeSpan lifeSpan) {
 		if (getMap().containsKey(dstKey)) {
-			LogManager.logger.d(LOG_TAG, "item "+dstKey+" already exists in the DB");
+			LogManager.logger.d(LOG_TAG, "item "+dstKey+" already exists in the DB, can't copy "+srcKey);
 			return false;
 		}
 
 		try {
 			CacheItem v = getMap().get(srcKey);
 			if (v != null) {
+				LogManager.logger.v(LOG_TAG, "Copy "+srcKey+" to "+dstKey);
 				File src = v.path;
 				if (src != null && src.exists()) {
 					File dst = getCachedFilepath(dstKey);
 					dst.delete();
 
 					if (src.renameTo(dst)) {
+						remove(srcKey); // that key is not valid anymore
 						v = v.copyWithNewPath(dst);
 						v.lifeSpan = lifeSpan;
 						return put(dstKey, v) != null;
