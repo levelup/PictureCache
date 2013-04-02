@@ -22,7 +22,7 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 	private final T view;
 
 	private static final long MAX_SIZE_IN_UI_THREAD = 19000;
-	static final boolean DEBUG_VIEW_LOADING = false;
+	static final boolean DEBUG_VIEW_LOADING = BuildConfig.DEBUG && false;
 
 	public ViewLoader(T view, StorageTransform storageTransform, BitmapTransform loadTransform) {
 		super(storageTransform, loadTransform);

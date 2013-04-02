@@ -95,7 +95,7 @@ class CacheKey {
 
 	@Override
 	public String toString() {
-		StringBuilder hashBuilder = new StringBuilder(UUID);
+		final StringBuilder hashBuilder = new StringBuilder(UUID);
 		if (widthBased)
 			hashBuilder.append("w");
 		hashBuilder.append("_").append(dimension);
@@ -105,7 +105,7 @@ class CacheKey {
 	}
 
 	String getFilename() {
-		StringBuilder filename = new StringBuilder(UUID);
+		final StringBuilder filename = new StringBuilder(UUID);
 		filename.append("_").append(dimension);
 		if (variantString!=null)
 			filename.append(variantString);

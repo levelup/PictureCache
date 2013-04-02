@@ -66,7 +66,7 @@ public abstract class PictureLoaderHandler {
 	 */
 	abstract protected String getLoadingURL();
 	abstract protected boolean canDirectLoad(File file, UIHandler uiHandler);
-	
+
 	protected boolean isDownloadAllowed() {
 		return true;
 	}

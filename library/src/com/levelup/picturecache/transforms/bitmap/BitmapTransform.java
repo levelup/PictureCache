@@ -6,7 +6,7 @@ import android.graphics.Bitmap;
 public interface BitmapTransform {
 
 	/**
-	 * transform the source bitmap into the bitmap for display
+	 * Transform the source bitmap into the bitmap for display
 	 * @param bitmap the Bitmap to transformed
 	 * @return bitmap the transformed Bitmap, may be the same as the source if no transformation occured
 	 */

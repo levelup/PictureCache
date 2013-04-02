@@ -40,6 +40,9 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	public static final String LOG_TAG = "PictureCache";
 	final static boolean DEBUG_CACHE = false & BuildConfig.DEBUG;
 
+	/**
+	 * How many new items need to be added to the database before a purge is done
+	 */
 	private static final int MIN_ADD_BEFORE_PURGE = 7;
 
 	/**
@@ -69,7 +72,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	}
 
 	private static final String DATABASE_NAME = "PictureCachev2.sqlite";
-	private static final String OLD_DATABASE_NAME = "PictureCache.sqlite"; 
+	private static final String OLD_DATABASE_NAME = "PictureCache.sqlite";
 	private static final int DATABASE_VERSION = 1;
 	private static final String TABLE_NAME = "Pictures";
 
@@ -114,7 +117,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		int indexDate = c.getColumnIndex("DATE");
 		int indexUUID = c.getColumnIndex("UUID");
 
-		if (indexRemoteDate==-1) {
+		if (indexRemoteDate == -1) {
 			// updating from an old DB
 			indexRemoteDate = c.getColumnIndex("TOUIT_ID");
 
@@ -125,10 +128,10 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			String path = c.getString(indexPath);
 			String pathr = c.getString(indexPathRounded);
 			boolean widthBased;
-			if (indexWidthBased<0)
+			if (indexWidthBased < 0)
 				widthBased = false;
 			else
-				widthBased = c.getInt(indexWidthBased)!=0;
+				widthBased = c.getInt(indexWidthBased) != 0;
 
 			if (!TextUtils.isEmpty(path)) {
 				CacheItem val = new CacheItem(new File(path), c.getString(indexURL));
@@ -206,15 +209,15 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 	@Override
 	protected String[] getKeySelectArgs(CacheKey key) {
-		return new String[] {key.serialize()};
+		return new String[] { key.serialize() };
 	}
 
 	/**
-	 * constructor of a PictureCache
-	 * @param context context of the application, may also be used to get a {@link ContentResolver}
-	 * @param postHandler handler to run some code in the UI thread and also determine if we're in the UI thread or not
-	 * @param logger a {@link Logger} object used to send all the logs generated inside the cache, may be null
-	 * @param ooHandler a {@link OutOfMemoryHandler} object used to notify when we are short on memory, may be null
+	 * Constructor of a PictureCache
+	 * @param context Context of the application, may also be used to get a {@link ContentResolver}
+	 * @param postHandler Handler to run some code in the UI thread and also determine if we're in the UI thread or not
+	 * @param logger A {@link Logger} object used to send all the logs generated inside the cache, may be null
+	 * @param ooHandler A {@link OutOfMemoryHandler} object used to notify when we are short on memory, may be null
 	 */
 	protected PictureCache(Context context, UIHandler postHandler, Logger logger, OutOfMemoryHandler ooHandler) {
 		super(context, DATABASE_NAME, DATABASE_VERSION, logger);
@@ -241,7 +244,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			} catch (VerifyError e) {
 			} catch (NoSuchFieldError e) {
 			} finally {
-				if (newdir==null)
+				if (newdir == null)
 					newdir = olddir;
 			}
 			mCacheFolder = newdir;
@@ -296,8 +299,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		return getContext().getCacheDir();
 	}
 
-	public File getPictureDir()
-	{
+	public File getPictureDir() {
 		File dstDir = null;
 		String appName = getAppName();
 		if (!TextUtils.isEmpty(appName)) {
@@ -317,8 +319,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		return dstDir;
 	}
 
-	private void assertFolderExists() throws IOException, SecurityException 
-	{
+	private void assertFolderExists() throws IOException, SecurityException {
 		//LogManager.logger.e(TAG, "assertFolderExists " +DirAsserted);
 		synchronized (mDirAsserted) {
 			if (!mDirAsserted) {
@@ -336,7 +337,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 					}
 
 					String oldFolder = getOldCacheFolder();
-					if (oldFolder!=null) {
+					if (oldFolder != null) {
 						final File oldDir = new File(Environment.getExternalStorageDirectory(), oldFolder);
 						if (oldDir.exists()) {
 							new Thread() {
@@ -372,14 +373,14 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	}
 
 	private Entry<CacheKey, CacheItem> getCacheOldestEntry(LifeSpan lifeSpan) {
-		//LogManager.logger.d(TAG, "getCacheOldest in");
+		// LogManager.logger.d(TAG, "getCacheOldest in");
 		Entry<CacheKey, CacheItem> result = null;
 		for (Entry<CacheKey, CacheItem> entry : getMap().entrySet()) {
 			final CacheItem item = entry.getValue();
 			if (lifeSpan==item.lifeSpan && (result==null || result.getValue().lastAccessDate > item.lastAccessDate))
 				result = entry;
 		}
-		//LogManager.logger.e(TAG, "getCacheOldest out with "+result);
+		// LogManager.logger.e(TAG, "getCacheOldest out with "+result);
 		return result;
 	}
 
@@ -390,6 +391,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		RemoveExpired() {
 			this.lifeSpan = null;
 		}
+
 		RemoveExpired(LifeSpan cacheType) {
 			this.lifeSpan = cacheType;
 		}
@@ -397,7 +399,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		@Override
 		public void runInMemoryDbOperation(InMemoryDbHelper<Entry<CacheKey, CacheItem>> db) {
 			PictureCache cache = (PictureCache) db;
-			if (lifeSpan!=null)
+			if (lifeSpan != null)
 				makeRoom(cache, lifeSpan);
 			else {
 				for (LifeSpan lifeSpan : LifeSpan.values())
@@ -409,7 +411,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			try {
 				long TotalSize = cache.getCacheSize(lifeSpan);
 				int MaxSize = cache.getCacheMaxSize(lifeSpan);
-				if (MaxSize!=0 && TotalSize > MaxSize) {
+				if (MaxSize != 0 && TotalSize > MaxSize) {
 					// make room in the DB/cache for this new element
 					while (TotalSize > MaxSize) {
 						//if (type != k.getValue().type) continue;
@@ -418,7 +420,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 						cache.mDataLock.lock();
 						try {
 							entry = cache.getCacheOldestEntry(lifeSpan);
-							if (entry==null)
+							if (entry == null)
 								break;
 						} finally {
 							cache.mDataLock.unlock();
@@ -426,9 +428,9 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 						if (DEBUG_CACHE) LogManager.logger.i(LOG_TAG, "remove "+entry+" from the cache for "+lifeSpan);
 						CacheItem item = cache.remove(entry.getKey());
-						if (item!=null) {
+						if (item != null) {
 							File f = item.path;
-							if (f!=null && f.exists()) {
+							if (f != null && f.exists()) {
 								long fSize = f.length();
 								if (f.delete()) {
 									TotalSize -= fSize;
@@ -531,13 +533,13 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 */
 	public void loadPictureWithFixedHeight(PictureLoaderHandler handler, String URL, String UUID, long itemDate, LifeSpan lifeSpan, int height, StorageType extensionMode) {
 		PictureJob pictureJob = new PictureJob.Builder(handler)
-			.setURL(URL).setUUID(UUID)
-			.setFreshDate(itemDate)
-			.setLifeType(lifeSpan)
-			.setExtensionMode(extensionMode)
-			.setDimension(height, false)
-			.build();
-		
+		.setURL(URL).setUUID(UUID)
+		.setFreshDate(itemDate)
+		.setLifeType(lifeSpan)
+		.setExtensionMode(extensionMode)
+		.setDimension(height, false)
+		.build();
+
 		try {
 			pictureJob.startLoading(this);
 		} catch (NoSuchAlgorithmException e) {
@@ -558,13 +560,13 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 */
 	public void loadPictureWithMaxWidth(PictureLoaderHandler handler, String URL, String UUID, long itemDate, LifeSpan lifeSpan, int width, StorageType extensionMode) {
 		PictureJob pictureJob = new PictureJob.Builder(handler)
-			.setURL(URL)
-			.setUUID(UUID)
-			.setFreshDate(itemDate)
-			.setLifeType(lifeSpan)
-			.setExtensionMode(extensionMode)
-			.setDimension(width, true)
-			.build();
+		.setURL(URL)
+		.setUUID(UUID)
+		.setFreshDate(itemDate)
+		.setLifeType(lifeSpan)
+		.setExtensionMode(extensionMode)
+		.setDimension(width, true)
+		.build();
 		try {
 			pictureJob.startLoading(this);
 		} catch (NoSuchAlgorithmException e) {
@@ -578,7 +580,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @param oldURL
 	 */
 	public void cancelPictureLoader(PictureLoaderHandler loader, String oldURL) {
-		if (loader!=null)
+		if (loader != null)
 			mJobManager.cancelDownloadForLoader(loader, oldURL);
 	}
 
@@ -588,7 +590,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @param oldURL
 	 */
 	public void removePictureLoader(PictureLoaderHandler loader, String oldURL) {
-		if (loader!=null) {
+		if (loader != null) {
 			if (DEBUG_CACHE) LogManager.logger.i(LOG_TAG, "removePictureLoader "+loader+" with old URL "+oldURL);
 			loader.setLoadingURL(null);
 			mJobManager.cancelDownloadForLoader(loader, oldURL);
@@ -601,7 +603,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		mDataLock.lock();
 		try {
 			CacheItem v = getMap().get(key);
-			if (v!=null && v.path!=null) {
+			if (v != null && v.path != null) {
 				if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
 					File dst = new File(getPictureDir(), key.getFilename());
 					FileUtils.copyFile(v.path, dst, LOG_TAG);
@@ -646,9 +648,9 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		mDataLock.lock();
 		try {
 			CacheItem cacheItem = getCacheItem(UUID, height, widthBased, rounded);
-			if (cacheItem!=null) {
+			if (cacheItem != null) {
 				File file = cacheItem.path;
-				if (file!=null && file.exists())
+				if (file != null && file.exists())
 					return file.getAbsolutePath();
 			}
 		} finally {
@@ -666,16 +668,16 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 		try {
 			CacheItem v = getMap().get(srcKey);
-			if (v!=null) {
+			if (v != null) {
 				File src = v.path;
-				if (src!=null && src.exists()) {
+				if (src != null && src.exists()) {
 					File dst = getCachedFilepath(dstKey);
 					dst.delete();
 
 					if (src.renameTo(dst)) {
 						v = v.copyWithNewPath(dst);
 						v.lifeSpan = lifeSpan;
-						return put(dstKey, v)!=null;
+						return put(dstKey, v) != null;
 					} else {
 						LogManager.logger.e(LOG_TAG, "Failed to rename path "+src+" to "+dst);
 					}
@@ -710,15 +712,15 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				fos.close();
 
 				if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "stored "+variant.key+" from "+url+" as "+variant.path); 
-				
+
 				mDataLock.lock();
 				try {
 					CacheItem val = getMap().get(variant.key);
-					if (val!=null) {
+					if (val != null) {
 						if (val.remoteDate < remoteDate)
 							val.remoteDate = remoteDate;
 
-						if (val.lifeSpan.compare(lifeSpan)<0)
+						if (val.lifeSpan.compare(lifeSpan) < 0)
 							val.lifeSpan = lifeSpan;
 
 						val.lastAccessDate = System.currentTimeMillis();
@@ -748,9 +750,9 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		}
 
 		//LogManager.logger.i("BitmapLoaded outFile:"+outFile);
-		if (fileSizeAdded!=0) {
+		if (fileSizeAdded != 0) {
 			final boolean needsPurge;
-			if (lifeSpan==LifeSpan.LONGTERM)
+			if (lifeSpan == LifeSpan.LONGTERM)
 				needsPurge = (mPurgeCounterLongterm.incrementAndGet() > MIN_ADD_BEFORE_PURGE);
 			else if (lifeSpan == LifeSpan.SHORTTERM)
 				needsPurge = (mPurgeCounterShortterm.incrementAndGet() > MIN_ADD_BEFORE_PURGE);
@@ -758,16 +760,23 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				needsPurge = false;
 
 			if (needsPurge) {
-				if (lifeSpan==LifeSpan.LONGTERM)
+				if (lifeSpan == LifeSpan.LONGTERM)
 					mPurgeCounterLongterm.set(0);
-				else if (lifeSpan==LifeSpan.SHORTTERM)
+				else if (lifeSpan == LifeSpan.SHORTTERM)
 					mPurgeCounterShortterm.set(0);
 				scheduleCustomOperation(new RemoveExpired(lifeSpan));
 			}
 		}
 	}
 
-
+	/**
+	 * Get the correct storage key for the given key, URL and itemDate.
+	 * It may differ from the source key if it's referring an older or newer version of the key/URL combo compared to the one already stored
+	 * @param key The source key we want to use in the database
+	 * @param URL The URL associated with the key in storage
+	 * @param itemDate The date corresponding to the key/URL combo (can be 0)
+	 * @return a key corresponding to the right item in the database to load/store
+	 */
 	File getCachedFile(CacheKey key, String URL, long itemDate) {
 		//if (URL!=null && !URL.contains("/profile_images/"))
 		//LogManager.logger.v(TAG, " getPicture URL:"+URL + " key:"+key);
@@ -778,9 +787,9 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 				//if (URL!=null && !URL.contains("/profile_images/"))
 				if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, key+" found cache item "+v+" for URL "+URL);
-				if (v!=null) {
+				if (v != null) {
 					try {
-						if (URL!=null && !URL.equals(v.URL)) {
+						if (URL != null && !URL.equals(v.URL)) {
 							// the URL for the cached item changed
 							if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, key+" changed from "+v.URL+" to "+URL+" v.touitlastAccessDate:"+v.lastAccessDate +" remoteDate:"+v.remoteDate+" was "+itemDate);
 							if (v.remoteDate <= itemDate) { // '=' favor the newer url when dates are 0
@@ -796,7 +805,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 								remove(key); // this one is not valid anymore
 								v = null; // don't use the old file
 							} else {
-								// use the old image from the cache
+								// use the old image from the cache with that URL
 								String dstUUID = getOldPicUUID(key.getUUID(), URL);
 								key = key.copyWithNewUuid(dstUUID);
 								if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, key+" used");

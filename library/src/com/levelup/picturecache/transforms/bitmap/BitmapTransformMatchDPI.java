@@ -14,7 +14,7 @@ import android.widget.ImageView;
 public class BitmapTransformMatchDPI implements BitmapTransform {
 
 	private final int deviceDPI;
-	
+
 	/**
 	 * constructor of a {@link BitmapTransform} that resizes the image to match the DPI provided
 	 * @param deviceDPI the DPI to match, 160 means identical bitmap on output
@@ -22,7 +22,7 @@ public class BitmapTransformMatchDPI implements BitmapTransform {
 	public BitmapTransformMatchDPI(int deviceDPI) {
 		this.deviceDPI = deviceDPI;
 	}
-	
+
 	/**
 	 * constructor of a {@link BitmapTransform} that resizes the image to match the DPI of the {@link Context}
 	 * @param context the context to get the DPI from
@@ -30,7 +30,7 @@ public class BitmapTransformMatchDPI implements BitmapTransform {
 	public BitmapTransformMatchDPI(Context context) {
 		this.deviceDPI = context.getResources().getDisplayMetrics().densityDpi;
 	}
-	
+
 	@Override
 	public Bitmap transformBitmap(Bitmap bitmap) {
 		if (deviceDPI!=160) {
