@@ -1,11 +1,18 @@
 package com.levelup.picturecache.loaders;
 
 import java.io.File;
+import java.security.InvalidParameterException;
 
 import android.graphics.Bitmap;
+import android.graphics.Bitmap.Config;
+import android.graphics.Canvas;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.view.View;
 import android.widget.ImageView;
 
+import com.levelup.picturecache.BuildConfig;
 import com.levelup.picturecache.LogManager;
 import com.levelup.picturecache.PictureCache;
 import com.levelup.picturecache.PictureLoaderHandler;
@@ -19,7 +26,7 @@ import com.levelup.picturecache.transforms.storage.StorageTransform;
  * @see {@link ViewLoaderDefaultResource} and {@link ViewLoaderDefaultDrawable} 
  */
 public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
-	private final T view;
+	private final ViewReference<T> view;
 
 	private static final long MAX_SIZE_IN_UI_THREAD = 19000;
 	static final boolean DEBUG_VIEW_LOADING = BuildConfig.DEBUG && false;
@@ -27,11 +34,21 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 	public ViewLoader(T view, StorageTransform storageTransform, BitmapTransform loadTransform) {
 		super(storageTransform, loadTransform);
 		if (view==null) throw new NullPointerException("empty view to load to, use PrecacheImageLoader");
-		this.view = view;
+		this.view = createViewReference(view);
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	protected ViewReference<T> createViewReference(T view) {
+		if (!(view instanceof ImageView)) throw new InvalidParameterException("You need to override createViewReference() in your loader to handle non ImageView targets like "+view);
+		if (Build.VERSION.SDK_INT >= 12) {
+			return new ImageViewReferenceSDK12((ImageView) view);
+		} else {
+			return new ImageViewReference((ImageView) view);
+		}
 	}
 
 	public T getImageView() {
-		return view;
+		return view.getImageView();
 	}
 
 	@Override
@@ -40,7 +57,7 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 		if (!(o instanceof ViewLoader)) return false;
 		ViewLoader<?> loader = (ViewLoader<?>) o;
 		//if (DEBUG_VIEW_LOADING && toString().equals(loader.toString())) Log.e("PlumeCache",this+" same equals "+loader+" = "+(loader.view==view && Float.compare(loader.mRotation,mRotation)==0 && loader.mRoundedCorner==mRoundedCorner));
-		return loader.view==view && super.equals(loader);
+		return loader.view.equals(view) && super.equals(loader);
 	}
 
 	@Override
@@ -60,7 +77,7 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 	}
 
 	@Override
-	public final void drawBitmap(Bitmap bmp, String url, UIHandler postHandler) {
+	public final void drawBitmap(Drawable bmp, String url, UIHandler postHandler) {
 		if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" drawBitmap "+view+" with "+bmp);
 		showDrawable(postHandler, bmp, url);
 	}
@@ -73,17 +90,16 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 
 	/**
 	 * display this Bitmap in the view, called in the UI thread
-	 * @param bmp the Bitmap to display in {@link view}
+	 * @param pendingDrawable the Bitmap to display in {@link view}
 	 * called under a lock on {@link view}
 	 */
-	protected void displayCustomBitmap(Bitmap bmp) {
-		if (view instanceof ImageView)
-			((ImageView) view).setImageBitmap(bmp);
+	protected void displayCustomBitmap(Drawable pendingDrawable) {
+		view.setImageDrawable(pendingDrawable);
 	}
 
-	private void showDrawable(UIHandler postHandler, Bitmap customBitmap, String url) {
-		synchronized (view) {
-			ViewLoadingTag tag = (ViewLoadingTag) view.getTag();
+	private void showDrawable(UIHandler postHandler, Drawable customBitmap, String url) {
+		synchronized (view.getImageView()) {
+			ViewLoadingTag tag = view.getTag();
 			if (tag==null) {
 				tag = new ViewLoadingTag(url, getStorageTransform(), getDisplayTransform());
 				view.setTag(tag);
@@ -98,8 +114,8 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 		ViewLoadingTag newTag = new ViewLoadingTag(newURL, getStorageTransform(), getDisplayTransform());
 
 		ViewLoadingTag oldTag = null;
-		synchronized (view) {
-			oldTag = (ViewLoadingTag) view.getTag();
+		synchronized (view.getImageView()) {
+			oldTag = view.getTag();
 			if (newTag.equals(oldTag)) {
 				if (oldTag.isUrlLoaded() || oldTag.isBitmapPending()) {
 					if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" setting the same picture in "+view+" isLoaded:"+oldTag.isUrlLoaded()+" drawPending:"+oldTag.isBitmapPending());
@@ -129,7 +145,7 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 
 	@Override
 	public String getLoadingURL() {
-		ViewLoadingTag tag = (ViewLoadingTag) view.getTag();
+		ViewLoadingTag tag = view.getTag();
 		if (tag==null)
 			return null;
 		return tag.url;
@@ -138,5 +154,23 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 	@Override
 	protected boolean canDirectLoad(File file, UIHandler uiHandler) {
 		return !uiHandler.isUIThread() || file.length() < MAX_SIZE_IN_UI_THREAD;
+	}
+
+	public static Bitmap drawableToBitmap(Drawable drawable) {
+		if (drawable instanceof BitmapDrawable) {
+			return ((BitmapDrawable)drawable).getBitmap();
+		}
+
+		int width = drawable.getIntrinsicWidth();
+		width = width > 0 ? width : 1;
+		int height = drawable.getIntrinsicHeight();
+		height = height > 0 ? height : 1;
+
+		Bitmap bitmap = Bitmap.createBitmap(width, height, Config.ARGB_8888);
+		Canvas canvas = new Canvas(bitmap); 
+		drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+		drawable.draw(canvas);
+
+		return bitmap;
 	}
 }

@@ -23,6 +23,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Environment;
 import android.text.TextUtils;
 
@@ -117,6 +119,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		int indexDate = c.getColumnIndex("DATE");
 		int indexUUID = c.getColumnIndex("UUID");
 
+		final String url = c.getString(indexURL);
+
 		if (indexRemoteDate == -1) {
 			// updating from an old DB
 			indexRemoteDate = c.getColumnIndex("TOUIT_ID");
@@ -134,7 +138,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				widthBased = c.getInt(indexWidthBased) != 0;
 
 			if (!TextUtils.isEmpty(path)) {
-				CacheItem val = new CacheItem(new File(path), c.getString(indexURL));
+				CacheItem val = new CacheItem(new File(path), url);
 				if (val.path.exists()) {
 					val.lifeSpan = LifeSpan.fromStorage(c.getInt(indexType));
 					val.remoteDate = c.getLong(indexRemoteDate);
@@ -149,7 +153,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			}
 
 			if (!TextUtils.isEmpty(pathr)) {
-				CacheItem val = new CacheItem(new File(pathr), c.getString(indexURL));
+				CacheItem val = new CacheItem(new File(pathr), url);
 				if (val.path.exists()) {
 					val.lifeSpan = LifeSpan.fromStorage(c.getInt(indexType));
 					val.remoteDate = c.getLong(indexRemoteDate);
@@ -163,6 +167,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 			return null; // already done manually
 		} else {
+			final CacheKey key = CacheKey.unserialize(c.getString(indexUUID));
 			final String path = c.getString(indexPath);
 			if (TextUtils.isEmpty(path)) {
 				LogManager.logger.w(LOG_TAG, "trying to load an empty cache item for "+c.getString(indexURL));
@@ -660,7 +665,6 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	}
 
 	private boolean moveCachedFiles(CacheKey srcKey, CacheKey dstKey, LifeSpan lifeSpan) {
-		LogManager.logger.v(LOG_TAG, "Copy "+srcKey+" to "+dstKey);
 		if (getMap().containsKey(dstKey)) {
 			LogManager.logger.d(LOG_TAG, "item "+dstKey+" already exists in the DB");
 			return false;
@@ -698,7 +702,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	}
 
 	@Override
-	public void onNewBitmapLoaded(HashMap<CacheVariant,Bitmap> newBitmaps, String url, long remoteDate, LifeSpan lifeSpan) {
+	public void onNewBitmapLoaded(HashMap<CacheVariant,Drawable> newBitmaps, String url, long remoteDate, LifeSpan lifeSpan) {
 		// handle the storing and adding to the cache
 		// save the bitmap for later use
 		long fileSizeAdded = 0;
@@ -707,7 +711,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				if (variant.path.exists())
 					variant.path.delete();
 				FileOutputStream fos = new FileOutputStream(variant.path, false);
-				Bitmap bmp = newBitmaps.get(variant);
+				Drawable drawable = newBitmaps.get(variant);
+				Bitmap bmp = ViewLoader.drawableToBitmap(drawable);
 				bmp.compress(variant.key.getCompression(), variant.key.getCompRatio(), fos);
 				fos.close();
 
@@ -833,5 +838,15 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 	public Context getContext() {
 		return mContext;
+	}
+
+	static String resourcePath;
+
+	synchronized Drawable loadResourceDrawable(String url) {
+		if (resourcePath==null)
+			resourcePath = "android.resource://"+mContext.getPackageName()+"/";
+		if (!url.startsWith(resourcePath))
+			return null;
+		return mContext.getResources().getDrawable(Integer.valueOf(url.substring(resourcePath.length())));
 	}
 }

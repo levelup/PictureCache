@@ -16,8 +16,12 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import com.levelup.picturecache.loaders.ViewLoader;
+
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.util.FloatMath;
 
@@ -54,7 +58,7 @@ class BitmapDownloader extends Thread {
 	}
 
 	abstract interface JobMonitor {
-		abstract void onJobFinishedWithNewBitmaps(BitmapDownloader job, HashMap<CacheVariant,Bitmap> newBitmaps);
+		abstract void onJobFinishedWithNewBitmaps(BitmapDownloader job, HashMap<CacheVariant,Drawable> newBitmaps);
 	}
 
 	private final String mURL;
@@ -102,8 +106,8 @@ class BitmapDownloader extends Thread {
 
 	public void run() {
 		//LogManager.logger.v( "start image load in cache: " + mURL);
-		final HashMap<CacheKey,Bitmap> targetBitmaps = new HashMap<CacheKey, Bitmap>();
-		final HashMap<CacheVariant,Bitmap> targetNewBitmaps = new HashMap<CacheVariant, Bitmap>();
+		final HashMap<CacheKey,Drawable> targetBitmaps = new HashMap<CacheKey, Drawable>();
+		final HashMap<CacheVariant,Drawable> targetNewBitmaps = new HashMap<CacheVariant, Drawable>();
 		File downloadToFile = null;
 		boolean downloaded = false;
 		try {
@@ -115,8 +119,8 @@ class BitmapDownloader extends Thread {
 				DownloadTarget target = mTargets.get(i);
 				checkAbort();
 
-				target.fileInCache = mCache.getCachedFile(target.mKey, mURL, mItemDate);
-				final boolean bitmapWasInCache = target.fileInCache!=null && target.fileInCache.exists() && target.fileInCache.canRead();
+				target.fileInCache = mCache.getCachedFile(target.mKey);
+				boolean bitmapWasInCache = target.fileInCache!=null;
 				if (!bitmapWasInCache) {
 					// we can't use the older version, download the file and create the stored file again
 					if (target.fileInCache!=null)
@@ -127,13 +131,27 @@ class BitmapDownloader extends Thread {
 				}
 
 				if (target.fileInCache!=null) {
-					Bitmap bitmap = targetBitmaps.get(target.mKey);
-					if (bitmap==null && bitmapWasInCache)
-						bitmap = BitmapFactory.decodeFile(target.fileInCache.getAbsolutePath());
+					Drawable displayDrawable;
+					if (bitmapWasInCache)
+						displayDrawable = new BitmapDrawable(mCache.getContext().getResources(), target.fileInCache.getAbsolutePath());
+					else
+						displayDrawable = null;
 
-					if (bitmap==null) {
+					if (displayDrawable==null) {
 						// we don't have that final file yet, use the download file to generate it
-						if (downloadToFile!=null && !downloaded) {
+						displayDrawable = targetBitmaps.get(target.mKey);
+						if (displayDrawable==null) {
+							displayDrawable = mCache.loadResourceDrawable(mURL);
+
+							if (displayDrawable!=null) {
+								if (target.loadHandler.getStorageTransform()!=null)
+									displayDrawable = new BitmapDrawable(target.loadHandler.getStorageTransform().transformBitmapForStorage(ViewLoader.drawableToBitmap(displayDrawable)));
+								else
+									bitmapWasInCache = true; // do not store the drawable as a bitmap as it is equal to the source
+							}
+						}
+
+						if (displayDrawable==null && downloadToFile!=null && !downloaded) {
 							try {
 								downloaded = downloadInTempFile(downloadToFile);
 								if (downloaded) {
@@ -150,7 +168,7 @@ class BitmapDownloader extends Thread {
 						}
 
 						if (downloaded) {
-							bitmap = BitmapFactory.decodeFile(downloadToFile.getAbsolutePath(), getOutputOptions(tmpFileOptions.outWidth, tmpFileOptions.outHeight, target.mKey));
+							Bitmap bitmap = BitmapFactory.decodeFile(downloadToFile.getAbsolutePath(), getOutputOptions(tmpFileOptions.outWidth, tmpFileOptions.outHeight, target.mKey));
 							if (bitmap!=null) {
 								int finalHeight = target.mKey.getBitmapHeight(bitmap.getWidth(), bitmap.getHeight());
 								if (finalHeight!=0 && finalHeight != bitmap.getHeight()) {
@@ -163,15 +181,17 @@ class BitmapDownloader extends Thread {
 
 								if (target.loadHandler.getStorageTransform()!=null)
 									bitmap = target.loadHandler.getStorageTransform().transformBitmapForStorage(bitmap);
+								
+								displayDrawable = new BitmapDrawable(mCache.getContext().getResources(), bitmap);
 							}
 						}
 					}
 
-					if (bitmap!=null) {
-						targetBitmaps.put(target.mKey, bitmap);
+					if (displayDrawable!=null) {
+						targetBitmaps.put(target.mKey, displayDrawable);
 						if (!bitmapWasInCache) {
 							CacheVariant variant = new CacheVariant(target.fileInCache, target.mKey);
-							targetNewBitmaps.put(variant, bitmap);
+							targetNewBitmaps.put(variant, displayDrawable);
 						}
 					} else {
 						if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.d(PictureCache.LOG_TAG, this+" failed to get a bitmap for:"+target);
@@ -203,15 +223,24 @@ class BitmapDownloader extends Thread {
 					for (DownloadTarget target : mTargets) {
 						//LogManager.logger.i(PictureCache.TAG, false, "ViewUpdate "+mURL);
 						PictureLoaderHandler j = target.loadHandler;
-						Bitmap bitmap = targetBitmaps.get(target.mKey);
+						Drawable drawable = targetBitmaps.get(target.mKey);
 
-						if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.i(PictureCache.LOG_TAG, this+" display "+bitmap+" in "+target.loadHandler+" file:"+target.fileInCache+" key:"+target.mKey);
+						if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.i(PictureCache.LOG_TAG, this+" display "+drawable+" in "+target.loadHandler+" file:"+target.fileInCache+" key:"+target.mKey);
 						if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.v(PictureCache.LOG_TAG, this+"  targets:"+mTargets+" bitmaps:"+targetBitmaps);
 						//LogManager.logger.i(PictureCache.TAG, "display "+mURL+" in "+j+" abort:"+abortRequested);
-						if (bitmap!=null) {
+						if (drawable!=null) {
+							Bitmap bitmap = ViewLoader.drawableToBitmap(drawable);
 							if (j.getDisplayTransform()!=null)
 								bitmap = j.getDisplayTransform().transformBitmap(bitmap);
-							j.drawBitmap(bitmap, mURL, mCache.postHandler);
+
+							Drawable cacheableBmp = null;
+							if (cacheableBmp == null) {
+								if (drawable instanceof BitmapDrawable && ((BitmapDrawable) drawable).getBitmap()==bitmap)
+									cacheableBmp = drawable;
+								else
+									cacheableBmp = new BitmapDrawable(mCache.getContext().getResources(), bitmap);
+							}
+							j.drawBitmap(cacheableBmp, mURL, mCache.postHandler);
 						} else
 							j.drawDefaultPicture(mURL, mCache.postHandler);
 					}
@@ -257,7 +286,7 @@ class BitmapDownloader extends Thread {
 
 			if (mItemDate < itemDate)
 				mItemDate = itemDate;
-			
+
 			if (mLifeSpan==null)
 				mLifeSpan = lifeSpan;
 			else if (mLifeSpan.compare(lifeSpan)<0)

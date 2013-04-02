@@ -2,11 +2,11 @@ package com.levelup.picturecache.loaders;
 
 import java.io.File;
 
-import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.widget.RemoteViews;
 
-import com.levelup.picturecache.UIHandler;
 import com.levelup.picturecache.PictureLoaderHandler;
+import com.levelup.picturecache.UIHandler;
 import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
 import com.levelup.picturecache.transforms.storage.StorageTransform;
 
@@ -30,8 +30,8 @@ public class RemoteViewLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	public void drawBitmap(Bitmap bmp, String url, UIHandler postHandler) {
-		remoteViews.setImageViewBitmap(viewId, bmp);
+	public void drawBitmap(Drawable bmp, String url, UIHandler postHandler) {
+		remoteViews.setImageViewBitmap(viewId, ViewLoader.drawableToBitmap(bmp));
 	}
 
 	@Override

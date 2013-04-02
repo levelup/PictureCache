@@ -2,12 +2,11 @@ package com.levelup.picturecache.loaders;
 
 import java.io.File;
 
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.view.View;
 
-import com.levelup.picturecache.UIHandler;
 import com.levelup.picturecache.PictureLoaderHandler;
+import com.levelup.picturecache.UIHandler;
 import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
 import com.levelup.picturecache.transforms.storage.StorageTransform;
 
@@ -57,14 +56,14 @@ public class ViewBackgroundLoader<V extends View> extends PictureLoaderHandler {
 	}
 
 	@Override
-	protected void drawBitmap(final Bitmap bmp, final String url, UIHandler postHandler) {
+	protected void drawBitmap(final Drawable bmp, final String url, UIHandler postHandler) {
 		postHandler.runOnUiThread(new Runnable() {
+			@SuppressWarnings("deprecation")
 			@Override
 			public void run() {
 				// TODO use the ImageViewLoadingTag
 				if (url.equals(mLoadingUrl)) {
-					BitmapDrawable drawable = new BitmapDrawable(bmp);
-					view.setBackgroundDrawable(drawable);
+					view.setBackgroundDrawable(bmp);
 				}
 			}
 		});

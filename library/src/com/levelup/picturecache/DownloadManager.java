@@ -7,7 +7,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
 
-import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 
 import com.levelup.picturecache.BitmapDownloader.JobMonitor;
@@ -17,7 +17,7 @@ class DownloadManager implements JobMonitor {
 	private static final boolean DEBUG_DOWNLOADER = false;
 
 	abstract interface JobsMonitor {
-		abstract void onNewBitmapLoaded(HashMap<CacheVariant,Bitmap> newBitmaps, String url, long cacheDate, LifeSpan lifeSpan);
+		abstract void onNewBitmapLoaded(HashMap<CacheVariant,Drawable> newBitmaps, String url, long cacheDate, LifeSpan lifeSpan);
 	}
 
 	private final Hashtable<String, BitmapDownloader> mJobs = new Hashtable<String, BitmapDownloader>();
@@ -82,7 +82,8 @@ class DownloadManager implements JobMonitor {
 		return false;
 	}
 
-	public void onJobFinishedWithNewBitmaps(BitmapDownloader downloader, HashMap<CacheVariant,Bitmap> newBitmaps) {
+	@Override
+	public void onJobFinishedWithNewBitmaps(BitmapDownloader downloader, HashMap<CacheVariant,Drawable> newBitmaps) {
 		if (mMonitor!=null)
 			mMonitor.onNewBitmapLoaded(newBitmaps, downloader.getURL(), downloader.getItemDate(), downloader.getLifeSpan());
 

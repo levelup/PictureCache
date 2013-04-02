@@ -1,6 +1,6 @@
 package com.levelup.picturecache.loaders;
 
-import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.os.Handler;
 
 import com.levelup.picturecache.LogManager;
@@ -18,7 +18,7 @@ class ViewLoadingTag {
 	private boolean isDefault;
 
 	// pending draw data
-	private Bitmap mPendingDraw;
+	private Drawable mPendingDraw;
 	private String mPendingUrl;
 	private DrawInUI mDrawInUI;
 
@@ -28,7 +28,7 @@ class ViewLoadingTag {
 		this.storageTransform = storageTransform;
 	}
 
-	void setPendingDraw(Bitmap pendingDraw, String pendingUrl) {
+	void setPendingDraw(Drawable pendingDraw, String pendingUrl) {
 		if (mDrawInUI!=null)
 			mDrawInUI.setPendingDraw(pendingDraw, pendingUrl);
 		else {
@@ -81,16 +81,16 @@ class ViewLoadingTag {
 		private final ViewLoader<?> viewLoader;
 
 		// pending draw data
-		private Bitmap mPendingDraw;
+		private Drawable mPendingDrawable;
 		private String mPendingUrl;
 
 		DrawInUI(ViewLoader<?> view) {
 			this.viewLoader = view;
 		}
 
-		public void setPendingDraw(Bitmap pendingDraw, String pendingUrl) {
+		public void setPendingDraw(Drawable pendingDraw, String pendingUrl) {
 			synchronized (viewLoader.getImageView()) {
-				this.mPendingDraw = pendingDraw;
+				this.mPendingDrawable = pendingDraw;
 				this.mPendingUrl = pendingUrl;
 			}
 		}
@@ -101,9 +101,9 @@ class ViewLoadingTag {
 				boolean skipDrawing = false;
 				final ViewLoadingTag tag = (ViewLoadingTag) viewLoader.getImageView().getTag();
 				if (tag!=null) {
-					if (mPendingDraw!=null && mPendingUrl!=null && (tag.url==null || !mPendingUrl.equals(tag.url))) {
+					if (mPendingDrawable!=null && mPendingUrl!=null && (tag.url==null || !mPendingUrl.equals(tag.url))) {
 						skipDrawing = true;
-						if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().e(PictureCache.LOG_TAG, viewLoader+" skip drawing "+mPendingUrl+" instead of "+tag.url+" with "+mPendingDraw);
+						if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().e(PictureCache.LOG_TAG, viewLoader+" skip drawing "+mPendingUrl+" instead of "+tag.url+" with "+mPendingDrawable);
 						//throw new IllegalStateException(ImageViewLoader.this+" try to draw "+mPendingUrl+" instead of "+tag.url+" with "+mPendingDraw);
 					}
 				}
@@ -111,18 +111,18 @@ class ViewLoadingTag {
 				if (!skipDrawing) {
 					boolean wasAlreadyDefault = false; // false: by default nothing is drawn
 					if (tag!=null) {
-						wasAlreadyDefault = tag.setAndGetIsDefault(mPendingDraw==null);
-						tag.setUrlIsLoaded(mPendingDraw!=null);
+						wasAlreadyDefault = tag.setAndGetIsDefault(mPendingDrawable==null);
+						tag.setUrlIsLoaded(mPendingDrawable!=null);
 					}
 
-					if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" / "+viewLoader+" drawing "+(mPendingDraw==null ? "default view" : mPendingDraw)+" tag:"+tag);
+					if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" / "+viewLoader+" drawing "+(mPendingDrawable==null ? "default view" : mPendingDrawable)+" tag:"+tag);
 
-					if (mPendingDraw==null) {
+					if (mPendingDrawable==null) {
 						if (!wasAlreadyDefault)
 							viewLoader.displayDefaultView();
 						else if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().e(PictureCache.LOG_TAG, viewLoader+" saved a default drawing");
 					} else
-						viewLoader.displayCustomBitmap(mPendingDraw);
+						viewLoader.displayCustomBitmap(mPendingDrawable);
 				}
 
 				//TODO: could cause memory leaks ?  mPendingDraw = null;
@@ -139,7 +139,7 @@ class ViewLoadingTag {
 			mPendingUrl = null;
 		}
 
-		if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().i(PictureCache.LOG_TAG, mDrawInUI+" / "+viewLoader+" drawInView run mDrawInUI bitmap:"+mDrawInUI.mPendingDraw+" for "+mDrawInUI.mPendingUrl);
+		if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().i(PictureCache.LOG_TAG, mDrawInUI+" / "+viewLoader+" drawInView run mDrawInUI bitmap:"+mDrawInUI.mPendingDrawable+" for "+mDrawInUI.mPendingUrl);
 		if (postHandler instanceof Handler)
 			((Handler) postHandler).removeCallbacks(mDrawInUI);
 		postHandler.runOnUiThread(mDrawInUI);

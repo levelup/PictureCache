@@ -2,13 +2,14 @@ package com.levelup.picturecache;
 
 import java.io.File;
 
-import com.levelup.picturecache.loaders.ViewLoader;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
+
 import com.levelup.picturecache.loaders.PrecacheImageLoader;
 import com.levelup.picturecache.loaders.RemoteViewLoader;
+import com.levelup.picturecache.loaders.ViewLoader;
 import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
 import com.levelup.picturecache.transforms.storage.StorageTransform;
-
-import android.graphics.Bitmap;
 
 /**
  * base class for the loader used by the picture cache
@@ -35,11 +36,11 @@ public abstract class PictureLoaderHandler {
 	 * <p>
 	 * this method may be called outside of the UI thread
 	 * 
-	 * @param bmp bitmap to display
+	 * @param bmp drawable to display
 	 * @param url URL corresponding to the bitmap
 	 * @param postHandler handler to use to run code in the UI thread
 	 */
-	abstract protected void drawBitmap(Bitmap bmp, String url, UIHandler postHandler);
+	abstract protected void drawBitmap(Drawable bmp, String url, UIHandler postHandler);
 	
 	protected PictureLoaderHandler(StorageTransform bitmapStorageTransform, BitmapTransform bitmapTransform) {
 		this.mStorageTransform = bitmapStorageTransform;
