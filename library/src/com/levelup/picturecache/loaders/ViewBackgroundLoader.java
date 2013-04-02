@@ -2,6 +2,7 @@ package com.levelup.picturecache.loaders;
 
 import java.io.File;
 
+import uk.co.senab.bitmapcache.BitmapLruCache;
 import android.graphics.drawable.Drawable;
 import android.view.View;
 
@@ -45,7 +46,7 @@ public class ViewBackgroundLoader<V extends View> extends PictureLoaderHandler {
 	}
 
 	@Override
-	protected void drawDefaultPicture(String url, UIHandler postHandler) {
+	protected void drawDefaultPicture(String url, UIHandler postHandler, BitmapLruCache drawableCache) {
 		postHandler.runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
@@ -56,7 +57,7 @@ public class ViewBackgroundLoader<V extends View> extends PictureLoaderHandler {
 	}
 
 	@Override
-	protected void drawBitmap(final Drawable bmp, final String url, UIHandler postHandler) {
+	protected void drawBitmap(final Drawable bmp, final String url, UIHandler postHandler, BitmapLruCache drawableCache) {
 		postHandler.runOnUiThread(new Runnable() {
 			@SuppressWarnings("deprecation")
 			@Override
@@ -70,7 +71,7 @@ public class ViewBackgroundLoader<V extends View> extends PictureLoaderHandler {
 	}
 
 	@Override
-	protected String setLoadingURL(String newURL) {
+	protected String setLoadingURL(String newURL, BitmapLruCache cache) {
 		// TODO use the ImageViewLoadingTag
 		String oldLoadingUrl = mLoadingUrl;
 		mLoadingUrl = newURL;

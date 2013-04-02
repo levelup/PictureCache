@@ -15,6 +15,10 @@ import st.gaw.db.InMemoryDbOperation;
 import st.gaw.db.InMemoryHashmapDb;
 import st.gaw.db.Logger;
 import st.gaw.db.MapEntry;
+import uk.co.senab.bitmapcache.BitmapLruCache;
+import uk.co.senab.bitmapcache.BitmapLruCache.Builder;
+import uk.co.senab.bitmapcache.CacheableBitmapDrawable;
+import uk.co.senab.bitmapcache.BitmapLruCache.RecyclePolicy;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -96,6 +100,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 	private DownloadManager mJobManager;
 	private Context mContext;
+
+	final BitmapLruCache mBitmapCache;
 
 	private AtomicInteger mPurgeCounterLongterm = new AtomicInteger();
 	private AtomicInteger mPurgeCounterShortterm = new AtomicInteger();
@@ -223,8 +229,9 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @param postHandler Handler to run some code in the UI thread and also determine if we're in the UI thread or not
 	 * @param logger A {@link Logger} object used to send all the logs generated inside the cache, may be null
 	 * @param ooHandler A {@link OutOfMemoryHandler} object used to notify when we are short on memory, may be null
+	 * @param bitmapCacheSize The size to use in memory for the Bitmaps cache, 0 for no memory cache, -1 for heap size based
 	 */
-	protected PictureCache(Context context, UIHandler postHandler, Logger logger, OutOfMemoryHandler ooHandler) {
+	protected PictureCache(Context context, UIHandler postHandler, Logger logger, OutOfMemoryHandler ooHandler, int bitmapCacheSize) {
 		super(context, DATABASE_NAME, DATABASE_VERSION, logger);
 
 		LogManager.setLogger(logger==null ? new LogManager.LoggerDefault() : logger);
@@ -238,6 +245,19 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		};
 		else
 			this.ooHandler = ooHandler;
+		if (bitmapCacheSize==0)
+			this.mBitmapCache = null;
+		else {
+			Builder builder = new BitmapLruCache.Builder(context).
+					setDiskCacheEnabled(false)
+					.setMemoryCacheEnabled(true)
+					.setRecyclePolicy(RecyclePolicy.DISABLED);
+			if (bitmapCacheSize < 0)
+				builder.setMemoryCacheMaxSizeUsingHeapSize();
+			else
+				builder.setMemoryCacheMaxSize(bitmapCacheSize);
+			this.mBitmapCache = builder.build();
+		}
 
 		File olddir = new File(Environment.getExternalStorageDirectory(), "/Android/data/"+context.getPackageName()+"/cache");
 		if (olddir.exists())
@@ -453,6 +473,18 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		}
 	}
 
+	static String keyToBitmapCacheKey(CacheKey key, String url, PictureLoaderHandler loader) {
+		final StringBuilder bitmapKey = new StringBuilder(key.getUUID());
+		bitmapKey.append(url);
+		if (loader != null) {
+			if (loader.getStorageTransform() != null)
+				bitmapKey.append(loader.getStorageTransform().getVariantPostfix());
+			if (loader.getDisplayTransform() != null)
+				bitmapKey.append(loader.getDisplayTransform().getVariant());
+		}
+		return bitmapKey.toString();
+	}
+
 	/**
 	 * 
 	 * @param URL
@@ -476,19 +508,20 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			if (TextUtils.isEmpty(URL)) {
 				LogManager.logger.i(LOG_TAG, "no URL specified/known for "+key+" using default");
 				removePictureLoader(loader, null);
-				loader.drawDefaultPicture(null, postHandler);
+				loader.drawDefaultPicture(null, postHandler, mBitmapCache);
 				return;
 			}
 
 			//LogManager.logger.v(TAG, "load "+URL+" in "+target+" key:"+key);
-			String previouslyLoading = loader.setLoadingURL(URL); 
-			if (URL.equals(previouslyLoading)) {
+			String wasPreviouslyLoading = loader.setLoadingURL(URL, mBitmapCache); 
+			if (URL.equals(wasPreviouslyLoading)) {
 				if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, loader+" no need to draw anything");
 				return; // no need to do anything the image is the same or downloading for it
 			}
-			
-			if (previouslyLoading!=null) {
-				mJobManager.cancelDownloadForLoader(loader, previouslyLoading);
+
+			if (wasPreviouslyLoading!=null) {
+				// cancel the loading of the previous URL for this loader
+				mJobManager.cancelDownloadForLoader(loader, wasPreviouslyLoading);
 			}
 
 			/*if (URL.startsWith("android.resource://")) {
@@ -498,24 +531,53 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			return;
 		}*/
 
-			File file = getCachedFile(key, URL, itemDate);
-			if (file!=null && file.exists() && file.canRead() && loader.canDirectLoad(file, postHandler)) {
-				try {
-					Bitmap bmp = BitmapFactory.decodeFile(file.getAbsolutePath());
-					if (bmp!=null) {
-						if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using direct file for URL "+URL+" file:"+file);
-						loader.drawBitmap(bmp, URL, postHandler);
+			key = getStoredKey(key, URL, itemDate);
+
+			final String bitmapCacheKey = mBitmapCache!=null ? keyToBitmapCacheKey(key, URL, loader) : null;
+			if (mBitmapCache!=null) {
+				CacheableBitmapDrawable cachedBmp = mBitmapCache.get(bitmapCacheKey);
+				if (cachedBmp!=null) {
+					if (!cachedBmp.getBitmap().isRecycled()) {
+						if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using cached bitmap for URL "+URL+" key:"+bitmapCacheKey);
+						loader.drawBitmap(cachedBmp, URL, postHandler, mBitmapCache);
 						return;
 					}
-				} catch (OutOfMemoryError e) {
-					loader.drawDefaultPicture(URL, postHandler);
-					LogManager.logger.w(LOG_TAG, "can't decode "+file,e);
-					ooHandler.onOutOfMemoryError(e);
-					return;
+					LogManager.logger.w(LOG_TAG, "try to draw bitmap "+key+" already recycled in "+loader+" URL:"+URL);
 				}
 			}
 
-			loader.drawDefaultPicture(URL, postHandler);
+			File file = getCachedFile(key);
+			if (file!=null) {
+				if (!file.exists() || !file.isFile()) {
+					LogManager.logger.w(LOG_TAG, "File "+file+" disappeared for "+key);
+					remove(key);
+				}
+				else if (loader.canDirectLoad(file, postHandler)) {
+					try {
+						Bitmap bmp = BitmapFactory.decodeFile(file.getAbsolutePath());
+						if (bmp!=null) {
+							if (null != loader.getDisplayTransform())
+								bmp = loader.getDisplayTransform().transformBitmap(bmp);
+
+							Drawable cachedBmp = null;
+							if (mBitmapCache!=null && loader.canKeepBitmapInMemory(bmp))
+								cachedBmp = mBitmapCache.put(bitmapCacheKey, bmp);
+							if (cachedBmp==null)
+								cachedBmp = new BitmapDrawable(mContext.getResources(), bmp);
+							if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using direct file for URL "+URL+" file:"+file);
+							loader.drawBitmap(cachedBmp, URL, postHandler, mBitmapCache);
+							return;
+						}
+					} catch (OutOfMemoryError e) {
+						loader.drawDefaultPicture(URL, postHandler, mBitmapCache);
+						LogManager.logger.w(LOG_TAG, "can't decode "+file,e);
+						ooHandler.onOutOfMemoryError(e);
+						return;
+					}
+				}
+			}
+
+			loader.drawDefaultPicture(URL, postHandler, mBitmapCache);
 
 			// we could not read from the cache, load the URL
 			if (key!=null)
@@ -597,7 +659,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	public void removePictureLoader(PictureLoaderHandler loader, String oldURL) {
 		if (loader != null) {
 			if (DEBUG_CACHE) LogManager.logger.i(LOG_TAG, "removePictureLoader "+loader+" with old URL "+oldURL);
-			loader.setLoadingURL(null);
+			loader.setLoadingURL(null, mBitmapCache);
 			mJobManager.cancelDownloadForLoader(loader, oldURL);
 		}
 	}
@@ -782,7 +844,50 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @param itemDate The date corresponding to the key/URL combo (can be 0)
 	 * @return a key corresponding to the right item in the database to load/store
 	 */
-	File getCachedFile(CacheKey key, String URL, long itemDate) {
+	private CacheKey getStoredKey(CacheKey key, String URL, long itemDate) {
+		if (key != null) {
+			mDataLock.lock();
+			try {
+				CacheItem v = getMap().get(key);
+
+				//if (URL!=null && !URL.contains("/profile_images/"))
+				if (v != null) {
+					if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, key+" found cache item "+v+" for key "+key+" URL:"+URL);
+					try {
+						if (URL != null && !URL.equals(v.URL)) {
+							// the URL for the cached item changed
+							if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, key+" changed from "+v.URL+" to "+URL+" remoteDate:"+v.remoteDate+" was "+itemDate);
+							if (v.remoteDate <= itemDate) { // '=' favor the newer url when dates are 0
+								// the item in the Cache is older than this request, the image changed for a newer one
+								// we need to mark the old one as short term with a UUID that has the picture ID inside
+								String deprecatedUUID = getOldPicUUID(key.getUUID(), v.URL);
+								CacheKey oldVersionKey = key.copyWithNewUuid(deprecatedUUID);
+								// move the current content to the deprecated key
+								moveCachedFiles(key, oldVersionKey, LifeSpan.SHORTTERM);
+								if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, key+" moved to "+oldVersionKey);
+							} else {
+								// use the old image from the cache with that URL
+								String dstUUID = getOldPicUUID(key.getUUID(), URL);
+								key = key.copyWithNewUuid(dstUUID);
+								if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, key+" will be used for that old version");
+							}
+						}
+					} catch (SecurityException e) {
+						LogManager.logger.e(LOG_TAG, "getPicture exception:" + e.getMessage(), e);
+					} catch (OutOfMemoryError e) {
+						LogManager.logger.w(LOG_TAG, "Could not decode image " + URL, e);
+						ooHandler.onOutOfMemoryError(e);
+					}
+				}
+				//else LogManager.logger.i(key.toString()+" not found in "+mData.size()+" cache elements");
+			} finally {
+				mDataLock.unlock();
+			}
+		}
+		return key;
+	}
+
+	File getCachedFile(CacheKey key) {
 		//if (URL!=null && !URL.contains("/profile_images/"))
 		//LogManager.logger.v(TAG, " getPicture URL:"+URL + " key:"+key);
 		if (key != null) {
@@ -791,42 +896,9 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				CacheItem v = getMap().get(key);
 
 				//if (URL!=null && !URL.contains("/profile_images/"))
-				if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, key+" found cache item "+v+" for URL "+URL);
-				if (v != null) {
-					try {
-						if (URL != null && !URL.equals(v.URL)) {
-							// the URL for the cached item changed
-							if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, key+" changed from "+v.URL+" to "+URL+" v.touitlastAccessDate:"+v.lastAccessDate +" remoteDate:"+v.remoteDate+" was "+itemDate);
-							if (v.remoteDate <= itemDate) { // '=' favor the newer url when dates are 0
-								// the item in the Cache is older than this request, the image changed for a newer one
-								// we need to mark the old one as short term with a UUID that has the picture ID inside
-								String dstUUID = getOldPicUUID(key.getUUID(), v.URL);
-								CacheKey oldVersionKey = key.copyWithNewUuid(dstUUID);
-								if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, key+" moved to "+oldVersionKey);
-								v = getMap().get(oldVersionKey);
-								if (v==null)
-									// the old version doesn't exist in the cache, copy the current content in there
-									moveCachedFiles(key, oldVersionKey, LifeSpan.SHORTTERM);
-								remove(key); // this one is not valid anymore
-								v = null; // don't use the old file
-							} else {
-								// use the old image from the cache with that URL
-								String dstUUID = getOldPicUUID(key.getUUID(), URL);
-								key = key.copyWithNewUuid(dstUUID);
-								if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, key+" used");
-								v = getMap().get(key);
-							}
-						}
-
-						// check if the URL matches, otherwise we have to load it again
-						if (v!=null)
-							return v.path;
-					} catch (SecurityException e) {
-						LogManager.logger.e(LOG_TAG, "getPicture exception:" + e.getMessage(), e);
-					} catch (OutOfMemoryError e) {
-						LogManager.logger.w(LOG_TAG, "Could not decode image " + URL, e);
-						ooHandler.onOutOfMemoryError(e);
-					}
+				if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, key+" found cache item "+v);
+				if (null!=v && null!=v.path && v.path.exists() && v.path.isFile()) {
+					return v.path;
 				}
 				//else LogManager.logger.i(key.toString()+" not found in "+mData.size()+" cache elements");
 			} finally {

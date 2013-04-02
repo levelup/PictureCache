@@ -2,6 +2,7 @@ package com.levelup.picturecache;
 
 import java.io.File;
 
+import uk.co.senab.bitmapcache.BitmapLruCache;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 
@@ -20,6 +21,8 @@ import com.levelup.picturecache.transforms.storage.StorageTransform;
  * @see {@link ViewLoader}, {@link RemoteViewLoader} or {@link PrecacheImageLoader}
  */
 public abstract class PictureLoaderHandler {
+	
+	private final int MAX_BITMAP_SIZE_IN_MEMORY = 1000000;
 
 	/**
 	 * called when the default drawable should be displayed, while the bitmap is loading
@@ -28,8 +31,9 @@ public abstract class PictureLoaderHandler {
 	 * 
 	 * @param url URL being loaded
 	 * @param postHandler handler to use to run code in the UI thread
+	 * @param drawableCache TODO
 	 */
-	abstract protected void drawDefaultPicture(String url, UIHandler postHandler);
+	abstract protected void drawDefaultPicture(String url, UIHandler postHandler, BitmapLruCache drawableCache);
 	
 	/**
 	 * called when the downloaded {@link Bitmap} should be displayed 
@@ -39,8 +43,9 @@ public abstract class PictureLoaderHandler {
 	 * @param bmp drawable to display
 	 * @param url URL corresponding to the bitmap
 	 * @param postHandler handler to use to run code in the UI thread
+	 * @param drawableCache TODO
 	 */
-	abstract protected void drawBitmap(Drawable bmp, String url, UIHandler postHandler);
+	abstract protected void drawBitmap(Drawable bmp, String url, UIHandler postHandler, BitmapLruCache drawableCache);
 	
 	protected PictureLoaderHandler(StorageTransform bitmapStorageTransform, BitmapTransform bitmapTransform) {
 		this.mStorageTransform = bitmapStorageTransform;
@@ -58,9 +63,10 @@ public abstract class PictureLoaderHandler {
 	/**
 	 * called to tell the loader which URL is being loaded in the target
 	 * @param newURL
+	 * @param cache TODO
 	 * @return the URL that was previously loading, null if there wasn't any
 	 */
-	abstract protected String setLoadingURL(String newURL);
+	abstract protected String setLoadingURL(String newURL, BitmapLruCache cache);
 	/**
 	 * 
 	 * @return
@@ -87,5 +93,18 @@ public abstract class PictureLoaderHandler {
 	@Override
 	public int hashCode() {
 		return (mBitmapTransform==null ? 0 : mBitmapTransform.hashCode()) * 31 + (mStorageTransform==null ? 0 : mStorageTransform.hashCode());
+	}
+
+	/**
+	 * Tell if the downloaded Bitmap can be kept in memory for later use (not recommended for large bitmaps)
+	 * <p>By default only allow bitmaps smaller than 1MB in memory</p>
+	 * <p>A {@link BitmapLruCache} must be provided in the {@link PictureCache} constructor</p>
+	 * @param bitmap The bitmap that should be kept in memory
+	 * @return
+	 */
+	public boolean canKeepBitmapInMemory(final Bitmap bitmap) {
+		if (bitmap==null)
+			return false;
+		return bitmap.getRowBytes() * bitmap.getHeight() < MAX_BITMAP_SIZE_IN_MEMORY;
 	}
 }

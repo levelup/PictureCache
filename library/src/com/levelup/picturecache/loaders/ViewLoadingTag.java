@@ -1,5 +1,6 @@
 package com.levelup.picturecache.loaders;
 
+import uk.co.senab.bitmapcache.BitmapLruCache;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 
@@ -13,6 +14,7 @@ class ViewLoadingTag {
 	final String url;
 	private final StorageTransform storageTransform;
 	private final BitmapTransform displayTransform;
+	private final BitmapLruCache cache;
 
 	private boolean isLoaded;
 	private boolean isDefault;
@@ -22,7 +24,8 @@ class ViewLoadingTag {
 	private String mPendingUrl;
 	private DrawInUI mDrawInUI;
 
-	ViewLoadingTag(String url, StorageTransform storageTransform, BitmapTransform displayTransform) {
+	ViewLoadingTag(BitmapLruCache cache, String url, StorageTransform storageTransform, BitmapTransform displayTransform) {
+		this.cache = cache;
 		this.url = url;
 		this.displayTransform = displayTransform;
 		this.storageTransform = storageTransform;
@@ -79,13 +82,15 @@ class ViewLoadingTag {
 
 	private static class DrawInUI implements Runnable {
 		private final ViewLoader<?> viewLoader;
+		private final BitmapLruCache cache;
 
 		// pending draw data
 		private Drawable mPendingDrawable;
 		private String mPendingUrl;
 
-		DrawInUI(ViewLoader<?> view) {
+		DrawInUI(ViewLoader<?> view, BitmapLruCache cache) {
 			this.viewLoader = view;
+			this.cache = cache;
 		}
 
 		public void setPendingDraw(Drawable pendingDraw, String pendingUrl) {
@@ -119,7 +124,7 @@ class ViewLoadingTag {
 
 					if (mPendingDrawable==null) {
 						if (!wasAlreadyDefault)
-							viewLoader.displayDefaultView();
+							viewLoader.displayDefaultView(cache);
 						else if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().e(PictureCache.LOG_TAG, viewLoader+" saved a default drawing");
 					} else
 						viewLoader.displayCustomBitmap(mPendingDrawable);
@@ -133,7 +138,7 @@ class ViewLoadingTag {
 	void drawInView(UIHandler postHandler, ViewLoader<?> viewLoader) {
 		if (mDrawInUI == null) {
 			if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, viewLoader+" create new DrawInUI with "+mPendingDraw+" for "+mPendingUrl);
-			mDrawInUI = new DrawInUI(viewLoader);
+			mDrawInUI = new DrawInUI(viewLoader, cache);
 			mDrawInUI.setPendingDraw(mPendingDraw, mPendingUrl);
 			mPendingDraw = null;
 			mPendingUrl = null;

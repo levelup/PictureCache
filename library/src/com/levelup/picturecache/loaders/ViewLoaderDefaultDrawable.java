@@ -1,5 +1,6 @@
 package com.levelup.picturecache.loaders;
 
+import uk.co.senab.bitmapcache.BitmapLruCache;
 import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.widget.ImageView;
@@ -31,8 +32,9 @@ public class ViewLoaderDefaultDrawable<T extends View> extends ViewLoader<T> {
 	 * display the default view, called in the UI thread
 	 * called under a lock on {@link view}
 	 */
-	protected void displayDefaultView() {
-		if (getImageView() instanceof ImageView)
+	protected void displayDefaultView(BitmapLruCache drawableCache) {
+		if (getImageView() instanceof ImageView) {
 			((ImageView) getImageView()).setImageDrawable(defaultDrawable);
+		}
 	}
 }

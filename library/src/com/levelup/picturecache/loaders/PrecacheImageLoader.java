@@ -3,6 +3,7 @@ package com.levelup.picturecache.loaders;
 import java.io.File;
 import java.util.Random;
 
+import uk.co.senab.bitmapcache.BitmapLruCache;
 import android.graphics.drawable.Drawable;
 
 import com.levelup.picturecache.PictureLoaderHandler;
@@ -23,10 +24,10 @@ public class PrecacheImageLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	public void drawDefaultPicture(String url, UIHandler postHandler) {}
+	public void drawDefaultPicture(String url, UIHandler postHandler, BitmapLruCache drawableCache) {}
 
 	@Override
-	public void drawBitmap(Drawable bmp, String url, UIHandler postHandler) {}
+	public void drawBitmap(Drawable bmp, String url, UIHandler postHandler, BitmapLruCache drawableCache) {}
 
 	@Override
 	public boolean equals(Object o) {
@@ -42,7 +43,7 @@ public class PrecacheImageLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	public String setLoadingURL(String newURL) {
+	public String setLoadingURL(String newURL, BitmapLruCache cache) {
 		String oldLoadingUrl = mLoadingUrl;
 		mLoadingUrl = newURL;
 		return oldLoadingUrl;

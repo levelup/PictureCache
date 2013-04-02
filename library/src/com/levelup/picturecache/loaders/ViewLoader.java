@@ -3,6 +3,7 @@ package com.levelup.picturecache.loaders;
 import java.io.File;
 import java.security.InvalidParameterException;
 
+import uk.co.senab.bitmapcache.BitmapLruCache;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
@@ -71,22 +72,23 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 	}
 
 	@Override
-	public final void drawDefaultPicture(String url, UIHandler postHandler) {
+	public final void drawDefaultPicture(String url, UIHandler postHandler, BitmapLruCache drawableCache) {
 		if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" drawDefaultPicture");
-		showDrawable(postHandler, null, url);
+		showDrawable(drawableCache, postHandler, null, url);
 	}
 
 	@Override
-	public final void drawBitmap(Drawable bmp, String url, UIHandler postHandler) {
+	public final void drawBitmap(Drawable bmp, String url, UIHandler postHandler, BitmapLruCache drawableCache) {
 		if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" drawBitmap "+view+" with "+bmp);
-		showDrawable(postHandler, bmp, url);
+		showDrawable(drawableCache, postHandler, bmp, url);
 	}
 
 	/**
 	 * display the default view, called in the UI thread
 	 * called under a lock on {@link view}
+	 * @param cache the bitmap cache
 	 */
-	protected abstract void displayDefaultView();
+	protected abstract void displayDefaultView(BitmapLruCache cache);
 
 	/**
 	 * display this Bitmap in the view, called in the UI thread
@@ -97,11 +99,11 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 		view.setImageDrawable(pendingDrawable);
 	}
 
-	private void showDrawable(UIHandler postHandler, Drawable customBitmap, String url) {
+	private void showDrawable(BitmapLruCache cache, UIHandler postHandler, Drawable customBitmap, String url) {
 		synchronized (view.getImageView()) {
 			ViewLoadingTag tag = view.getTag();
 			if (tag==null) {
-				tag = new ViewLoadingTag(url, getStorageTransform(), getDisplayTransform());
+				tag = new ViewLoadingTag(cache, url, getStorageTransform(), getDisplayTransform());
 				view.setTag(tag);
 			}
 			tag.setPendingDraw(customBitmap, url);
@@ -110,8 +112,8 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 	}
 
 	@Override
-	public String setLoadingURL(String newURL) {
-		ViewLoadingTag newTag = new ViewLoadingTag(newURL, getStorageTransform(), getDisplayTransform());
+	public String setLoadingURL(String newURL, BitmapLruCache cache) {
+		ViewLoadingTag newTag = new ViewLoadingTag(cache, newURL, getStorageTransform(), getDisplayTransform());
 
 		ViewLoadingTag oldTag = null;
 		synchronized (view.getImageView()) {

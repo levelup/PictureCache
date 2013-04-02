@@ -2,6 +2,7 @@ package com.levelup.picturecache.loaders;
 
 import java.io.File;
 
+import uk.co.senab.bitmapcache.BitmapLruCache;
 import android.graphics.drawable.Drawable;
 import android.widget.RemoteViews;
 
@@ -25,12 +26,12 @@ public class RemoteViewLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	public void drawDefaultPicture(String url, UIHandler postHandler) {
+	public void drawDefaultPicture(String url, UIHandler postHandler, BitmapLruCache drawableCache) {
 		remoteViews.setImageViewResource(viewId, defaultResourceId);
 	}
 
 	@Override
-	public void drawBitmap(Drawable bmp, String url, UIHandler postHandler) {
+	public void drawBitmap(Drawable bmp, String url, UIHandler postHandler, BitmapLruCache drawableCache) {
 		remoteViews.setImageViewBitmap(viewId, ViewLoader.drawableToBitmap(bmp));
 	}
 
@@ -53,7 +54,7 @@ public class RemoteViewLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	public String setLoadingURL(String newURL) {
+	public String setLoadingURL(String newURL, BitmapLruCache cache) {
 		String oldLoadingUrl = mLoadingUrl;
 		mLoadingUrl = newURL;
 		return oldLoadingUrl;
