@@ -775,9 +775,17 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			try {
 				if (variant.path.exists())
 					variant.path.delete();
-				FileOutputStream fos = new FileOutputStream(variant.path, false);
 				Drawable drawable = newBitmaps.get(variant);
+				if (null==drawable) {
+					LogManager.logger.i(LOG_TAG, "tried to save a null drawable "+variant.key+" from "+url+" as "+variant.path);
+					continue;
+				}
 				Bitmap bmp = ViewLoader.drawableToBitmap(drawable);
+				if (null==bmp) {
+					LogManager.logger.i(LOG_TAG, "tried to save a null bitmap "+variant.key+" from "+url+" as "+variant.path);
+					continue;
+				}
+				FileOutputStream fos = new FileOutputStream(variant.path, false);
 				bmp.compress(variant.key.getCompression(), variant.key.getCompRatio(), fos);
 				fos.close();
 
