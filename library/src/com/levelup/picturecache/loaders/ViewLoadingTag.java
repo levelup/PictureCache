@@ -126,11 +126,11 @@ class ViewLoadingTag {
 						if (!wasAlreadyDefault)
 							viewLoader.displayDefaultView(cache);
 						else if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().e(PictureCache.LOG_TAG, viewLoader+" saved a default drawing");
-					} else
+					} else {
 						viewLoader.displayCustomBitmap(mPendingDrawable);
+						mPendingDrawable = null;
+					}
 				}
-
-				//TODO: could cause memory leaks ?  mPendingDraw = null;
 			}
 		}
 	};
