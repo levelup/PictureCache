@@ -10,15 +10,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import st.gaw.db.InMemoryDbHelper;
-import st.gaw.db.InMemoryDbOperation;
+import st.gaw.db.AsynchronousDbHelper;
+import st.gaw.db.AsynchronousDbOperation;
 import st.gaw.db.InMemoryHashmapDb;
 import st.gaw.db.Logger;
 import st.gaw.db.MapEntry;
 import uk.co.senab.bitmapcache.BitmapLruCache;
 import uk.co.senab.bitmapcache.BitmapLruCache.Builder;
-import uk.co.senab.bitmapcache.CacheableBitmapDrawable;
 import uk.co.senab.bitmapcache.BitmapLruCache.RecyclePolicy;
+import uk.co.senab.bitmapcache.CacheableBitmapDrawable;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -409,7 +409,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		return result;
 	}
 
-	private static class RemoveExpired implements InMemoryDbOperation<Map.Entry<CacheKey,CacheItem>> {
+	private static class RemoveExpired implements AsynchronousDbOperation<Map.Entry<CacheKey,CacheItem>> {
 
 		private final LifeSpan lifeSpan;
 
@@ -422,7 +422,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		}
 
 		@Override
-		public void runInMemoryDbOperation(InMemoryDbHelper<Entry<CacheKey, CacheItem>> db) {
+		public void runInMemoryDbOperation(AsynchronousDbHelper<Entry<CacheKey, CacheItem>> db) {
 			PictureCache cache = (PictureCache) db;
 			if (lifeSpan != null)
 				makeRoom(cache, lifeSpan);
