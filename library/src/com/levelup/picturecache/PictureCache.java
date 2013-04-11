@@ -45,6 +45,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 	public static final String LOG_TAG = "PictureCache";
 	final static boolean DEBUG_CACHE = false & BuildConfig.DEBUG;
+	
+	static int MAXBITMAP_IN_MEMORY = 400000;
 
 	/**
 	 * How many new items need to be added to the database before a purge is done
@@ -245,6 +247,9 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		};
 		else
 			this.ooHandler = ooHandler;
+		
+		MAXBITMAP_IN_MEMORY = context.getResources().getDisplayMetrics().densityDpi * context.getResources().getDisplayMetrics().widthPixels * 4;
+		
 		if (bitmapCacheSize==0)
 			this.mBitmapCache = null;
 		else {
@@ -785,7 +790,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				}
 				Bitmap bmp = ViewLoader.drawableToBitmap(drawable);
 				if (null==bmp) {
-					LogManager.logger.i(LOG_TAG, "tried to save a null bitmap "+variant.key+" from "+url+" as "+variant.path);
+					LogManager.logger.i(LOG_TAG, "tried to save a null bitmap "+variant.key+" from "+url+" using "+drawable);
 					continue;
 				}
 				FileOutputStream fos = new FileOutputStream(variant.path, false);

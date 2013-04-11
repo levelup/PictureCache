@@ -22,8 +22,6 @@ import com.levelup.picturecache.transforms.storage.StorageTransform;
  */
 public abstract class PictureLoaderHandler {
 	
-	private final int MAX_BITMAP_SIZE_IN_MEMORY = 1000000;
-
 	/**
 	 * Called when the default drawable should be displayed, while the bitmap is loading
 	 * <p>
@@ -106,6 +104,6 @@ public abstract class PictureLoaderHandler {
 	public boolean canKeepBitmapInMemory(final Bitmap bitmap) {
 		if (bitmap==null)
 			return false;
-		return bitmap.getRowBytes() * bitmap.getHeight() < MAX_BITMAP_SIZE_IN_MEMORY;
+		return bitmap.getRowBytes() * bitmap.getHeight() < PictureCache.MAXBITMAP_IN_MEMORY;
 	}
 }
