@@ -490,11 +490,12 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * 
 	 * @param URL
 	 * @param key
+	 * @param cookie TODO
 	 * @param itemDate use to store the previous item for the same {@link key}
 	 * @param loader
 	 * @param lifeSpan see {@link LifeSpan}
 	 */
-	void getPicture(String URL, CacheKey key, long itemDate, PictureLoaderHandler loader, LifeSpan lifeSpan)
+	void getPicture(String URL, CacheKey key, Object cookie, long itemDate, PictureLoaderHandler loader, LifeSpan lifeSpan)
 	{
 		mDataLock.lock();
 		try {
@@ -540,7 +541,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				if (cachedBmp!=null) {
 					if (!cachedBmp.getBitmap().isRecycled()) {
 						if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using cached bitmap for URL "+URL+" key:"+bitmapCacheKey);
-						loader.drawBitmap(cachedBmp, URL, postHandler, mBitmapCache);
+						loader.drawBitmap(cachedBmp, URL, cookie, postHandler, mBitmapCache);
 						return;
 					}
 					LogManager.logger.w(LOG_TAG, "try to draw bitmap "+key+" already recycled in "+loader+" URL:"+URL);
@@ -566,7 +567,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 							if (cachedBmp==null)
 								cachedBmp = new BitmapDrawable(mContext.getResources(), bmp);
 							if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using direct file for URL "+URL+" file:"+file);
-							loader.drawBitmap(cachedBmp, URL, postHandler, mBitmapCache);
+							loader.drawBitmap(cachedBmp, URL, cookie, postHandler, mBitmapCache);
 							return;
 						}
 					} catch (OutOfMemoryError e) {
@@ -582,30 +583,31 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 			// we could not read from the cache, load the URL
 			if (key!=null)
-				mJobManager.addDownloadTarget(this, URL, loader, key, itemDate, lifeSpan);
+				mJobManager.addDownloadTarget(this, URL, cookie, loader, key, itemDate, lifeSpan);
 		} finally {
 			mDataLock.unlock();
 		}
 	}
 
 	/**
-	 * helper method to load a height based picture using the cache
-	 * @see {@link PictureJob}
-	 * @param handler the handler used to display the loaded bitmap/placeholder on the target, see {@link ViewLoader}, {@link RemoteViewLoader} or {@link PrecacheImageLoader}
-	 * @param URL the bitmap URL to load into the handler (may be null if UUID is not null)
-	 * @param UUID a unique ID representing the element in the cache (may be null if URL is not null)
-	 * @param itemDate the date in which the item was created, this is used to purge images older than this one from the cache
-	 * @param lifeSpan how long the item should remain in the cache, can be {@link LifeSpan#SHORTTERM},  {@link LifeSpan#LONGTERM} or {@link LifeSpan#ETERNAL}
-	 * @param height the height of the image to store in the cache
-	 * @param extensionMode the kind of file type we are loading, can be {@link StorageType#AUTO}, {@link StorageType#PNG} or {@link StorageType#JPEG}
+	 * Helper method for {@link PictureJob} to load a height based picture using the cache 
+	 * @param loader The handler used to display the loaded bitmap/placeholder on the target, see {@link ViewLoader}, {@link RemoteViewLoader} or {@link PrecacheImageLoader}
+	 * @param URL The bitmap URL to load into the handler (may be null if UUID is not null)
+	 * @param UUID A unique ID representing the element in the cache (may be null if URL is not null)
+	 * @param cookie An object that will be passed to the loader when the URL is displayed
+	 * @param itemDate The date in which the item was created, this is used to purge images older than this one from the cache
+	 * @param lifeSpan How long the item should remain in the cache, can be {@link LifeSpan#SHORTTERM},  {@link LifeSpan#LONGTERM} or {@link LifeSpan#ETERNAL}
+	 * @param height The height of the image to store in the cache
+	 * @param extensionMode The kind of file type we are loading, can be {@link StorageType#AUTO}, {@link StorageType#PNG} or {@link StorageType#JPEG}
 	 */
-	public void loadPictureWithFixedHeight(PictureLoaderHandler handler, String URL, String UUID, long itemDate, LifeSpan lifeSpan, int height, StorageType extensionMode) {
-		PictureJob pictureJob = new PictureJob.Builder(handler)
+	public void loadPictureWithFixedHeight(PictureLoaderHandler loader, String URL, String UUID, Object cookie, long itemDate, LifeSpan lifeSpan, int height, StorageType extensionMode) {
+		PictureJob pictureJob = new PictureJob.Builder(loader)
 		.setURL(URL).setUUID(UUID)
 		.setFreshDate(itemDate)
 		.setLifeType(lifeSpan)
 		.setExtensionMode(extensionMode)
 		.setDimension(height, false)
+		.setCookie(cookie)
 		.build();
 
 		try {
@@ -616,24 +618,25 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	}
 
 	/**
-	 * helper method to load a width based picture using the cache
-	 * @see {@link PictureJob}
-	 * @param handler the handler used to display the loaded bitmap/placeholder on the target, see {@link ViewLoader}, {@link RemoteViewLoader} or {@link PrecacheImageLoader}
-	 * @param URL the bitmap URL to load into the handler (may be null if UUID is not null)
-	 * @param UUID a unique ID representing the element in the cache (may be null if URL is not null)
-	 * @param itemDate the date in which the item was created, this is used to purge images older than this one from the cache
-	 * @param lifeSpan how long the item should remain in the cache, can be {@link LifeSpan#SHORTTERM},  {@link LifeSpan#LONGTERM} or {@link LifeSpan#ETERNAL}
-	 * @param width the width of the image to store in the cache
-	 * @param extensionMode the kind of file type we are loading, can be {@link StorageType#AUTO}, {@link StorageType#PNG} or {@link StorageType#JPEG}
+	 * Helper method for {@link PictureJob} to load a width based picture using the cache
+	 * @param loader The handler used to display the loaded bitmap/placeholder on the target, see {@link ViewLoader}, {@link RemoteViewLoader} or {@link PrecacheImageLoader}
+	 * @param URL The bitmap URL to load into the handler (may be null if UUID is not null)
+	 * @param UUID A unique ID representing the element in the cache (may be null if URL is not null)
+	 * @param cookie An object that will be passed to the loader when the URL is displayed
+	 * @param itemDate The date in which the item was created, this is used to purge images older than this one from the cache
+	 * @param lifeSpan How long the item should remain in the cache, can be {@link LifeSpan#SHORTTERM},  {@link LifeSpan#LONGTERM} or {@link LifeSpan#ETERNAL}
+	 * @param width The width of the image to store in the cache
+	 * @param extensionMode The kind of file type we are loading, can be {@link StorageType#AUTO}, {@link StorageType#PNG} or {@link StorageType#JPEG}
 	 */
-	public void loadPictureWithMaxWidth(PictureLoaderHandler handler, String URL, String UUID, long itemDate, LifeSpan lifeSpan, int width, StorageType extensionMode) {
-		PictureJob pictureJob = new PictureJob.Builder(handler)
+	public void loadPictureWithMaxWidth(PictureLoaderHandler loader, String URL, String UUID, Object cookie, long itemDate, LifeSpan lifeSpan, int width, StorageType extensionMode) {
+		PictureJob pictureJob = new PictureJob.Builder(loader)
 		.setURL(URL)
 		.setUUID(UUID)
 		.setFreshDate(itemDate)
 		.setLifeType(lifeSpan)
 		.setExtensionMode(extensionMode)
 		.setDimension(width, true)
+		.setCookie(cookie)
 		.build();
 		try {
 			pictureJob.startLoading(this);

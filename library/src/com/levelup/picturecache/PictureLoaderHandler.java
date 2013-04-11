@@ -25,27 +25,28 @@ public abstract class PictureLoaderHandler {
 	private final int MAX_BITMAP_SIZE_IN_MEMORY = 1000000;
 
 	/**
-	 * called when the default drawable should be displayed, while the bitmap is loading
+	 * Called when the default drawable should be displayed, while the bitmap is loading
 	 * <p>
-	 * this method may be called outside of the UI thread
+	 * This method may be called outside of the UI thread</p>
 	 * 
 	 * @param url URL being loaded
-	 * @param postHandler handler to use to run code in the UI thread
+	 * @param postHandler Handler to use to run code in the UI thread
 	 * @param drawableCache TODO
 	 */
 	abstract protected void drawDefaultPicture(String url, UIHandler postHandler, BitmapLruCache drawableCache);
 	
 	/**
-	 * called when the downloaded {@link Bitmap} should be displayed 
+	 * Called when the downloaded {@link Bitmap} should be displayed 
 	 * <p>
-	 * this method may be called outside of the UI thread
+	 * This method may be called outside of the UI thread</p>
 	 * 
-	 * @param bmp drawable to display
+	 * @param bmp Drawable to display
 	 * @param url URL corresponding to the bitmap
-	 * @param postHandler handler to use to run code in the UI thread
+	 * @param cookie data associated with the loaded URL
+	 * @param postHandler Handler to use to run code in the UI thread
 	 * @param drawableCache TODO
 	 */
-	abstract protected void drawBitmap(Drawable bmp, String url, UIHandler postHandler, BitmapLruCache drawableCache);
+	abstract protected void drawBitmap(Drawable bmp, String url, Object cookie, UIHandler postHandler, BitmapLruCache drawableCache);
 	
 	protected PictureLoaderHandler(StorageTransform bitmapStorageTransform, BitmapTransform bitmapTransform) {
 		this.mStorageTransform = bitmapStorageTransform;

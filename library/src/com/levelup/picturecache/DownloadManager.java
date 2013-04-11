@@ -27,7 +27,7 @@ class DownloadManager implements JobMonitor {
 		mMonitor = monitor;
 	}
 
-	void addDownloadTarget(PictureCache cache, String URL, PictureLoaderHandler loadHandler, CacheKey key, long itemDate, LifeSpan lifeSpan) {
+	void addDownloadTarget(PictureCache cache, String URL, Object cookie, PictureLoaderHandler loadHandler, CacheKey key, long itemDate, LifeSpan lifeSpan) {
 		// find out if that URL is already loading, if so add the view to the recipient
 		synchronized (mJobs) {
 			// add job by URL
@@ -37,7 +37,7 @@ class DownloadManager implements JobMonitor {
 			if (!targetAdded) {
 				if (DEBUG_DOWNLOADER) LogManager.logger.i(PictureCache.LOG_TAG, "add new downloader for "+URL+" key:"+key+" loader:"+loadHandler+" jobs:"+mJobs);
 				// create a fresh new one if an old one is not ready to accept our loadHandler
-				downloader = new BitmapDownloader(URL, cache);
+				downloader = new BitmapDownloader(URL, cookie, cache);
 				downloader.setMonitor(this);
 				mJobs.put(URL, downloader);
 				downloader.addTarget(loadHandler, key, itemDate, lifeSpan);

@@ -27,7 +27,7 @@ public class PrecacheImageLoader extends PictureLoaderHandler {
 	public void drawDefaultPicture(String url, UIHandler postHandler, BitmapLruCache drawableCache) {}
 
 	@Override
-	public void drawBitmap(Drawable bmp, String url, UIHandler postHandler, BitmapLruCache drawableCache) {}
+	public void drawBitmap(Drawable bmp, String url, Object cookie, UIHandler postHandler, BitmapLruCache drawableCache) {}
 
 	@Override
 	public boolean equals(Object o) {

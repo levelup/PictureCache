@@ -62,6 +62,7 @@ class BitmapDownloader extends Thread {
 	}
 
 	private final String mURL;
+	private final Object mCookie;
 	private final PictureCache mCache;
 	private final CopyOnWriteArrayList<DownloadTarget> mTargets = new CopyOnWriteArrayList<DownloadTarget>();
 
@@ -78,9 +79,10 @@ class BitmapDownloader extends Thread {
 
 	private static final int CONNECT_TIMEOUT_DL = 10000; // 10s
 
-	BitmapDownloader(String URL, PictureCache cache) {
+	BitmapDownloader(String URL, Object cookie, PictureCache cache) {
 		if (URL==null) throw new NullPointerException("How are we supposed to download a null URL?");
 		mURL = URL;
+		mCookie = cookie;
 		mCache = cache;
 		setName("PictureDL-"+mURL.hashCode());
 	}
@@ -243,7 +245,7 @@ class BitmapDownloader extends Thread {
 								else
 									cacheableBmp = new BitmapDrawable(mCache.getContext().getResources(), bitmap);
 							}
-							j.drawBitmap(cacheableBmp, mURL, mCache.postHandler, mCache.mBitmapCache);
+							j.drawBitmap(cacheableBmp, mURL, mCookie, mCache.postHandler, mCache.mBitmapCache);
 						} else
 							j.drawDefaultPicture(mURL, mCache.postHandler, mCache.mBitmapCache);
 					}

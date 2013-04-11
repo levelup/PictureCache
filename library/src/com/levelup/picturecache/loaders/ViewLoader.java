@@ -78,7 +78,7 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 	}
 
 	@Override
-	public final void drawBitmap(Drawable bmp, String url, UIHandler postHandler, BitmapLruCache drawableCache) {
+	public final void drawBitmap(Drawable bmp, String url, Object cookie, UIHandler postHandler, BitmapLruCache drawableCache) {
 		if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" drawBitmap "+view+" with "+bmp);
 		showDrawable(drawableCache, postHandler, bmp, url);
 	}

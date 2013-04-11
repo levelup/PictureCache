@@ -8,6 +8,7 @@ public class PictureJob {
 
 	private String mURL;
 	private String mUUID;
+	private Object mCookie;
 	private long mFreshDate;
 	private LifeSpan mLifeSpan;
 	private int mDimension;
@@ -19,6 +20,7 @@ public class PictureJob {
 
 		private String mURL;
 		private String mUUID;
+		private Object mCookie;
 		private long mFreshDate;
 		private LifeSpan mLifeSpan = LifeSpan.LONGTERM;
 		private int mDimension;
@@ -66,10 +68,16 @@ public class PictureJob {
 			return this;
 		}
 
+		public Builder setCookie(Object cookie) {
+			mCookie = cookie;
+			return this;
+		}
+
 		public PictureJob build() {
 			PictureJob pictureJob = new PictureJob();
 			pictureJob.mURL = mURL;
 			pictureJob.mUUID = mUUID;
+			pictureJob.mCookie = mCookie;
 			pictureJob.mFreshDate = mFreshDate;
 			pictureJob.mLifeSpan = mLifeSpan;
 			pictureJob.mDimension = mDimension;
@@ -105,6 +113,6 @@ public class PictureJob {
 			return;
 		}
 
-		cache.getPicture(mURL, key, mFreshDate, mHandler, mLifeSpan);
+		cache.getPicture(mURL, key, mCookie, mFreshDate, mHandler, mLifeSpan);
 	}
 }
