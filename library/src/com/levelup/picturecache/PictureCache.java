@@ -232,6 +232,18 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @param bitmapCacheSize The size to use in memory for the Bitmaps cache, 0 for no memory cache, -1 for heap size based
 	 */
 	protected PictureCache(Context context, Logger logger, OutOfMemoryHandler ooHandler, int bitmapCacheSize) {
+		this(context, logger, ooHandler, bitmapCacheSize, "cache");
+	}
+	
+	/**
+	 * Constructor of a PictureCache
+	 * @param context Context of the application, may also be used to get a {@link ContentResolver}
+	 * @param logger A {@link Logger} object used to send all the logs generated inside the cache, may be null
+	 * @param ooHandler A {@link OutOfMemoryHandler} object used to notify when we are short on memory, may be null
+	 * @param bitmapCacheSize The size to use in memory for the Bitmaps cache, 0 for no memory cache, -1 for heap size based
+	 * @param folderName TODO
+	 */
+	protected PictureCache(Context context, Logger logger, OutOfMemoryHandler ooHandler, int bitmapCacheSize, String folderName) {
 		super(context, DATABASE_NAME, DATABASE_VERSION, logger);
 
 		LogManager.setLogger(logger==null ? new LogManager.LoggerDefault() : logger);
@@ -262,7 +274,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			this.mBitmapCache = builder.build();
 		}
 
-		File olddir = new File(Environment.getExternalStorageDirectory(), "/Android/data/"+context.getPackageName()+"/cache");
+		File olddir = new File(Environment.getExternalStorageDirectory(), "/Android/data/"+context.getPackageName()+"/"+folderName);
 		if (olddir.exists())
 			mCacheFolder = olddir;
 		else {
