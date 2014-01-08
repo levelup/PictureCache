@@ -227,17 +227,16 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	/**
 	 * Constructor of a PictureCache
 	 * @param context Context of the application, may also be used to get a {@link ContentResolver}
-	 * @param postHandler Handler to run some code in the UI thread and also determine if we're in the UI thread or not
 	 * @param logger A {@link Logger} object used to send all the logs generated inside the cache, may be null
 	 * @param ooHandler A {@link OutOfMemoryHandler} object used to notify when we are short on memory, may be null
 	 * @param bitmapCacheSize The size to use in memory for the Bitmaps cache, 0 for no memory cache, -1 for heap size based
 	 */
-	protected PictureCache(Context context, UIHandler postHandler, Logger logger, OutOfMemoryHandler ooHandler, int bitmapCacheSize) {
+	protected PictureCache(Context context, Logger logger, OutOfMemoryHandler ooHandler, int bitmapCacheSize) {
 		super(context, DATABASE_NAME, DATABASE_VERSION, logger);
 
 		LogManager.setLogger(logger==null ? new LogManager.LoggerDefault() : logger);
 		this.mContext = context;
-		this.postHandler = postHandler;
+		this.postHandler = new UIHandler();
 		if (ooHandler==null)
 			this.ooHandler = new OutOfMemoryHandler() {
 			// do nothing

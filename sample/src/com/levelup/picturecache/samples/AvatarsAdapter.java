@@ -21,7 +21,7 @@ class AvatarsAdapter extends ArrayAdapter<SampleSource.Sample> {
 	AvatarsAdapter(Context context) {
 		super(context, R.layout.list_item_avatar, android.R.id.text1, SampleSource.getSamples());
 
-		mCache = MyPictureCache.getInstance(context, new UIHandlerThread());
+		mCache = MyPictureCache.getInstance(context);
 	}
 
 	@Override

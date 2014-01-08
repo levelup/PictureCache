@@ -22,7 +22,7 @@ class AlternateAvatarsAdapter extends ArrayAdapter<SampleSource.Sample> {
 	AlternateAvatarsAdapter(Context context) {
 		super(context, R.layout.list_item_avatar_alt, android.R.id.text1, SampleSource.getSamples());
 
-		mCache = MyPictureCache.getInstance(context, new UIHandlerThread());
+		mCache = MyPictureCache.getInstance(context);
 	}
 
 	private static class LoaderWithProgress extends ImageViewLoaderDefaultResource {

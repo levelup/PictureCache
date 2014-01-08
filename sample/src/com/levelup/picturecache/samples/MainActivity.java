@@ -26,7 +26,7 @@ public class MainActivity extends Activity {
 		
 		final int screenDpi = getResources().getDisplayMetrics().densityDpi;
 		
-		mCache = MyPictureCache.getInstance(this, new UIHandlerThread());
+		mCache = MyPictureCache.getInstance(this);
 
 		/*
 		 * the most basic image loading call

@@ -2,7 +2,6 @@ package com.levelup.picturecache.samples;
 
 import android.content.Context;
 
-import com.levelup.picturecache.UIHandler;
 import com.levelup.picturecache.LifeSpan;
 import com.levelup.picturecache.PictureCache;
 
@@ -14,14 +13,14 @@ public class MyPictureCache extends PictureCache {
 
 	private static MyPictureCache instance;
 	
-	static synchronized MyPictureCache getInstance(Context context, UIHandler postHandler) {
+	static synchronized MyPictureCache getInstance(Context context) {
 		if (instance == null)
-			instance = new MyPictureCache(context, postHandler);
+			instance = new MyPictureCache(context);
 		return instance;
 	}
 	
-	private MyPictureCache(Context context, UIHandler postHandler) {
-		super(context, postHandler, null, null);
+	private MyPictureCache(Context context) {
+		super(context, null, null, 4*1024*1024);
 	}
 
 	@Override
