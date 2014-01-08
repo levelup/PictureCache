@@ -6,9 +6,9 @@ import android.text.TextUtils;
 
 public class PictureJob {
 
-	private String mURL;
-	private String mUUID;
-	private Object mCookie;
+	public String mURL;
+	public String mUUID;
+	public Object mCookie;
 	private long mFreshDate;
 	private LifeSpan mLifeSpan;
 	private int mDimension;
