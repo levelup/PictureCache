@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -119,7 +118,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	}
 
 	@Override
-	protected Entry<CacheKey, CacheItem> getEntryFromCursor(Cursor c) {
+	protected MapEntry<CacheKey, CacheItem> getEntryFromCursor(Cursor c) {
 		int indexPath = c.getColumnIndex("PATH");
 		int indexURL = c.getColumnIndex("SRC_URL");
 		int indexType = c.getColumnIndex("TYPE");
@@ -198,7 +197,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	}
 
 	@Override
-	protected ContentValues getValuesFromData(Entry<CacheKey, CacheItem> data, SQLiteDatabase dbToFill) throws RuntimeException {
+	protected ContentValues getValuesFromData(MapEntry<CacheKey, CacheItem> data, SQLiteDatabase dbToFill) throws RuntimeException {
 		if (data.getValue().path==null) {
 			LogManager.logger.w(LOG_TAG, "cache item has an empty path :"+data.getKey()+" / "+data.getValue());
 			throw new RuntimeException("empty path for "+data);
@@ -414,7 +413,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		return result;
 	}
 
-	private static class RemoveExpired implements AsynchronousDbOperation<Map.Entry<CacheKey,CacheItem>> {
+	private static class RemoveExpired implements AsynchronousDbOperation<MapEntry<CacheKey,CacheItem>> {
 
 		private final LifeSpan lifeSpan;
 
@@ -427,7 +426,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		}
 
 		@Override
-		public void runInMemoryDbOperation(AsynchronousDbHelper<Entry<CacheKey, CacheItem>> db) {
+		public void runInMemoryDbOperation(AsynchronousDbHelper<MapEntry<CacheKey, CacheItem>> db) {
 			PictureCache cache = (PictureCache) db;
 			if (lifeSpan != null)
 				makeRoom(cache, lifeSpan);
