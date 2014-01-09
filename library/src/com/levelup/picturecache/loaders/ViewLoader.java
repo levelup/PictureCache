@@ -71,12 +71,18 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 		return getClass().getSimpleName()+"@"+hashCode()+(getStorageTransform()!=null ? getStorageTransform().getVariantPostfix() : "");
 	}
 
+	/**
+	 * To override the default display, use {@link #displayDefaultView(BitmapLruCache)}
+	 */
 	@Override
 	public final void drawDefaultPicture(String url, BitmapLruCache drawableCache) {
 		if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" drawDefaultPicture");
 		showDrawable(drawableCache, null, url);
 	}
 
+	/**
+	 * To override the drawable display, use {@link #displayCustomBitmap(Drawable)}
+	 */
 	@Override
 	public final void drawBitmap(Drawable bmp, String url, Object cookie, BitmapLruCache drawableCache) {
 		if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" drawBitmap "+view+" with "+bmp);
