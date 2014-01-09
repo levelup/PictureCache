@@ -1,8 +1,10 @@
 package com.levelup.picturecache.loaders;
 
+import android.annotation.TargetApi;
 import android.graphics.drawable.Drawable;
 import android.widget.ImageView;
 
+@TargetApi(12)
 public class ImageViewReferenceSDK12<V extends ImageView> extends ViewReferenceSDK12<V> {
 
 	public ImageViewReferenceSDK12(V view) {

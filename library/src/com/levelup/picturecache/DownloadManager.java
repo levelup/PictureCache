@@ -6,6 +6,11 @@ package com.levelup.picturecache;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
@@ -15,6 +20,23 @@ import com.levelup.picturecache.BitmapDownloader.JobMonitor;
 class DownloadManager implements JobMonitor {
 
 	private static final boolean DEBUG_DOWNLOADER = false;
+
+	private final static int THREAD_POOL_SIZE = 2;
+
+	private static final BlockingQueue<Runnable> sPoolWorkQueue = new LinkedBlockingQueue<Runnable>(20);
+
+	private final ThreadPoolExecutor threadPool = new ThreadPoolExecutor(THREAD_POOL_SIZE, THREAD_POOL_SIZE, 1, TimeUnit.SECONDS, sPoolWorkQueue) {
+		@Override
+		protected void beforeExecute(Thread t, Runnable r) {
+			super.beforeExecute(t, r);
+			if (r instanceof BitmapDownloader) {
+				t.setName("PictureDL-"+((BitmapDownloader) r).mURL.hashCode());
+			} else {
+				t.setName("PictureDL-"+t);
+			}
+			t.setPriority(Thread.MIN_PRIORITY);
+		}
+	};
 
 	abstract interface JobsMonitor {
 		abstract void onNewBitmapLoaded(HashMap<CacheVariant,Drawable> newBitmaps, String url, long cacheDate, LifeSpan lifeSpan);
@@ -39,8 +61,13 @@ class DownloadManager implements JobMonitor {
 				// create a fresh new one if an old one is not ready to accept our loadHandler
 				downloader = new BitmapDownloader(URL, networkLoader, cookie, cache);
 				downloader.setMonitor(this);
-				mJobs.put(URL, downloader);
 				downloader.addTarget(loadHandler, key, itemDate, lifeSpan);
+				try {
+					threadPool.execute(downloader);
+					mJobs.put(URL, downloader);
+				} catch (RejectedExecutionException e) {
+					LogManager.logger.w(PictureCache.LOG_TAG, "can't execute "+downloader, e);
+				}
 			}
 			if (DEBUG_DOWNLOADER) {
 				downloader = mJobs.get(URL);
@@ -63,7 +90,10 @@ class DownloadManager implements JobMonitor {
 				if (DEBUG_DOWNLOADER) LogManager.logger.i(PictureCache.LOG_TAG, " cancelDownloadForLoader loadHandler:"+loadHandler+" found:"+downloader);
 				if (downloader!=null) {
 					//LogManager.logger.d(PictureCache.TAG, "cancelDownloadForTarget for URL " + URL+" for "+loader);
-					return downloader.removeTarget(loadHandler);
+					boolean removed = downloader.removeTarget(loadHandler);
+					if (downloader.isEmpty())
+						threadPool.remove(downloader);
+					return removed;
 				}
 			}
 		}
@@ -75,6 +105,8 @@ class DownloadManager implements JobMonitor {
 			BitmapDownloader downloader = downloaders.nextElement();
 			if (downloader.removeTarget(loadHandler)) {
 				if (DEBUG_DOWNLOADER) LogManager.logger.i(PictureCache.LOG_TAG, " cancelDownloadForLoader loadHandler:"+loadHandler+" deleted on:"+downloader/*+" url:"+url*/);
+				if (downloader.isEmpty())
+					threadPool.remove(downloader);
 				return true;
 			}
 		}

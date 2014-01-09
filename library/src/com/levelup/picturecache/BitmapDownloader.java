@@ -16,8 +16,6 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import com.levelup.picturecache.loaders.ViewLoader;
-
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
@@ -25,7 +23,9 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.util.FloatMath;
 
-class BitmapDownloader extends Thread {
+import com.levelup.picturecache.loaders.ViewLoader;
+
+class BitmapDownloader implements Runnable {
 
 	private static final boolean DEBUG_BITMAP_DOWNLOADER = false;
 
@@ -75,7 +75,6 @@ class BitmapDownloader extends Thread {
 	private long mItemDate;
 
 	private boolean mCanDownload;
-	private boolean mIsThreadStarted;
 	private boolean mAborting;
 
 	private static final int CONNECT_TIMEOUT_DL = 10000; // 10s
@@ -86,7 +85,6 @@ class BitmapDownloader extends Thread {
 		this.networkLoader = loader;
 		this.mCookie = cookie;
 		this.mCache = cache;
-		setName("PictureDL-"+mURL.hashCode());
 	}
 
 	void setMonitor(JobMonitor monitor) {
@@ -115,7 +113,6 @@ class BitmapDownloader extends Thread {
 		File downloadToFile = null;
 		boolean downloaded = false;
 		try {
-			setPriority(Thread.MIN_PRIORITY);
 			BitmapFactory.Options tmpFileOptions = new BitmapFactory.Options();
 			tmpFileOptions.inJustDecodeBounds = false;
 
@@ -299,13 +296,6 @@ class BitmapDownloader extends Thread {
 			else if (mLifeSpan.compare(lifeSpan)<0)
 				mLifeSpan = lifeSpan;
 		}
-
-		if (!mIsThreadStarted) {
-			mIsThreadStarted = true;
-			if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.d(PictureCache.LOG_TAG, this+" start loading thread");
-			//LogManager.logger.i(PictureCache.TAG, "start download job for " + mURL);
-			start();
-		}
 		return true;
 	}
 
@@ -362,6 +352,12 @@ class BitmapDownloader extends Thread {
 				mAborting = true;
 				throw new AbortDownload();
 			}
+		}
+	}
+	
+	protected boolean isEmpty() {
+		synchronized (mTargets) {
+			return mTargets.isEmpty();
 		}
 	}
 
