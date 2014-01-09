@@ -15,6 +15,7 @@ public class PictureJob {
 	public final boolean mWidthBased;
 	public final StorageType mExtensionMode;
 	public final PictureLoaderHandler mHandler;
+	public final NetworkLoader networkLoader;
 
 	public static class Builder {
 
@@ -27,6 +28,7 @@ public class PictureJob {
 		private boolean mWidthBased;
 		private StorageType mExtensionMode = StorageType.AUTO;
 		protected final PictureLoaderHandler mHandler;
+		private NetworkLoader networkLoader;
 
 		public Builder(PictureLoaderHandler handler) {
 			mHandler = handler;
@@ -73,6 +75,11 @@ public class PictureJob {
 			return this;
 		}
 
+		public Builder setNetworkLoader(NetworkLoader networkLoader) {
+			this.networkLoader = networkLoader;
+			return this;
+		}
+
 		public PictureJob build() {
 			return new PictureJob(this);
 		}
@@ -88,6 +95,7 @@ public class PictureJob {
 		this.mWidthBased = builder.mWidthBased;
 		this.mExtensionMode = builder.mExtensionMode;
 		this.mHandler = builder.mHandler;
+		this.networkLoader = builder.networkLoader;
 	}
 
 	private CacheKey buildKey() throws NoSuchAlgorithmException {
@@ -115,6 +123,6 @@ public class PictureJob {
 			return;
 		}
 
-		cache.getPicture(mURL, key, mCookie, mFreshDate, mHandler, mLifeSpan);
+		cache.getPicture(mURL, key, mCookie, mFreshDate, mHandler, mLifeSpan, networkLoader);
 	}
 }

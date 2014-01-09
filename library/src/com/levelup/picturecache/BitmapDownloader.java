@@ -61,10 +61,11 @@ class BitmapDownloader extends Thread {
 		abstract void onJobFinishedWithNewBitmaps(BitmapDownloader job, HashMap<CacheVariant,Drawable> newBitmaps);
 	}
 
-	private final String mURL;
-	private final Object mCookie;
-	private final PictureCache mCache;
-	private final CopyOnWriteArrayList<DownloadTarget> mTargets = new CopyOnWriteArrayList<DownloadTarget>();
+	final String mURL;
+	final NetworkLoader networkLoader;
+	final Object mCookie;
+	final PictureCache mCache;
+	final CopyOnWriteArrayList<DownloadTarget> mTargets = new CopyOnWriteArrayList<DownloadTarget>();
 
 	private JobMonitor mMonitor;
 
@@ -79,11 +80,12 @@ class BitmapDownloader extends Thread {
 
 	private static final int CONNECT_TIMEOUT_DL = 10000; // 10s
 
-	BitmapDownloader(String URL, Object cookie, PictureCache cache) {
+	BitmapDownloader(String URL, NetworkLoader loader, Object cookie, PictureCache cache) {
 		if (URL==null) throw new NullPointerException("How are we supposed to download a null URL?");
-		mURL = URL;
-		mCookie = cookie;
-		mCache = cache;
+		this.mURL = URL;
+		this.networkLoader = loader;
+		this.mCookie = cookie;
+		this.mCache = cache;
 		setName("PictureDL-"+mURL.hashCode());
 	}
 
@@ -183,7 +185,7 @@ class BitmapDownloader extends Thread {
 
 								if (target.loadHandler.getStorageTransform()!=null)
 									bitmap = target.loadHandler.getStorageTransform().transformBitmapForStorage(bitmap);
-								
+
 								displayDrawable = new BitmapDrawable(mCache.getContext().getResources(), bitmap);
 							}
 						}
@@ -373,19 +375,24 @@ class BitmapDownloader extends Thread {
 				//LogManager.logger.v("using the content resolver for "+mURL);
 			} catch (FileNotFoundException e) {
 				//LogManager.logger.d(PictureCache.TAG, false, "cache error trying ContentResolver on "+mURL);
-				URL url = new URL(mURL);
-				URLConnection conn = url.openConnection();
-				conn.setConnectTimeout(CONNECT_TIMEOUT_DL);
-				conn.setUseCaches(false);
-				conn.setRequestProperty("Accept-Encoding", "identity");
-				//LogManager.logger.e(PictureCache.TAG, conn.getContentEncoding()+" encoding for "+mURL);
-				checkAbort();
-				try {
-					is = conn.getInputStream();
-				} catch (FileNotFoundException fe) {
-					LogManager.logger.i(PictureCache.LOG_TAG, "cache URL not found "+mURL);
-				} catch (Exception ee) {
-					LogManager.logger.w(PictureCache.LOG_TAG, "cache error opening "+mURL, ee);
+				if (null!=networkLoader)
+					is = networkLoader.loadURL(mURL);
+				
+				if (null==is) {
+					URL url = new URL(mURL);
+					URLConnection conn = url.openConnection();
+					conn.setConnectTimeout(CONNECT_TIMEOUT_DL);
+					conn.setUseCaches(false);
+					conn.setRequestProperty("Accept-Encoding", "identity");
+					//LogManager.logger.e(PictureCache.TAG, conn.getContentEncoding()+" encoding for "+mURL);
+					checkAbort();
+					try {
+						is = conn.getInputStream();
+					} catch (FileNotFoundException fe) {
+						LogManager.logger.i(PictureCache.LOG_TAG, "cache URL not found "+mURL);
+					} catch (Exception ee) {
+						LogManager.logger.w(PictureCache.LOG_TAG, "cache error opening "+mURL, ee);
+					}
 				}
 			}
 

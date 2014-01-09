@@ -93,7 +93,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 					"DATE LONG not null DEFAULT -1, " +  // the date of last access to the item
 					"PRIMARY KEY (UUID));";
 
-	private static Boolean mDirAsserted = Boolean.FALSE;
+	private Boolean mDirAsserted = Boolean.FALSE;
 
 	protected final File mCacheFolder;
 	final OutOfMemoryHandler ooHandler;
@@ -510,8 +510,9 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @param itemDate use to store the previous item for the same {@link key}
 	 * @param loader
 	 * @param lifeSpan see {@link LifeSpan}
+	 * @param networkLoader TODO
 	 */
-	void getPicture(String URL, CacheKey key, Object cookie, long itemDate, PictureLoaderHandler loader, LifeSpan lifeSpan)
+	void getPicture(String URL, CacheKey key, Object cookie, long itemDate, PictureLoaderHandler loader, LifeSpan lifeSpan, NetworkLoader networkLoader)
 	{
 		mDataLock.lock();
 		try {
@@ -599,7 +600,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 			// we could not read from the cache, load the URL
 			if (key!=null)
-				mJobManager.addDownloadTarget(this, URL, cookie, loader, key, itemDate, lifeSpan);
+				mJobManager.addDownloadTarget(this, URL, cookie, loader, key, itemDate, lifeSpan, networkLoader);
 		} finally {
 			mDataLock.unlock();
 		}
