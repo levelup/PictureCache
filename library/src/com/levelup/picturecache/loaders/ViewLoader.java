@@ -72,15 +72,15 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 	}
 
 	@Override
-	public final void drawDefaultPicture(String url, UIHandler postHandler, BitmapLruCache drawableCache) {
+	public final void drawDefaultPicture(String url, BitmapLruCache drawableCache) {
 		if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" drawDefaultPicture");
-		showDrawable(drawableCache, postHandler, null, url);
+		showDrawable(drawableCache, null, url);
 	}
 
 	@Override
-	public final void drawBitmap(Drawable bmp, String url, Object cookie, UIHandler postHandler, BitmapLruCache drawableCache) {
+	public final void drawBitmap(Drawable bmp, String url, Object cookie, BitmapLruCache drawableCache) {
 		if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" drawBitmap "+view+" with "+bmp);
-		showDrawable(drawableCache, postHandler, bmp, url);
+		showDrawable(drawableCache, bmp, url);
 	}
 
 	/**
@@ -99,7 +99,7 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 		view.setImageDrawable(pendingDrawable);
 	}
 
-	private void showDrawable(BitmapLruCache cache, UIHandler postHandler, Drawable customBitmap, String url) {
+	private void showDrawable(BitmapLruCache cache, Drawable customBitmap, String url) {
 		synchronized (view.getImageView()) {
 			ViewLoadingTag tag = view.getTag();
 			if (tag==null) {
@@ -107,7 +107,7 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 				view.setTag(tag);
 			}
 			tag.setPendingDraw(customBitmap, url);
-			tag.drawInView(postHandler, this);
+			tag.drawInView(this);
 		}
 	}
 
@@ -154,8 +154,8 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 	}
 
 	@Override
-	protected boolean canDirectLoad(File file, UIHandler uiHandler) {
-		return !uiHandler.isUIThread() || file.length() < MAX_SIZE_IN_UI_THREAD;
+	protected boolean canDirectLoad(File file) {
+		return !UIHandler.isUIThread() || file.length() < MAX_SIZE_IN_UI_THREAD;
 	}
 
 	public static Bitmap drawableToBitmap(Drawable drawable) {

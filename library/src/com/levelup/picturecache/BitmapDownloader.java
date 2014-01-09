@@ -245,9 +245,9 @@ class BitmapDownloader extends Thread {
 								else
 									cacheableBmp = new BitmapDrawable(mCache.getContext().getResources(), bitmap);
 							}
-							j.drawBitmap(cacheableBmp, mURL, mCookie, mCache.postHandler, mCache.mBitmapCache);
+							j.drawBitmap(cacheableBmp, mURL, mCookie, mCache.mBitmapCache);
 						} else
-							j.drawDefaultPicture(mURL, mCache.postHandler, mCache.mBitmapCache);
+							j.drawDefaultPicture(mURL, mCache.mBitmapCache);
 					}
 					mTargets.clear();
 				}
@@ -323,7 +323,7 @@ class BitmapDownloader extends Thread {
 			if (deleted) {
 				//LogManager.logger.v(" deleted job view:"+target+" for "+mURL);
 				//target.setLoadingURL(mCache, mURL);
-				target.drawDefaultPicture(mURL, mCache.postHandler, mCache.mBitmapCache);
+				target.drawDefaultPicture(mURL, mCache.mBitmapCache);
 			}
 			//else LogManager.logger.i(PictureCache.TAG, " keep downloading URL:" + mURL + " remaining views:" + reqViews.size() + " like view:"+reqViews.get(0));
 			return deleted;

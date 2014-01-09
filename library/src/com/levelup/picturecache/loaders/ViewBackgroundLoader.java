@@ -46,8 +46,8 @@ public class ViewBackgroundLoader<V extends View> extends PictureLoaderHandler {
 	}
 
 	@Override
-	protected void drawDefaultPicture(String url, UIHandler postHandler, BitmapLruCache drawableCache) {
-		postHandler.runOnUiThread(new Runnable() {
+	protected void drawDefaultPicture(String url, BitmapLruCache drawableCache) {
+		UIHandler.instance.runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
 				// TODO use the ImageViewLoadingTag
@@ -57,8 +57,8 @@ public class ViewBackgroundLoader<V extends View> extends PictureLoaderHandler {
 	}
 
 	@Override
-	protected void drawBitmap(final Drawable bmp, final String url, Object cookie, UIHandler postHandler, BitmapLruCache drawableCache) {
-		postHandler.runOnUiThread(new Runnable() {
+	protected void drawBitmap(final Drawable bmp, final String url, Object cookie, BitmapLruCache drawableCache) {
+		UIHandler.instance.runOnUiThread(new Runnable() {
 			@SuppressWarnings("deprecation")
 			@Override
 			public void run() {
@@ -85,7 +85,7 @@ public class ViewBackgroundLoader<V extends View> extends PictureLoaderHandler {
 	}
 
 	@Override
-	protected boolean canDirectLoad(File file, UIHandler uiHandler) {
+	protected boolean canDirectLoad(File file) {
 		return true;
 	}
 

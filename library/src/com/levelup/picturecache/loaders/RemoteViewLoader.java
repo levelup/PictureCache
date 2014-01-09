@@ -7,7 +7,6 @@ import android.graphics.drawable.Drawable;
 import android.widget.RemoteViews;
 
 import com.levelup.picturecache.PictureLoaderHandler;
-import com.levelup.picturecache.UIHandler;
 import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
 import com.levelup.picturecache.transforms.storage.StorageTransform;
 
@@ -26,12 +25,12 @@ public class RemoteViewLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	public void drawDefaultPicture(String url, UIHandler postHandler, BitmapLruCache drawableCache) {
+	public void drawDefaultPicture(String url, BitmapLruCache drawableCache) {
 		remoteViews.setImageViewResource(viewId, defaultResourceId);
 	}
 
 	@Override
-	public void drawBitmap(Drawable bmp, String url, Object cookie, UIHandler postHandler, BitmapLruCache drawableCache) {
+	public void drawBitmap(Drawable bmp, String url, Object cookie, BitmapLruCache drawableCache) {
 		remoteViews.setImageViewBitmap(viewId, ViewLoader.drawableToBitmap(bmp));
 	}
 
@@ -66,7 +65,7 @@ public class RemoteViewLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	protected boolean canDirectLoad(File file, UIHandler uiHandler) {
+	protected boolean canDirectLoad(File file) {
 		return true;
 	}
 }

@@ -96,7 +96,6 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	private static Boolean mDirAsserted = Boolean.FALSE;
 
 	private final File mCacheFolder;
-	final UIHandler postHandler;
 	final OutOfMemoryHandler ooHandler;
 
 	private DownloadManager mJobManager;
@@ -249,7 +248,6 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 		LogManager.setLogger(logger==null ? new LogManager.LoggerDefault() : logger);
 		this.mContext = context;
-		this.postHandler = new UIHandler();
 		if (ooHandler==null)
 			this.ooHandler = new OutOfMemoryHandler() {
 			// do nothing
@@ -526,7 +524,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			if (TextUtils.isEmpty(URL)) {
 				LogManager.logger.i(LOG_TAG, "no URL specified/known for "+key+" using default");
 				removePictureLoader(loader, null);
-				loader.drawDefaultPicture(null, postHandler, mBitmapCache);
+				loader.drawDefaultPicture(null, mBitmapCache);
 				return;
 			}
 
@@ -557,7 +555,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				if (cachedBmp!=null) {
 					if (!cachedBmp.getBitmap().isRecycled()) {
 						if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using cached bitmap for URL "+URL+" key:"+bitmapCacheKey);
-						loader.drawBitmap(cachedBmp, URL, cookie, postHandler, mBitmapCache);
+						loader.drawBitmap(cachedBmp, URL, cookie, mBitmapCache);
 						return;
 					}
 					LogManager.logger.w(LOG_TAG, "try to draw bitmap "+key+" already recycled in "+loader+" URL:"+URL);
@@ -570,7 +568,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 					LogManager.logger.w(LOG_TAG, "File "+file+" disappeared for "+key);
 					remove(key);
 				}
-				else if (loader.canDirectLoad(file, postHandler)) {
+				else if (loader.canDirectLoad(file)) {
 					try {
 						Bitmap bmp = BitmapFactory.decodeFile(file.getAbsolutePath());
 						if (bmp!=null) {
@@ -583,11 +581,11 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 							if (cachedBmp==null)
 								cachedBmp = new BitmapDrawable(mContext.getResources(), bmp);
 							if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using direct file for URL "+URL+" file:"+file);
-							loader.drawBitmap(cachedBmp, URL, cookie, postHandler, mBitmapCache);
+							loader.drawBitmap(cachedBmp, URL, cookie, mBitmapCache);
 							return;
 						}
 					} catch (OutOfMemoryError e) {
-						loader.drawDefaultPicture(URL, postHandler, mBitmapCache);
+						loader.drawDefaultPicture(URL, mBitmapCache);
 						LogManager.logger.w(LOG_TAG, "can't decode "+file,e);
 						ooHandler.onOutOfMemoryError(e);
 						return;
@@ -595,7 +593,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				}
 			}
 
-			loader.drawDefaultPicture(URL, postHandler, mBitmapCache);
+			loader.drawDefaultPicture(URL, mBitmapCache);
 
 			// we could not read from the cache, load the URL
 			if (key!=null)

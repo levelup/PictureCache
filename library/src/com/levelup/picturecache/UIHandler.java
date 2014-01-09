@@ -7,6 +7,8 @@ import android.os.Looper;
  * A {@link android.os.Handler Handler} that runs the code in the UI thread
  */
 public class UIHandler extends Handler {
+	
+	public static UIHandler instance = new UIHandler();
 
 	public UIHandler() {
 		super(Looper.getMainLooper());

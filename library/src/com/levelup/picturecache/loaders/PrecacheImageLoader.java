@@ -7,7 +7,6 @@ import uk.co.senab.bitmapcache.BitmapLruCache;
 import android.graphics.drawable.Drawable;
 
 import com.levelup.picturecache.PictureLoaderHandler;
-import com.levelup.picturecache.UIHandler;
 import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
 import com.levelup.picturecache.transforms.storage.StorageTransform;
 
@@ -24,10 +23,10 @@ public class PrecacheImageLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	public void drawDefaultPicture(String url, UIHandler postHandler, BitmapLruCache drawableCache) {}
+	public void drawDefaultPicture(String url, BitmapLruCache drawableCache) {}
 
 	@Override
-	public void drawBitmap(Drawable bmp, String url, Object cookie, UIHandler postHandler, BitmapLruCache drawableCache) {}
+	public void drawBitmap(Drawable bmp, String url, Object cookie, BitmapLruCache drawableCache) {}
 
 	@Override
 	public boolean equals(Object o) {
@@ -55,7 +54,7 @@ public class PrecacheImageLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	protected boolean canDirectLoad(File file, UIHandler uiHandler) {
+	protected boolean canDirectLoad(File file) {
 		return true;
 	}
 }

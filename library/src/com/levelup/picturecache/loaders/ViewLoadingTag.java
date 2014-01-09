@@ -2,7 +2,6 @@ package com.levelup.picturecache.loaders;
 
 import uk.co.senab.bitmapcache.BitmapLruCache;
 import android.graphics.drawable.Drawable;
-import android.os.Handler;
 
 import com.levelup.picturecache.LogManager;
 import com.levelup.picturecache.PictureCache;
@@ -135,7 +134,7 @@ class ViewLoadingTag {
 		}
 	};
 
-	void drawInView(UIHandler postHandler, ViewLoader<?> viewLoader) {
+	void drawInView(ViewLoader<?> viewLoader) {
 		if (mDrawInUI == null) {
 			if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, viewLoader+" create new DrawInUI with "+mPendingDraw+" for "+mPendingUrl);
 			mDrawInUI = new DrawInUI(viewLoader, cache);
@@ -145,9 +144,9 @@ class ViewLoadingTag {
 		}
 
 		if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().i(PictureCache.LOG_TAG, mDrawInUI+" / "+viewLoader+" drawInView run mDrawInUI bitmap:"+mDrawInUI.mPendingDrawable+" for "+mDrawInUI.mPendingUrl);
-		if (postHandler instanceof Handler)
-			((Handler) postHandler).removeCallbacks(mDrawInUI);
-		postHandler.runOnUiThread(mDrawInUI);
+
+		UIHandler.instance.removeCallbacks(mDrawInUI);
+		UIHandler.instance.runOnUiThread(mDrawInUI);
 	}
 
 	public boolean isBitmapPending() {

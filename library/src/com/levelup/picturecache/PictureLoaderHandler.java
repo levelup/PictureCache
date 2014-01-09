@@ -28,10 +28,9 @@ public abstract class PictureLoaderHandler {
 	 * This method may be called outside of the UI thread</p>
 	 * 
 	 * @param url URL being loaded
-	 * @param postHandler Handler to use to run code in the UI thread
 	 * @param drawableCache TODO
 	 */
-	abstract protected void drawDefaultPicture(String url, UIHandler postHandler, BitmapLruCache drawableCache);
+	abstract protected void drawDefaultPicture(String url, BitmapLruCache drawableCache);
 	
 	/**
 	 * Called when the downloaded {@link Bitmap} should be displayed 
@@ -41,10 +40,9 @@ public abstract class PictureLoaderHandler {
 	 * @param bmp Drawable to display
 	 * @param url URL corresponding to the bitmap
 	 * @param cookie data associated with the loaded URL
-	 * @param postHandler Handler to use to run code in the UI thread
 	 * @param drawableCache TODO
 	 */
-	abstract protected void drawBitmap(Drawable bmp, String url, Object cookie, UIHandler postHandler, BitmapLruCache drawableCache);
+	abstract protected void drawBitmap(Drawable bmp, String url, Object cookie, BitmapLruCache drawableCache);
 	
 	protected PictureLoaderHandler(StorageTransform bitmapStorageTransform, BitmapTransform bitmapTransform) {
 		this.mStorageTransform = bitmapStorageTransform;
@@ -71,7 +69,7 @@ public abstract class PictureLoaderHandler {
 	 * @return
 	 */
 	abstract protected String getLoadingURL();
-	abstract protected boolean canDirectLoad(File file, UIHandler uiHandler);
+	abstract protected boolean canDirectLoad(File file);
 
 	protected boolean isDownloadAllowed() {
 		return true;
