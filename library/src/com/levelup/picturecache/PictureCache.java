@@ -226,6 +226,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 	/**
 	 * Constructor of a PictureCache
+	 * <p><b>Do not use multiple instances with this constructor!</b></p>
 	 * @param context Context of the application, may also be used to get a {@link ContentResolver}
 	 * @param logger A {@link Logger} object used to send all the logs generated inside the cache, may be null
 	 * @param ooHandler A {@link OutOfMemoryHandler} object used to notify when we are short on memory, may be null
@@ -241,7 +242,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @param logger A {@link Logger} object used to send all the logs generated inside the cache, may be null
 	 * @param ooHandler A {@link OutOfMemoryHandler} object used to notify when we are short on memory, may be null
 	 * @param bitmapCacheSize The size to use in memory for the Bitmaps cache, 0 for no memory cache, -1 for heap size based
-	 * @param folderName TODO
+	 * @param folderName Storage folder name on the external disk (erased when the app is uninstalled). If you use multiple PictureCache instances you must use a different folder for each instance
 	 */
 	protected PictureCache(Context context, Logger logger, OutOfMemoryHandler ooHandler, int bitmapCacheSize, String folderName) {
 		super(context, DATABASE_NAME, DATABASE_VERSION, logger);
