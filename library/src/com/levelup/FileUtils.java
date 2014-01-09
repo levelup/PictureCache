@@ -20,16 +20,20 @@ public class FileUtils {
 			return;
 		}
 
-		FileChannel inChannel = new FileInputStream(src).getChannel();
-		FileChannel outChannel = new FileOutputStream(dst, false).getChannel();
+		FileChannel inChannel = null;
+		FileChannel outChannel = null;
 
 		try {
+			inChannel = new FileInputStream(src).getChannel();
+			outChannel = new FileOutputStream(dst, false).getChannel();
 			if (inChannel.transferTo(0, inChannel.size(), outChannel)==0)
 				LogManager.getLogger().e(logTag, "nothing copied in "+dst.getAbsolutePath());
 			//else logger.v("done copying to "+dst.getAbsolutePath());
 		} finally {
-			inChannel.close();
-			outChannel.close();
+			if (null!=inChannel)
+				inChannel.close();
+			if (null!=outChannel)
+				outChannel.close();
 		}
 	}
 
