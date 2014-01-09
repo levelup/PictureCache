@@ -6,15 +6,15 @@ import android.text.TextUtils;
 
 public class PictureJob {
 
-	public String mURL;
-	public String mUUID;
-	public Object mCookie;
-	private long mFreshDate;
-	private LifeSpan mLifeSpan;
-	private int mDimension;
-	private boolean mWidthBased;
-	private StorageType mExtensionMode = StorageType.AUTO;
-	protected PictureLoaderHandler mHandler;
+	public final String mURL;
+	public final String mUUID;
+	public final Object mCookie;
+	public final long mFreshDate;
+	public final LifeSpan mLifeSpan;
+	public final int mDimension;
+	public final boolean mWidthBased;
+	public final StorageType mExtensionMode;
+	public final PictureLoaderHandler mHandler;
 
 	public static class Builder {
 
@@ -74,18 +74,20 @@ public class PictureJob {
 		}
 
 		public PictureJob build() {
-			PictureJob pictureJob = new PictureJob();
-			pictureJob.mURL = mURL;
-			pictureJob.mUUID = mUUID;
-			pictureJob.mCookie = mCookie;
-			pictureJob.mFreshDate = mFreshDate;
-			pictureJob.mLifeSpan = mLifeSpan;
-			pictureJob.mDimension = mDimension;
-			pictureJob.mWidthBased = mWidthBased;
-			pictureJob.mExtensionMode = mExtensionMode;
-			pictureJob.mHandler = mHandler;
-			return pictureJob;
+			return new PictureJob(this);
 		}
+	}
+
+	protected PictureJob(Builder builder) {
+		this.mURL = builder.mURL;
+		this.mUUID = builder.mUUID;
+		this.mCookie = builder.mCookie;
+		this.mFreshDate = builder.mFreshDate;
+		this.mLifeSpan = builder.mLifeSpan;
+		this.mDimension = builder.mDimension;
+		this.mWidthBased = builder.mWidthBased;
+		this.mExtensionMode = builder.mExtensionMode;
+		this.mHandler = builder.mHandler;
 	}
 
 	private CacheKey buildKey() throws NoSuchAlgorithmException {

@@ -101,7 +101,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	private DownloadManager mJobManager;
 	private Context mContext;
 
-	final BitmapLruCache mBitmapCache;
+	protected final BitmapLruCache mBitmapCache;
 
 	private AtomicInteger mPurgeCounterLongterm = new AtomicInteger();
 	private AtomicInteger mPurgeCounterShortterm = new AtomicInteger();
