@@ -44,7 +44,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 	public static final String LOG_TAG = "PictureCache";
 	final static boolean DEBUG_CACHE = false & BuildConfig.DEBUG;
-	
+
 	static int MAXBITMAP_IN_MEMORY = 400000;
 
 	/**
@@ -64,7 +64,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * return a different uuid for when the original uuid just got a new URL. this way we can keep the old and new versions in the cache
 	 * @param uuid base UUID
 	 * @param URL old URL
-	 * @return different UUID to stored the old cached version
+	 * @return different UUID to stored the old cached version, {@code null} if you don't want to deal with this
 	 */
 	abstract protected String getOldPicUUID(String uuid, String URL);
 
@@ -234,7 +234,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	protected PictureCache(Context context, Logger logger, OutOfMemoryHandler ooHandler, int bitmapCacheSize) {
 		this(context, logger, ooHandler, bitmapCacheSize, "cache");
 	}
-	
+
 	/**
 	 * Constructor of a PictureCache
 	 * @param context Context of the application, may also be used to get a {@link ContentResolver}
@@ -256,9 +256,9 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		};
 		else
 			this.ooHandler = ooHandler;
-		
+
 		MAXBITMAP_IN_MEMORY = context.getResources().getDisplayMetrics().densityDpi * context.getResources().getDisplayMetrics().widthPixels * 4;
-		
+
 		if (bitmapCacheSize==0)
 			this.mBitmapCache = null;
 		else {
@@ -889,14 +889,21 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 								// the item in the Cache is older than this request, the image changed for a newer one
 								// we need to mark the old one as short term with a UUID that has the picture ID inside
 								String deprecatedUUID = getOldPicUUID(key.getUUID(), v.URL);
-								CacheKey oldVersionKey = key.copyWithNewUuid(deprecatedUUID);
+								CacheKey oldVersionKey;
+								if (!TextUtils.isEmpty(deprecatedUUID))
+									oldVersionKey = key.copyWithNewUuid(deprecatedUUID);
+								else
+									oldVersionKey = key.copyWithNewUrl(v.URL);
 								// move the current content to the deprecated key
 								moveCachedFiles(key, oldVersionKey, LifeSpan.SHORTTERM);
 								if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, key+" moved to "+oldVersionKey);
 							} else {
 								// use the old image from the cache with that URL
 								String dstUUID = getOldPicUUID(key.getUUID(), URL);
-								key = key.copyWithNewUuid(dstUUID);
+								if (!TextUtils.isEmpty(dstUUID))
+									key = key.copyWithNewUuid(dstUUID);
+								else
+									key = key.copyWithNewUrl(URL);
 								if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, key+" will be used for that old version");
 							}
 						}

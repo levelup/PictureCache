@@ -43,8 +43,17 @@ class CacheKey {
 	}
 
 	CacheKey copyWithNewUuid(String newUUID) {
+		if (null==newUUID) throw new IllegalArgumentException("use copyWithNewUrl() instead");
 		String uuid = newUUID.replace('/', '_').replace(':', '_').replace('\'', '_');
 		return new CacheKey(uuid, dimension, widthBased, extensionMode, variantString);
+	}
+
+	CacheKey copyWithNewUrl(String newURL) {
+		try {
+			return newUrlBasedKey(newURL, dimension, widthBased, extensionMode, variantString);
+		} catch (NoSuchAlgorithmException e) {
+			return null;
+		}
 	}
 
 	private CacheKey(String uuid, int height, boolean widthBased, StorageType extensionMode, String variantString) {
