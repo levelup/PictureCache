@@ -95,7 +95,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 	private static Boolean mDirAsserted = Boolean.FALSE;
 
-	private final File mCacheFolder;
+	protected final File mCacheFolder;
 	final OutOfMemoryHandler ooHandler;
 
 	private DownloadManager mJobManager;
@@ -115,7 +115,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	public void onCreate(SQLiteDatabase db) {
 		db.execSQL(CREATE_TABLE);
 	}
-
+	
 	@Override
 	protected MapEntry<CacheKey, CacheItem> getEntryFromCursor(Cursor c) {
 		int indexPath = c.getColumnIndex("PATH");
@@ -232,7 +232,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @param bitmapCacheSize The size to use in memory for the Bitmaps cache, 0 for no memory cache, -1 for heap size based
 	 */
 	protected PictureCache(Context context, Logger logger, OutOfMemoryHandler ooHandler, int bitmapCacheSize) {
-		this(context, logger, ooHandler, bitmapCacheSize, "cache");
+		this(context, logger, ooHandler, bitmapCacheSize, null);
 	}
 
 	/**
@@ -244,7 +244,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @param folderName Storage folder name on the external disk (erased when the app is uninstalled). If you use multiple PictureCache instances you must use a different folder for each instance
 	 */
 	protected PictureCache(Context context, Logger logger, OutOfMemoryHandler ooHandler, int bitmapCacheSize, String folderName) {
-		super(context, DATABASE_NAME, DATABASE_VERSION, logger);
+		super(context, null==folderName ? DATABASE_NAME : (folderName+"_pic.sqlite"), DATABASE_VERSION, logger);
 
 		LogManager.setLogger(logger==null ? new LogManager.LoggerDefault() : logger);
 		this.mContext = context;
@@ -273,7 +273,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			this.mBitmapCache = builder.build();
 		}
 
-		File olddir = new File(Environment.getExternalStorageDirectory(), "/Android/data/"+context.getPackageName()+"/"+folderName);
+		File olddir = new File(Environment.getExternalStorageDirectory(), "/Android/data/"+context.getPackageName()+'/'+(null!=folderName ? folderName : "cache"));
 		if (olddir.exists())
 			mCacheFolder = olddir;
 		else {
@@ -285,6 +285,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			} finally {
 				if (newdir == null)
 					newdir = olddir;
+				else if (null!=folderName)
+					newdir = new File(newdir, folderName);
 			}
 			mCacheFolder = newdir;
 		}
