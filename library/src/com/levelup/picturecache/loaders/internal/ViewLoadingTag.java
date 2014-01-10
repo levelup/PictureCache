@@ -1,4 +1,4 @@
-package com.levelup.picturecache.loaders;
+package com.levelup.picturecache.loaders.internal;
 
 import uk.co.senab.bitmapcache.BitmapLruCache;
 import android.graphics.drawable.Drawable;
@@ -6,11 +6,12 @@ import android.graphics.drawable.Drawable;
 import com.levelup.picturecache.LogManager;
 import com.levelup.picturecache.PictureCache;
 import com.levelup.picturecache.UIHandler;
+import com.levelup.picturecache.loaders.ViewLoader;
 import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
 import com.levelup.picturecache.transforms.storage.StorageTransform;
 
-class ViewLoadingTag {
-	final String url;
+public class ViewLoadingTag {
+	public final String url;
 	private final StorageTransform storageTransform;
 	private final BitmapTransform displayTransform;
 	private final BitmapLruCache cache;
@@ -23,14 +24,14 @@ class ViewLoadingTag {
 	private String mPendingUrl;
 	private DrawInUI mDrawInUI;
 
-	ViewLoadingTag(BitmapLruCache cache, String url, StorageTransform storageTransform, BitmapTransform displayTransform) {
+	public ViewLoadingTag(BitmapLruCache cache, String url, StorageTransform storageTransform, BitmapTransform displayTransform) {
 		this.cache = cache;
 		this.url = url;
 		this.displayTransform = displayTransform;
 		this.storageTransform = storageTransform;
 	}
 
-	void setPendingDraw(Drawable pendingDraw, String pendingUrl) {
+	public void setPendingDraw(Drawable pendingDraw, String pendingUrl) {
 		if (mDrawInUI!=null)
 			mDrawInUI.setPendingDraw(pendingDraw, pendingUrl);
 		else {
@@ -40,7 +41,7 @@ class ViewLoadingTag {
 		}
 	}
 
-	boolean isUrlLoaded() {
+	public boolean isUrlLoaded() {
 		return isLoaded;
 	}
 
@@ -58,7 +59,7 @@ class ViewLoadingTag {
 		return old;
 	}
 
-	void recoverStateFrom(ViewLoadingTag oldTag) {
+	public void recoverStateFrom(ViewLoadingTag oldTag) {
 		setAndGetIsDefault(oldTag.isDefault());
 		mDrawInUI = oldTag.mDrawInUI;
 	}
@@ -134,7 +135,7 @@ class ViewLoadingTag {
 		}
 	};
 
-	void drawInView(ViewLoader<?> viewLoader) {
+	public void drawInView(ViewLoader<?> viewLoader) {
 		if (mDrawInUI == null) {
 			if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, viewLoader+" create new DrawInUI with "+mPendingDraw+" for "+mPendingUrl);
 			mDrawInUI = new DrawInUI(viewLoader, cache);

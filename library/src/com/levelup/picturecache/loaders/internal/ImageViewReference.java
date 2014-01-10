@@ -1,4 +1,5 @@
-package com.levelup.picturecache.loaders;
+package com.levelup.picturecache.loaders.internal;
+
 
 import android.graphics.drawable.Drawable;
 import android.widget.ImageView;

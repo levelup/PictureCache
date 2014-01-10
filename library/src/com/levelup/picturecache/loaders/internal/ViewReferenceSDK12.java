@@ -1,4 +1,4 @@
-package com.levelup.picturecache.loaders;
+package com.levelup.picturecache.loaders.internal;
 
 import android.annotation.TargetApi;
 import android.os.Build;

@@ -18,6 +18,10 @@ import com.levelup.picturecache.LogManager;
 import com.levelup.picturecache.PictureCache;
 import com.levelup.picturecache.PictureLoaderHandler;
 import com.levelup.picturecache.UIHandler;
+import com.levelup.picturecache.loaders.internal.ImageViewReference;
+import com.levelup.picturecache.loaders.internal.ImageViewReferenceSDK12;
+import com.levelup.picturecache.loaders.internal.ViewLoadingTag;
+import com.levelup.picturecache.loaders.internal.ViewReference;
 import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
 import com.levelup.picturecache.transforms.storage.StorageTransform;
 
@@ -30,7 +34,7 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 	private final ViewReference<T> view;
 
 	private static final long MAX_SIZE_IN_UI_THREAD = 19000;
-	static final boolean DEBUG_VIEW_LOADING = BuildConfig.DEBUG && false;
+	public static final boolean DEBUG_VIEW_LOADING = BuildConfig.DEBUG && false;
 
 	public ViewLoader(T view, StorageTransform storageTransform, BitmapTransform loadTransform) {
 		super(storageTransform, loadTransform);
@@ -94,14 +98,14 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 	 * called under a lock on {@link view}
 	 * @param cache the bitmap cache
 	 */
-	protected abstract void displayDefaultView(BitmapLruCache cache);
+	public abstract void displayDefaultView(BitmapLruCache cache);
 
 	/**
 	 * display this Bitmap in the view, called in the UI thread
 	 * @param pendingDrawable the Bitmap to display in {@link view}
 	 * called under a lock on {@link view}
 	 */
-	protected void displayCustomBitmap(Drawable pendingDrawable) {
+	public void displayCustomBitmap(Drawable pendingDrawable) {
 		view.setImageDrawable(pendingDrawable);
 	}
 

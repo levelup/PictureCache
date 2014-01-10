@@ -32,7 +32,7 @@ public class ViewLoaderDefaultResource<T extends View> extends ViewLoader<T> {
 	}
 
 	@Override
-	protected void displayDefaultView(BitmapLruCache drawableCache) {
+	public void displayDefaultView(BitmapLruCache drawableCache) {
 		if (getImageView() instanceof ImageView) {
 			if (drawableCache!=null) {
 				final String drawableName = "android.resource://" + defaultDrawable;

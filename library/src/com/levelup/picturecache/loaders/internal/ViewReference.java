@@ -1,4 +1,4 @@
-package com.levelup.picturecache.loaders;
+package com.levelup.picturecache.loaders.internal;
 
 import android.graphics.drawable.Drawable;
 import android.view.View;
@@ -17,21 +17,21 @@ public abstract class ViewReference<V extends View> {
 		return true;
 	}
 
-	void setImageDrawable(Drawable drawable) {
+	public void setImageDrawable(Drawable drawable) {
 		if (canDisplay()) {
 			displayDrawable(drawable);
 		}
 	}
 
-	V getImageView() {
+	public V getImageView() {
 		return view;
 	}
 
-	ViewLoadingTag getTag() {
+	public ViewLoadingTag getTag() {
 		return (ViewLoadingTag) view.getTag();
 	}
 
-	void setTag(ViewLoadingTag tag) {
+	public void setTag(ViewLoadingTag tag) {
 		view.setTag(tag);
 	}
 
