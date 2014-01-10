@@ -31,10 +31,7 @@ public class ViewLoaderDefaultResource<T extends View> extends ViewLoader<T> {
 		this.defaultDrawable = defaultResourceId;
 	}
 
-	/**
-	 * display the default view, called in the UI thread
-	 * called under a lock on {@link view}
-	 */
+	@Override
 	protected void displayDefaultView(BitmapLruCache drawableCache) {
 		if (getImageView() instanceof ImageView) {
 			if (drawableCache!=null) {

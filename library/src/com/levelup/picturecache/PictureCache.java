@@ -115,7 +115,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	public void onCreate(SQLiteDatabase db) {
 		db.execSQL(CREATE_TABLE);
 	}
-	
+
 	@Override
 	protected MapEntry<CacheKey, CacheItem> getEntryFromCursor(Cursor c) {
 		int indexPath = c.getColumnIndex("PATH");
@@ -685,28 +685,43 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		}
 	}
 
-	public boolean saveInGallery(String UUID, int width, boolean widthBased, boolean Rounded, StorageType extensionMode) throws IOException, SecurityException {
+	public boolean saveInGallery(String URL, String UUID, int width, boolean widthBased, boolean Rounded, StorageType extensionMode) {
 		boolean succeeded = false;
-		CacheKey key = CacheKey.newUUIDBasedKey(UUID, width, widthBased, extensionMode, Rounded?"_r":null);
-		mDataLock.lock();
+		final CacheKey key;
+		CacheItem v = null;
 		try {
-			CacheItem v = getMap().get(key);
-			if (v != null && v.path != null) {
-				if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
-					File dst = new File(getPictureDir(), key.getFilename());
-					FileUtils.copyFile(v.path, dst, LOG_TAG);
-					succeeded = true;
+			if (TextUtils.isEmpty(UUID))
+				key = CacheKey.newUrlBasedKey(URL, width, widthBased, extensionMode, Rounded?"_r":null);
+			else
+				key = CacheKey.newUUIDBasedKey(UUID, width, widthBased, extensionMode, Rounded?"_r":null);
+			mDataLock.lock();
+			try {
+				v = getMap().get(key);
+				if (v != null && v.path != null) {
+					if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
+						File dst = new File(getPictureDir(), key.getFilename());
+						FileUtils.copyFile(v.path, dst, LOG_TAG);
+						succeeded = true;
 
-					try {
-						GalleryScanner saver = new GalleryScanner(getContext());
-						saver.scan(dst);
-					} catch (ReceiverCallNotAllowedException e) {
-						LogManager.logger.w(LOG_TAG, "could not start the gallery scanning");
+						try {
+							GalleryScanner saver = new GalleryScanner(getContext());
+							saver.scan(dst);
+						} catch (ReceiverCallNotAllowedException e) {
+							LogManager.logger.w(LOG_TAG, "could not start the gallery scanning");
+						}
 					}
 				}
+			} finally {
+				mDataLock.unlock();
 			}
-		} finally {
-			mDataLock.unlock();
+		} catch (SecurityException e) {
+			LogManager.logger.w(LOG_TAG, "Failed to copy the file for "+v,e);
+			succeeded = false;
+		} catch (IOException e) {
+			LogManager.logger.w(LOG_TAG, "Failed to copy the file for "+v,e);
+			succeeded = false;
+		} catch (NoSuchAlgorithmException e) {
+			succeeded = false;
 		}
 		return succeeded;
 	}
