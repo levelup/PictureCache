@@ -23,6 +23,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.util.FloatMath;
 
+import com.levelup.picturecache.NetworkLoader.NetworkLoaderException;
 import com.levelup.picturecache.loaders.ViewLoader;
 
 class BitmapDownloader implements Runnable {
@@ -426,6 +427,8 @@ class BitmapDownloader implements Runnable {
 			mCache.ooHandler.onOutOfMemoryError(e);
 		} catch (IOException e) {
 			LogManager.logger.e(PictureCache.LOG_TAG, "Could not read " + mURL, e);
+		} catch (NetworkLoaderException e) {
+			LogManager.logger.e(PictureCache.LOG_TAG, "Could not read " + mURL+" with "+networkLoader, e);
 		} finally {
 			try {
 				if (is!=null)
