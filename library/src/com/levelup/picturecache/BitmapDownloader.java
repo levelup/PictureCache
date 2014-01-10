@@ -108,7 +108,7 @@ class BitmapDownloader implements Runnable {
 	}
 
 	public void run() {
-		//LogManager.logger.v( "start image load in cache: " + mURL);
+		//LogManager.getLogger().v( "start image load in cache: " + mURL);
 		final HashMap<CacheKey,Drawable> targetBitmaps = new HashMap<CacheKey, Drawable>();
 		final HashMap<CacheVariant,Drawable> targetNewBitmaps = new HashMap<CacheVariant, Drawable>();
 		File downloadToFile = null;
@@ -160,7 +160,7 @@ class BitmapDownloader implements Runnable {
 									// we need the dimensions of the downloaded file
 									tmpFileOptions.inJustDecodeBounds = true;
 									BitmapFactory.decodeFile(downloadToFile.getAbsolutePath(), tmpFileOptions);
-									if (DEBUG_BITMAP_DOWNLOADER && tmpFileOptions.outHeight <= 0) LogManager.logger.i(PictureCache.LOG_TAG, this+" failed to get dimensions from "+downloadToFile);
+									if (DEBUG_BITMAP_DOWNLOADER && tmpFileOptions.outHeight <= 0) LogManager.getLogger().i(PictureCache.LOG_TAG, this+" failed to get dimensions from "+downloadToFile);
 								}
 							} finally {
 								if (!downloaded)
@@ -174,7 +174,7 @@ class BitmapDownloader implements Runnable {
 							if (bitmap!=null) {
 								int finalHeight = target.mKey.getBitmapHeight(bitmap.getWidth(), bitmap.getHeight());
 								if (finalHeight!=0 && finalHeight != bitmap.getHeight()) {
-									//LogManager.logger.v(" source size:"+bmp.getWidth()+"x"+bmp.getHeight());
+									//LogManager.getLogger().v(" source size:"+bmp.getWidth()+"x"+bmp.getHeight());
 									Bitmap newBmp = Bitmap.createScaledBitmap(bitmap, (bitmap.getWidth() * finalHeight) / bitmap.getHeight(), finalHeight, true);
 									/*if (bitmap!=newBmp)
 										bitmap.recycle();*/
@@ -196,40 +196,40 @@ class BitmapDownloader implements Runnable {
 							targetNewBitmaps.put(variant, displayDrawable);
 						}
 					} else {
-						if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.d(PictureCache.LOG_TAG, this+" failed to get a bitmap for:"+target);
+						if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" failed to get a bitmap for:"+target);
 						targetBitmaps.remove(target.mKey);
 					}
 				}
 
-				if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.i(PictureCache.LOG_TAG, this+" target:"+target+" fileInCache:"+target.fileInCache+" bitmap:"+targetBitmaps.get(target.mKey));
+				if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, this+" target:"+target+" fileInCache:"+target.fileInCache+" bitmap:"+targetBitmaps.get(target.mKey));
 			}
 		} catch (OutOfMemoryError e) {
-			LogManager.logger.e(PictureCache.LOG_TAG, "Failed to load " + mURL, e);
+			LogManager.getLogger().e(PictureCache.LOG_TAG, "Failed to load " + mURL, e);
 			mCache.ooHandler.onOutOfMemoryError(e);
 			/*} catch (InterruptedException e) {
-			LogManager.logger.e(PictureCache.TAG, "Interrupted while loading " + mURL, e);*/
+			LogManager.getLogger().e(PictureCache.TAG, "Interrupted while loading " + mURL, e);*/
 		} catch (AbortDownload e) {
 			// do nothing
 		} catch (Throwable e) {
-			LogManager.logger.e(PictureCache.LOG_TAG, "exception on "+mURL, e);
+			LogManager.getLogger().e(PictureCache.LOG_TAG, "exception on "+mURL, e);
 		} finally {
 			try {
 				// tell the monitor we are done
-				//LogManager.logger.i(PictureCache.TAG, "finished download thread for " + mURL + " bmp:"+bmp + " rbmp:"+rbmp);
-				//LogManager.logger.i(PictureCache.TAG, "send display bitmap "+mURL+" aborted:"+abortRequested.get()+" size:"+reqTargets.size());
-				//LogManager.logger.i(PictureCache.TAG, "ViewUpdate loop "+mURL+" aborted:"+abortRequested.get()+" size:"+reqTargets.size()+" bmp:"+bmp+" rbmp:"+rbmp);
+				//LogManager.getLogger().i(PictureCache.TAG, "finished download thread for " + mURL + " bmp:"+bmp + " rbmp:"+rbmp);
+				//LogManager.getLogger().i(PictureCache.TAG, "send display bitmap "+mURL+" aborted:"+abortRequested.get()+" size:"+reqTargets.size());
+				//LogManager.getLogger().i(PictureCache.TAG, "ViewUpdate loop "+mURL+" aborted:"+abortRequested.get()+" size:"+reqTargets.size()+" bmp:"+bmp+" rbmp:"+rbmp);
 				synchronized (mTargets) {
-					if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.e(PictureCache.LOG_TAG, this+" finished loading targets:"+mTargets+" bitmaps:"+targetBitmaps);
+					if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" finished loading targets:"+mTargets+" bitmaps:"+targetBitmaps);
 
 					mAborting = true; // after this point new targets are not OK for this job
 					for (DownloadTarget target : mTargets) {
-						//LogManager.logger.i(PictureCache.TAG, false, "ViewUpdate "+mURL);
+						//LogManager.getLogger().i(PictureCache.TAG, false, "ViewUpdate "+mURL);
 						PictureLoaderHandler j = target.loadHandler;
 						Drawable drawable = targetBitmaps.get(target.mKey);
 
-						if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.i(PictureCache.LOG_TAG, this+" display "+drawable+" in "+target.loadHandler+" file:"+target.fileInCache+" key:"+target.mKey);
-						if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.v(PictureCache.LOG_TAG, this+"  targets:"+mTargets+" bitmaps:"+targetBitmaps);
-						//LogManager.logger.i(PictureCache.TAG, "display "+mURL+" in "+j+" abort:"+abortRequested);
+						if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, this+" display "+drawable+" in "+target.loadHandler+" file:"+target.fileInCache+" key:"+target.mKey);
+						if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().v(PictureCache.LOG_TAG, this+"  targets:"+mTargets+" bitmaps:"+targetBitmaps);
+						//LogManager.getLogger().i(PictureCache.TAG, "display "+mURL+" in "+j+" abort:"+abortRequested);
 						if (drawable!=null) {
 							Bitmap bitmap = ViewLoader.drawableToBitmap(drawable);
 							if (j.getDisplayTransform()!=null)
@@ -272,17 +272,17 @@ class BitmapDownloader implements Runnable {
 	boolean addTarget(PictureLoaderHandler loadHandler, CacheKey key, long itemDate, LifeSpan lifeSpan)
 	{
 		DownloadTarget newTarget = new DownloadTarget(loadHandler, key);
-		//LogManager.logger.i(PictureCache.TAG, "add recipient view "+view+" for " + mURL);
-		if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.e(PictureCache.LOG_TAG, this+" addTarget "+loadHandler+" key:"+key);
+		//LogManager.getLogger().i(PictureCache.TAG, "add recipient view "+view+" for " + mURL);
+		if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" addTarget "+loadHandler+" key:"+key);
 		synchronized (mTargets) {
 			if (mAborting) {
-				if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.w(PictureCache.LOG_TAG, this+ " is aborting");
+				if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().w(PictureCache.LOG_TAG, this+ " is aborting");
 				return false;
 			}
 
 			if (mTargets.contains(newTarget)) {
 				// TODO: update the rounded/rotation status
-				if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.d(PictureCache.LOG_TAG, this+" target "+newTarget+" already pending");
+				if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" target "+newTarget+" already pending");
 				return true;
 			}
 			mTargets.add(newTarget);
@@ -304,7 +304,7 @@ class BitmapDownloader implements Runnable {
 		synchronized (mTargets) {
 
 			boolean deleted = false;
-			if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.e(PictureCache.LOG_TAG, this+" removeTarget "+target);
+			if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" removeTarget "+target);
 			for (int i=0;i<mTargets.size();++i) {
 				if (mTargets.get(i).loadHandler.equals(target)) {
 					deleted = mTargets.remove(i)!=null;
@@ -312,13 +312,13 @@ class BitmapDownloader implements Runnable {
 				}
 			}
 
-			if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.e(PictureCache.LOG_TAG, this+" removeTarget "+target+" = "+deleted+" remains:"+mTargets.size());
+			if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" removeTarget "+target+" = "+deleted+" remains:"+mTargets.size());
 			if (deleted) {
-				//LogManager.logger.v(" deleted job view:"+target+" for "+mURL);
+				//LogManager.getLogger().v(" deleted job view:"+target+" for "+mURL);
 				//target.setLoadingURL(mCache, mURL);
-				target.drawDefaultPicture(mURL, mCache.mBitmapCache);
+				target.drawDefaultPicture(mURL, mCache.getBitmapCache());
 			}
-			//else LogManager.logger.i(PictureCache.TAG, " keep downloading URL:" + mURL + " remaining views:" + reqViews.size() + " like view:"+reqViews.get(0));
+			//else LogManager.getLogger().i(PictureCache.TAG, " keep downloading URL:" + mURL + " remaining views:" + reqViews.size() + " like view:"+reqViews.get(0));
 			return deleted;
 		}
 	}
@@ -326,12 +326,12 @@ class BitmapDownloader implements Runnable {
 	private BitmapFactory.Options getOutputOptions(int srcWidth, int srcHeight, CacheKey key) {
 		BitmapFactory.Options opts = new BitmapFactory.Options();
 		if (srcHeight <= 0) {
-			LogManager.logger.i(PictureCache.LOG_TAG, "could not get the dimension for " + mURL+" use raw decoding");
+			LogManager.getLogger().i(PictureCache.LOG_TAG, "could not get the dimension for " + mURL+" use raw decoding");
 		} else {
 			int finalHeight = key.getBitmapHeight(srcWidth, srcHeight);
 
 			if (finalHeight>0 && srcHeight > finalHeight*2) {
-				//LogManager.logger.e(PictureCache.TAG, " Picture scaling by: " + scale +" from Height:" + opts.outHeight + " to "+finalHeight+" for "+mURL);
+				//LogManager.getLogger().e(PictureCache.TAG, " Picture scaling by: " + scale +" from Height:" + opts.outHeight + " to "+finalHeight+" for "+mURL);
 				opts.inSampleSize = (int) FloatMath.floor((float)srcHeight / finalHeight);
 			}
 			else opts.inSampleSize = 1;
@@ -349,13 +349,13 @@ class BitmapDownloader implements Runnable {
 	private void checkAbort() {
 		synchronized (mTargets) {
 			if (mTargets.isEmpty()) {
-				if (DEBUG_BITMAP_DOWNLOADER) LogManager.logger.i(PictureCache.LOG_TAG, this+ " no more targets, aborting");
+				if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, this+ " no more targets, aborting");
 				mAborting = true;
 				throw new AbortDownload();
 			}
 		}
 	}
-	
+
 	protected boolean isEmpty() {
 		synchronized (mTargets) {
 			return mTargets.isEmpty();
@@ -363,25 +363,25 @@ class BitmapDownloader implements Runnable {
 	}
 
 	private boolean downloadInTempFile(File tmpFile) {
-		//LogManager.logger.i(PictureCache.TAG, "loading "+mURL);
+		//LogManager.getLogger().i(PictureCache.TAG, "loading "+mURL);
 		InputStream is = null;
 		try {
 			try {
 				Uri dataUri = Uri.parse(mURL);
 				is = mCache.getContext().getContentResolver().openInputStream(dataUri);
-				//LogManager.logger.v("using the content resolver for "+mURL);
+				//LogManager.getLogger().v("using the content resolver for "+mURL);
 			} catch (FileNotFoundException e) {
-				//LogManager.logger.d(PictureCache.TAG, false, "cache error trying ContentResolver on "+mURL);
+				//LogManager.getLogger().d(PictureCache.TAG, false, "cache error trying ContentResolver on "+mURL);
 				if (null!=networkLoader)
 					is = networkLoader.loadURL(mURL);
-				
+
 				if (null==is) {
 					URL url = new URL(mURL);
 					URLConnection conn = url.openConnection();
 					conn.setConnectTimeout(CONNECT_TIMEOUT_DL);
 					conn.setUseCaches(false);
 					conn.setRequestProperty("Accept-Encoding", "identity");
-					//LogManager.logger.e(PictureCache.TAG, conn.getContentEncoding()+" encoding for "+mURL);
+					//LogManager.getLogger().e(PictureCache.TAG, conn.getContentEncoding()+" encoding for "+mURL);
 					checkAbort();
 					try {
 						is = conn.getInputStream();
@@ -417,7 +417,7 @@ class BitmapDownloader implements Runnable {
 				out.close();
 			}
 
-			//LogManager.logger.v(" got direct:"+bmp);
+			//LogManager.getLogger().v(" got direct:"+bmp);
 		} catch (MalformedURLException e) {
 			LogManager.logger.w(PictureCache.LOG_TAG, "bad URL " + mURL, e);
 		} catch (UnknownHostException e) {
@@ -434,7 +434,7 @@ class BitmapDownloader implements Runnable {
 				if (is!=null)
 					is.close();
 			} catch (IOException e) {
-				LogManager.logger.e(PictureCache.LOG_TAG, "Could not close " + is, e);
+				LogManager.getLogger().e(PictureCache.LOG_TAG, "Could not close " + is, e);
 			}
 		}
 		return false;
