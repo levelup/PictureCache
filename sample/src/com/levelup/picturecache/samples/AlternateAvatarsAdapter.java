@@ -2,8 +2,9 @@ package com.levelup.picturecache.samples;
 
 import java.security.NoSuchAlgorithmException;
 
+import uk.co.senab.bitmapcache.BitmapLruCache;
 import android.content.Context;
-import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,13 +36,13 @@ class AlternateAvatarsAdapter extends ArrayAdapter<SampleSource.Sample> {
 		}
 		
 		@Override
-		protected void displayCustomBitmap(Bitmap bmp) {
+		protected void displayCustomBitmap(Drawable bmp) {
 			super.displayCustomBitmap(bmp);
 			progress.setVisibility(View.INVISIBLE);
 		}
 		
 		@Override
-		protected void displayDefaultView() {
+		protected void displayDefaultView(BitmapLruCache drawableCache) {
 			//no need to display the default view super.displayDefaultView();
 			getImageView().setImageDrawable(null);
 			progress.setVisibility(View.VISIBLE);

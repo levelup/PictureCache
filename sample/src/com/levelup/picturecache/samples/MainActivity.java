@@ -8,7 +8,6 @@ import android.widget.ImageView;
 
 import com.levelup.picturecache.LifeSpan;
 import com.levelup.picturecache.StorageType;
-import com.levelup.picturecache.loaders.ImageViewLoader;
 import com.levelup.picturecache.loaders.ImageViewLoaderDefaultDrawable;
 import com.levelup.picturecache.loaders.ImageViewLoaderDefaultResource;
 
@@ -35,8 +34,8 @@ public class MainActivity extends Activity {
 			@Override
 			public void onClick(View v) {
 				ImageView avatar = (ImageView) findViewById(R.id.avatar1);
-				ImageViewLoader loader = new ImageViewLoaderDefaultDrawable(avatar, null, null, null);
-				mCache.loadPictureWithFixedHeight(loader, levelupAvatarURL, "twitter_levelup", 0,
+				ImageViewLoaderDefaultDrawable loader = new ImageViewLoaderDefaultDrawable(avatar, null, null, null);
+				mCache.loadPictureWithFixedHeight(loader, levelupAvatarURL, "twitter_levelup", null, 0,
 						LifeSpan.LONGTERM,
 						(48*screenDpi)/160,
 						StorageType.AUTO);
@@ -51,8 +50,8 @@ public class MainActivity extends Activity {
 			@Override
 			public void onClick(View v) {
 				ImageView avatar = (ImageView) findViewById(R.id.avatar1);
-				ImageViewLoader loader = new ImageViewLoaderDefaultDrawable(avatar, null, null, null);
-				mCache.loadPictureWithFixedHeight(loader, null, "empty", 0, LifeSpan.LONGTERM, (48*screenDpi)/160, StorageType.AUTO);
+				ImageViewLoaderDefaultDrawable loader = new ImageViewLoaderDefaultDrawable(avatar, null, null, null);
+				mCache.loadPictureWithFixedHeight(loader, null, "empty", null, 0, LifeSpan.LONGTERM, (48*screenDpi)/160, StorageType.AUTO);
 			}
 		});
 
@@ -64,7 +63,7 @@ public class MainActivity extends Activity {
 			public void onClick(View v) {
 				ImageView avatar = (ImageView) findViewById(R.id.avatar2);
 				ImageViewLoaderDefaultResource loader = new ImageViewLoaderDefaultResource(avatar, R.drawable.picholder, null, null);
-				mCache.loadPictureWithFixedHeight(loader, plumeAvatarURL, "twitter_plume", 0,
+				mCache.loadPictureWithFixedHeight(loader, plumeAvatarURL, "twitter_plume", null, 0,
 						LifeSpan.LONGTERM,
 						(96*screenDpi)/160,
 						StorageType.AUTO);
@@ -80,7 +79,7 @@ public class MainActivity extends Activity {
 			public void onClick(View v) {
 				ImageView avatar = (ImageView) findViewById(R.id.avatar2);
 				ImageViewLoaderDefaultResource loader = new ImageViewLoaderDefaultResource(avatar, R.drawable.picholder, null, null);
-				mCache.loadPictureWithFixedHeight(loader, null, "empty", 0, LifeSpan.LONGTERM, (96*screenDpi)/160, StorageType.AUTO);
+				mCache.loadPictureWithFixedHeight(loader, null, "empty", null, 0, LifeSpan.LONGTERM, (96*screenDpi)/160, StorageType.AUTO);
 			}
 		});
 
