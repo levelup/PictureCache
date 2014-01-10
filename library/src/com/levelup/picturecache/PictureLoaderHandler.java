@@ -30,7 +30,7 @@ public abstract class PictureLoaderHandler {
 	 * @param url URL being loaded
 	 * @param drawableCache TODO
 	 */
-	abstract protected void drawDefaultPicture(String url, BitmapLruCache drawableCache);
+	public abstract void drawDefaultPicture(String url, BitmapLruCache drawableCache);
 	
 	/**
 	 * Called when the downloaded {@link Bitmap} should be displayed 
@@ -42,7 +42,7 @@ public abstract class PictureLoaderHandler {
 	 * @param cookie data associated with the loaded URL
 	 * @param drawableCache TODO
 	 */
-	abstract protected void drawBitmap(Drawable bmp, String url, Object cookie, BitmapLruCache drawableCache);
+	public abstract void drawBitmap(Drawable bmp, String url, Object cookie, BitmapLruCache drawableCache);
 	
 	protected PictureLoaderHandler(StorageTransform bitmapStorageTransform, BitmapTransform bitmapTransform) {
 		this.mStorageTransform = bitmapStorageTransform;
