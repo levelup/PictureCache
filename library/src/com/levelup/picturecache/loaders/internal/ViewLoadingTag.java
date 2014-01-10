@@ -12,9 +12,9 @@ import com.levelup.picturecache.transforms.storage.StorageTransform;
 
 public class ViewLoadingTag {
 	public final String url;
+	public final BitmapLruCache bitmapCache;
 	private final StorageTransform storageTransform;
 	private final BitmapTransform displayTransform;
-	private final BitmapLruCache cache;
 
 	private boolean isLoaded;
 	private DrawType drawType;
@@ -26,7 +26,7 @@ public class ViewLoadingTag {
 	private DrawInUI mDrawInUI;
 
 	public ViewLoadingTag(BitmapLruCache cache, String url, StorageTransform storageTransform, BitmapTransform displayTransform) {
-		this.cache = cache;
+		this.bitmapCache = cache;
 		this.url = url;
 		this.displayTransform = displayTransform;
 		this.storageTransform = storageTransform;
@@ -85,7 +85,7 @@ public class ViewLoadingTag {
 	public void drawInView(ViewLoader<?> viewLoader) {
 		if (mDrawInUI == null) {
 			if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, viewLoader+" create new DrawInUI with "+mPendingDrawable+" for "+mPendingUrl);
-			mDrawInUI = new DrawInUI(viewLoader, cache);
+			mDrawInUI = new DrawInUI(viewLoader);
 			mDrawInUI.setPendingDrawable(mPendingDrawable, mPendingUrl, mPendingDrawType);
 			mPendingDrawable = null;
 			mPendingUrl = null;
