@@ -490,18 +490,6 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		}
 	}
 
-	static String keyToBitmapCacheKey(CacheKey key, String url, PictureLoaderHandler loader) {
-		final StringBuilder bitmapKey = new StringBuilder(key.getUUID());
-		bitmapKey.append(url);
-		if (loader != null) {
-			if (loader.getStorageTransform() != null)
-				bitmapKey.append(loader.getStorageTransform().getVariantPostfix());
-			if (loader.getDisplayTransform() != null)
-				bitmapKey.append(loader.getDisplayTransform().getVariant());
-		}
-		return bitmapKey.toString();
-	}
-
 	/**
 	 * 
 	 * @param URL
@@ -965,13 +953,4 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		return mContext;
 	}
 
-	static String resourcePath;
-
-	synchronized Drawable loadResourceDrawable(String url) {
-		if (resourcePath==null)
-			resourcePath = "android.resource://"+mContext.getPackageName()+"/";
-		if (!url.startsWith(resourcePath))
-			return null;
-		return mContext.getResources().getDrawable(Integer.valueOf(url.substring(resourcePath.length())));
-	}
 }

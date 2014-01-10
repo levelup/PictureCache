@@ -143,7 +143,7 @@ class BitmapDownloader implements Runnable {
 						// we don't have that final file yet, use the download file to generate it
 						displayDrawable = targetBitmaps.get(target.mKey);
 						if (displayDrawable==null) {
-							displayDrawable = mCache.loadResourceDrawable(mURL);
+							displayDrawable = loadResourceDrawable(mURL);
 
 							if (displayDrawable!=null) {
 								if (target.loadHandler.getStorageTransform()!=null)
@@ -237,7 +237,7 @@ class BitmapDownloader implements Runnable {
 
 							Drawable cacheableBmp = null;
 							if (mCache.mBitmapCache != null && target.loadHandler.canKeepBitmapInMemory(bitmap))
-								cacheableBmp = mCache.mBitmapCache.put(PictureCache.keyToBitmapCacheKey(target.mKey, mURL, j), bitmap);
+								cacheableBmp = mCache.mBitmapCache.put(keyToBitmapCacheKey(target.mKey, mURL, j), bitmap);
 
 							if (cacheableBmp == null) {
 								if (drawable instanceof BitmapDrawable && ((BitmapDrawable) drawable).getBitmap()==bitmap)
@@ -439,4 +439,27 @@ class BitmapDownloader implements Runnable {
 		}
 		return false;
 	}
+
+	public static String keyToBitmapCacheKey(CacheKey key, String url, PictureLoaderHandler loader) {
+		final StringBuilder bitmapKey = new StringBuilder(key.UUID);
+		bitmapKey.append(url);
+		if (loader != null) {
+			if (loader.getStorageTransform() != null)
+				bitmapKey.append(loader.getStorageTransform().getVariantPostfix());
+			if (loader.getDisplayTransform() != null)
+				bitmapKey.append(loader.getDisplayTransform().getVariant());
+		}
+		return bitmapKey.toString();
+	}
+
+	private String resourcePath;
+
+	private synchronized Drawable loadResourceDrawable(String url) {
+		if (resourcePath==null)
+			resourcePath = "android.resource://"+mCache.getContext().getPackageName()+"/";
+		if (!url.startsWith(resourcePath))
+			return null;
+		return mCache.getContext().getResources().getDrawable(Integer.valueOf(url.substring(resourcePath.length())));
+	}
+
 }
