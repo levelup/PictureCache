@@ -64,6 +64,6 @@ public class PrecacheImageLoader extends PictureLoaderHandler {
 
 	@Override
 	protected boolean canDirectLoad(File file) {
-		return true;
+		return false;
 	}
 }
