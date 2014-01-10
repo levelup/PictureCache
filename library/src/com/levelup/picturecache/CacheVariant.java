@@ -3,8 +3,8 @@ package com.levelup.picturecache;
 import java.io.File;
 
 public class CacheVariant {
-	final File path;
-	final CacheKey key;
+	public final File path;
+	public final CacheKey key;
 	
 	CacheVariant(File path, CacheKey key) {
 		if (path==null) throw new NullPointerException("we need a path for this variant "+key);

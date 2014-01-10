@@ -540,7 +540,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 			key = getStoredKey(key, URL, itemDate);
 
-			final String bitmapCacheKey = mBitmapCache!=null ? keyToBitmapCacheKey(key, URL, loader) : null;
+			final String bitmapCacheKey = mBitmapCache!=null ? BitmapDownloader.keyToBitmapCacheKey(key, URL, loader) : null;
 			if (mBitmapCache!=null) {
 				CacheableBitmapDrawable cachedBmp = mBitmapCache.get(bitmapCacheKey);
 				if (cachedBmp!=null) {
@@ -894,7 +894,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 							if (v.remoteDate <= itemDate) { // '=' favor the newer url when dates are 0
 								// the item in the Cache is older than this request, the image changed for a newer one
 								// we need to mark the old one as short term with a UUID that has the picture ID inside
-								String deprecatedUUID = getOldPicUUID(key.getUUID(), v.URL);
+								String deprecatedUUID = getOldPicUUID(key.UUID, v.URL);
 								CacheKey oldVersionKey;
 								if (!TextUtils.isEmpty(deprecatedUUID))
 									oldVersionKey = key.copyWithNewUuid(deprecatedUUID);
@@ -905,7 +905,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 								if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, key+" moved to "+oldVersionKey);
 							} else {
 								// use the old image from the cache with that URL
-								String dstUUID = getOldPicUUID(key.getUUID(), URL);
+								String dstUUID = getOldPicUUID(key.UUID, URL);
 								if (!TextUtils.isEmpty(dstUUID))
 									key = key.copyWithNewUuid(dstUUID);
 								else

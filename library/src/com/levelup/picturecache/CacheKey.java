@@ -12,9 +12,9 @@ import android.text.TextUtils;
 
 class CacheKey {
 
-	private final String UUID;          // key: the unique ID representing this item in the DB
+	public final String UUID;          // key: the unique ID representing this item in the DB
+	public final boolean widthBased;   // key: whether it's width constrained or height constrained
 	private final int dimension;        // key: the target display height/width
-	private final boolean widthBased;   // key: whether it's width constrained or height constrained
 	private final StorageType extensionMode;
 	private final String variantString;
 	private final int hashCode; // only compute the hascode once for speed efficiency
@@ -92,14 +92,6 @@ class CacheKey {
 			newHeight = dimension;
 
 		return newHeight;
-	}
-
-	final String getUUID() {
-		return UUID;
-	}
-
-	final boolean isWidthBased() {
-		return widthBased;
 	}
 
 	@Override
