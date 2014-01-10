@@ -7,7 +7,7 @@ import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
 import com.levelup.picturecache.transforms.storage.StorageTransform;
 
 /**
- * class used by the picture cache to display bitmaps on an {@link ImageView}, the default placeholder is defined by a {@link Drawable}
+ * Display bitmaps on an {@link ImageView}, the default/error placeholder is defined by a {@link Drawable}
  * <p>
  * it also handles the Bitmaps transformations use for storage and/or display
  */

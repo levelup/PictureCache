@@ -12,9 +12,8 @@ import com.levelup.picturecache.transforms.storage.StorageTransform;
 
 
 /**
- * class used by the picture cache to display bitmaps on an {@link View}, the default placeholder is defined by a resource ID
- * <p>
- * it also handles the Bitmaps transformations use for storage and/or display
+ * Display bitmaps on an {@link View}, the default/error placeholder is defined by a resource ID
+ * <p>It also handles the Bitmaps transformations use for storage and/or display</p>
  */
 public class ViewLoaderDefaultResource<T extends View> extends ViewLoader<T> {
 	private final int defaultDrawable;

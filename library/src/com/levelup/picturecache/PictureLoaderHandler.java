@@ -24,8 +24,7 @@ public abstract class PictureLoaderHandler {
 	
 	/**
 	 * Called when the default drawable should be displayed, while the bitmap is loading
-	 * <p>
-	 * This method may be called outside of the UI thread</p>
+	 * <p>This method may be called outside of the UI thread</p>
 	 * 
 	 * @param url URL being loaded
 	 * @param drawableCache TODO
@@ -34,8 +33,7 @@ public abstract class PictureLoaderHandler {
 	
 	/**
 	 * Called when the downloaded {@link Bitmap} should be displayed 
-	 * <p>
-	 * This method may be called outside of the UI thread</p>
+	 * <p>This method may be called outside of the UI thread</p>
 	 * 
 	 * @param bmp Drawable to display
 	 * @param url URL corresponding to the bitmap

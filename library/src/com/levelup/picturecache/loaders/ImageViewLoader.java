@@ -6,7 +6,7 @@ import com.levelup.picturecache.transforms.storage.StorageTransform;
 import android.widget.ImageView;
 
 /**
- * the base class used to display the loaded/default bitmap in an ImageView
+ * Abstract class used to display the loaded/default/error bitmap in an ImageView
  * <p>
  * @see {@link ImageViewLoaderDefaultResource} and {@link ImageViewLoaderDefaultDrawable} 
  */

@@ -12,7 +12,7 @@ import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
 import com.levelup.picturecache.transforms.storage.StorageTransform;
 
 /**
- * class used by the picture cache to display bitmaps on a {@link View},
+ * Class used by the picture cache to display bitmaps on a {@link View},
  * the bitmap is set as the background of the view as with {@code android:background}
  * <p>
  * it also handles the Bitmaps transformations use for storage and/or display

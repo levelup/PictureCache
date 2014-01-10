@@ -314,6 +314,13 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		LogManager.logger.w(LOG_TAG, "Upgrading PictureCache from " + oldVersion + " to " + newVersion);
 	}
 
+	/**
+	 * Get the File path that should be used for this {@code key}
+	 * @param key
+	 * @return
+	 * @throws SecurityException
+	 * @throws IOException
+	 */
 	public File getCachedFilepath(CacheKey key) throws SecurityException, IOException {
 		// TODO: handle the switch between phone memory and SD card
 		assertFolderExists();

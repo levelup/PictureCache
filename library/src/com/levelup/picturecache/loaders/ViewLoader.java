@@ -26,8 +26,7 @@ import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
 import com.levelup.picturecache.transforms.storage.StorageTransform;
 
 /**
- * the base class used to display the loaded/default bitmap in an View
- * <p>
+ * Base class used to display the loaded/default bitmap in an View
  * @see {@link ViewLoaderDefaultResource} and {@link ViewLoaderDefaultDrawable} 
  */
 public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
@@ -94,16 +93,16 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 	}
 
 	/**
-	 * display the default view, called in the UI thread
-	 * called under a lock on {@link view}
+	 * Display the default view, called in the UI thread
+	 * <p>called under a lock on {@link view}</p>
 	 * @param cache the bitmap cache
 	 */
 	public abstract void displayDefaultView(BitmapLruCache cache);
 
 	/**
-	 * display this Bitmap in the view, called in the UI thread
-	 * @param pendingDrawable the Bitmap to display in {@link view}
-	 * called under a lock on {@link view}
+	 * Display this Bitmap in the view, called in the UI thread
+	 * <p>called under a lock on {@link view}</p>
+	 * @param pendingDrawable Drawable to display in {@link view}
 	 */
 	public void displayCustomBitmap(Drawable pendingDrawable) {
 		view.setImageDrawable(pendingDrawable);
