@@ -98,8 +98,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	protected final File mCacheFolder;
 	final OutOfMemoryHandler ooHandler;
 
-	private DownloadManager mJobManager;
-	private Context mContext;
+	private final DownloadManager mJobManager;
+	private final Context mContext;
 
 	protected final BitmapLruCache mBitmapCache;
 
@@ -310,8 +310,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		LogManager.logger.w(LOG_TAG, "Upgrading PictureCache from " + oldVersion + " to " + newVersion);
 	}
 
-	File getCachedFilepath(CacheKey key) throws SecurityException, IOException
-	{
+	public File getCachedFilepath(CacheKey key) throws SecurityException, IOException {
 		// TODO: handle the switch between phone memory and SD card
 		assertFolderExists();
 		return new File(mCacheFolder, key.getFilename());
@@ -337,7 +336,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()))
 			return getTempDir();
 
-		return getContext().getCacheDir();
+		return mContext.getCacheDir();
 	}
 
 	public File getPictureDir() {
@@ -692,7 +691,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 						succeeded = true;
 
 						try {
-							GalleryScanner saver = new GalleryScanner(getContext());
+							GalleryScanner saver = new GalleryScanner(mContext);
 							saver.scan(dst);
 						} catch (ReceiverCallNotAllowedException e) {
 							LogManager.logger.w(LOG_TAG, "could not start the gallery scanning");
