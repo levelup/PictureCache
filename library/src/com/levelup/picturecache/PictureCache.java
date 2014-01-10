@@ -96,12 +96,12 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	private Boolean mDirAsserted = Boolean.FALSE;
 
 	protected final File mCacheFolder;
-	final OutOfMemoryHandler ooHandler;
+	private final OutOfMemoryHandler ooHandler;
 
 	private final DownloadManager mJobManager;
 	private final Context mContext;
 
-	protected final BitmapLruCache mBitmapCache;
+	private final BitmapLruCache mBitmapCache;
 
 	private AtomicInteger mPurgeCounterLongterm = new AtomicInteger();
 	private AtomicInteger mPurgeCounterShortterm = new AtomicInteger();
@@ -952,4 +952,11 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		return mContext;
 	}
 
+	public BitmapLruCache getBitmapCache() {
+		return mBitmapCache;
+	}
+
+	public OutOfMemoryHandler getOutOfMemoryHandler() {
+		return ooHandler;
+	}
 }

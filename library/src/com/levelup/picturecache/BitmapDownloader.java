@@ -205,7 +205,7 @@ class BitmapDownloader implements Runnable {
 			}
 		} catch (OutOfMemoryError e) {
 			LogManager.getLogger().e(PictureCache.LOG_TAG, "Failed to load " + mURL, e);
-			mCache.ooHandler.onOutOfMemoryError(e);
+			mCache.getOutOfMemoryHandler().onOutOfMemoryError(e);
 			/*} catch (InterruptedException e) {
 			LogManager.getLogger().e(PictureCache.TAG, "Interrupted while loading " + mURL, e);*/
 		} catch (AbortDownload e) {
@@ -236,8 +236,8 @@ class BitmapDownloader implements Runnable {
 								bitmap = j.getDisplayTransform().transformBitmap(bitmap);
 
 							Drawable cacheableBmp = null;
-							if (mCache.mBitmapCache != null && target.loadHandler.canKeepBitmapInMemory(bitmap))
-								cacheableBmp = mCache.mBitmapCache.put(keyToBitmapCacheKey(target.mKey, mURL, j), bitmap);
+							if (mCache.getBitmapCache() != null && target.loadHandler.canKeepBitmapInMemory(bitmap))
+								cacheableBmp = mCache.getBitmapCache().put(keyToBitmapCacheKey(target.mKey, mURL, j), bitmap);
 
 							if (cacheableBmp == null) {
 								if (drawable instanceof BitmapDrawable && ((BitmapDrawable) drawable).getBitmap()==bitmap)
@@ -245,9 +245,9 @@ class BitmapDownloader implements Runnable {
 								else
 									cacheableBmp = new BitmapDrawable(mCache.getContext().getResources(), bitmap);
 							}
-							j.drawBitmap(cacheableBmp, mURL, mCookie, mCache.mBitmapCache);
+							j.drawBitmap(cacheableBmp, mURL, mCookie, mCache.getBitmapCache());
 						} else
-							j.drawDefaultPicture(mURL, mCache.mBitmapCache);
+							j.drawDefaultPicture(mURL, mCache.getBitmapCache());
 					}
 					mTargets.clear();
 				}
