@@ -15,18 +15,29 @@ public class RemoteViewLoader extends PictureLoaderHandler {
 	private final RemoteViews remoteViews;
 	private final int viewId;
 	private final int defaultResourceId;
+	private final int errorDrawableResId;
 	private String mLoadingUrl;
 
 	public RemoteViewLoader(RemoteViews remoteViews, int viewId, int defaultDrawableResId, StorageTransform storageTransform, BitmapTransform loadTransform) {
+		this(remoteViews, viewId, defaultDrawableResId, defaultDrawableResId, storageTransform, loadTransform);
+	}
+
+	public RemoteViewLoader(RemoteViews remoteViews, int viewId, int defaultDrawableResId, int errorDrawableResId, StorageTransform storageTransform, BitmapTransform loadTransform) {
 		super(storageTransform, loadTransform);
 		this.remoteViews = remoteViews;
 		this.viewId = viewId;
 		this.defaultResourceId = defaultDrawableResId;
+		this.errorDrawableResId = errorDrawableResId;
 	}
 
 	@Override
 	public void drawDefaultPicture(String url, BitmapLruCache drawableCache) {
 		remoteViews.setImageViewResource(viewId, defaultResourceId);
+	}
+	
+	@Override
+	public void drawErrorPicture(String url, BitmapLruCache drawableCache) {
+		remoteViews.setImageViewResource(viewId, errorDrawableResId);
 	}
 
 	@Override

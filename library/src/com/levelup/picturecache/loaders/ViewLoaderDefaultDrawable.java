@@ -33,4 +33,11 @@ public class ViewLoaderDefaultDrawable<T extends View> extends ViewLoader<T> {
 			((ImageView) getImageView()).setImageDrawable(defaultDrawable);
 		}
 	}
+	
+	@Override
+	public void displayErrorView(BitmapLruCache cache) {
+		if (getImageView() instanceof ImageView) {
+			((ImageView) getImageView()).setImageDrawable(defaultDrawable);
+		}
+	}
 }

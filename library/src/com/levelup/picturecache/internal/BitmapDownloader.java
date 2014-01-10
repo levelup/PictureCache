@@ -148,13 +148,12 @@ public class BitmapDownloader implements Runnable {
 
 						if (displayDrawable==null && downloadToFile!=null && !downloaded) {
 							try {
-								downloaded = downloadInTempFile(downloadToFile);
-								if (downloaded) {
-									// we need the dimensions of the downloaded file
-									tmpFileOptions.inJustDecodeBounds = true;
-									BitmapFactory.decodeFile(downloadToFile.getAbsolutePath(), tmpFileOptions);
-									if (DEBUG_BITMAP_DOWNLOADER && tmpFileOptions.outHeight <= 0) LogManager.getLogger().i(PictureCache.LOG_TAG, this+" failed to get dimensions from "+downloadToFile);
-								}
+								downloadInTempFile(downloadToFile);
+								// we need the dimensions of the downloaded file
+								tmpFileOptions.inJustDecodeBounds = true;
+								BitmapFactory.decodeFile(downloadToFile.getAbsolutePath(), tmpFileOptions);
+								if (DEBUG_BITMAP_DOWNLOADER && tmpFileOptions.outHeight <= 0) LogManager.getLogger().i(PictureCache.LOG_TAG, this+" failed to get dimensions from "+downloadToFile);
+								downloaded = true;
 							} finally {
 								if (!downloaded)
 									downloadToFile.delete();
@@ -197,11 +196,11 @@ public class BitmapDownloader implements Runnable {
 				if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, this+" target:"+target+" fileInCache:"+target.fileInCache+" bitmap:"+targetBitmaps.get(target.mKey));
 			}
 		} catch (OutOfMemoryError e) {
-			LogManager.getLogger().e(PictureCache.LOG_TAG, "Failed to load " + mURL, e);
 			mCache.getOutOfMemoryHandler().onOutOfMemoryError(e);
+			LogManager.getLogger().e(PictureCache.LOG_TAG, "Failed to load " + mURL, e);
 			/*} catch (InterruptedException e) {
 			LogManager.getLogger().e(PictureCache.TAG, "Interrupted while loading " + mURL, e);*/
-		} catch (AbortDownload e) {
+		} catch (DownloadFailureException e) {
 			// do nothing
 		} catch (Throwable e) {
 			LogManager.getLogger().e(PictureCache.LOG_TAG, "exception on "+mURL, e);
@@ -240,7 +239,7 @@ public class BitmapDownloader implements Runnable {
 							}
 							j.drawBitmap(cacheableBmp, mURL, mCookie, mCache.getBitmapCache());
 						} else
-							j.drawDefaultPicture(mURL, mCache.getBitmapCache());
+							j.drawErrorPicture(mURL, mCache.getBitmapCache());
 					}
 					mTargets.clear();
 				}
@@ -355,13 +354,12 @@ public class BitmapDownloader implements Runnable {
 		}
 	}
 
-	private boolean downloadInTempFile(File tmpFile) {
+	private void downloadInTempFile(File tmpFile) throws DownloadFailureException {
 		//LogManager.getLogger().i(PictureCache.TAG, "loading "+mURL);
 		InputStream is = null;
 		try {
 			try {
-				Uri dataUri = Uri.parse(mURL);
-				is = mCache.getContext().getContentResolver().openInputStream(dataUri);
+				is = mCache.getContext().getContentResolver().openInputStream(Uri.parse(mURL));
 				//LogManager.getLogger().v("using the content resolver for "+mURL);
 			} catch (FileNotFoundException e) {
 				//LogManager.getLogger().d(PictureCache.TAG, false, "cache error trying ContentResolver on "+mURL);
@@ -378,17 +376,16 @@ public class BitmapDownloader implements Runnable {
 					checkAbort();
 					try {
 						is = conn.getInputStream();
-					} catch (FileNotFoundException fe) {
-						LogManager.logger.i(PictureCache.LOG_TAG, "cache URL not found "+mURL);
+					} catch (FileNotFoundException ee) {
+						throw new DownloadFailureException("cache URL not found "+mURL, e);
 					} catch (Exception ee) {
-						LogManager.logger.w(PictureCache.LOG_TAG, "cache error opening "+mURL, ee);
+						throw new DownloadFailureException("cache error opening "+mURL, e);
 					}
 				}
 			}
 
 			if (is==null) {
-				LogManager.logger.d(PictureCache.LOG_TAG, "impossible to get a stream for "+mURL);
-				return false;
+				throw new DownloadFailureException("impossible to get a stream for "+mURL);
 			}
 
 			checkAbort();
@@ -403,7 +400,6 @@ public class BitmapDownloader implements Runnable {
 					checkAbort();
 					readAmount = is.read(data);
 				}
-				return true;
 			} finally {
 				bis.close();
 				out.flush();
@@ -412,16 +408,14 @@ public class BitmapDownloader implements Runnable {
 
 			//LogManager.getLogger().v(" got direct:"+bmp);
 		} catch (MalformedURLException e) {
-			LogManager.logger.w(PictureCache.LOG_TAG, "bad URL " + mURL, e);
+			throw new DownloadFailureException("bad URL " + mURL, e);
 		} catch (UnknownHostException e) {
-			LogManager.logger.w(PictureCache.LOG_TAG, "host not found in "+mURL, e);
+			throw new DownloadFailureException("host not found in "+mURL, e);
 		} catch (OutOfMemoryError e) {
-			LogManager.logger.w(PictureCache.LOG_TAG, "Could not decode image " + mURL, e);
 			mCache.getOutOfMemoryHandler().onOutOfMemoryError(e);
+			throw new DownloadFailureException("Could not decode image " + mURL, e);
 		} catch (IOException e) {
-			LogManager.logger.e(PictureCache.LOG_TAG, "Could not read " + mURL, e);
-		} catch (NetworkLoaderException e) {
-			LogManager.logger.e(PictureCache.LOG_TAG, "Could not read " + mURL+" with "+networkLoader, e);
+			throw new DownloadFailureException("Could not read " + mURL, e);
 		} finally {
 			try {
 				if (is!=null)
@@ -430,7 +424,6 @@ public class BitmapDownloader implements Runnable {
 				LogManager.getLogger().e(PictureCache.LOG_TAG, "Could not close " + is, e);
 			}
 		}
-		return false;
 	}
 
 	public static String keyToBitmapCacheKey(CacheKey key, String url, PictureLoaderHandler loader) {

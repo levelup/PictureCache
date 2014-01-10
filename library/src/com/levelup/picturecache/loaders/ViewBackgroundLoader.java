@@ -21,6 +21,7 @@ public class ViewBackgroundLoader<V extends View> extends PictureLoaderHandler {
 
 	private final V view;
 	private final int defaultResId;
+	private final int errorResId;
 
 	/**
 	 * constructor of the {@link ViewBackgroundLoader}
@@ -30,9 +31,22 @@ public class ViewBackgroundLoader<V extends View> extends PictureLoaderHandler {
 	 * @param bitmapTransform the non-persistent transformation to use on the bitmap before displaying it
 	 */
 	public ViewBackgroundLoader(V view, int defaultResourceId, StorageTransform bitmapStorageTransform, BitmapTransform bitmapTransform) {
+		this(view, defaultResourceId, defaultResourceId, bitmapStorageTransform, bitmapTransform);
+	}
+
+	/**
+	 * constructor of the {@link ViewBackgroundLoader}
+	 * @param view the view on which the background will be set
+	 * @param defaultResourceId the drawable resource ID to use while the bitmap is loading
+	 * @param errorResourceId the drawable resource ID to use if the bitmap failed to load
+	 * @param bitmapStorageTransform the transformation to use before storing the bitmap in the cache
+	 * @param bitmapTransform the non-persistent transformation to use on the bitmap before displaying it
+	 */
+	public ViewBackgroundLoader(V view, int defaultResourceId, int errorResourceId, StorageTransform bitmapStorageTransform, BitmapTransform bitmapTransform) {
 		super(bitmapStorageTransform, bitmapTransform);
 		this.view = view;
 		this.defaultResId = defaultResourceId;
+		this.errorResId = errorResourceId;
 	}
 
 	private String mLoadingUrl;
@@ -52,6 +66,17 @@ public class ViewBackgroundLoader<V extends View> extends PictureLoaderHandler {
 			public void run() {
 				// TODO use the ImageViewLoadingTag
 				view.setBackgroundResource(defaultResId);
+			}
+		});
+	}
+	
+	@Override
+	public void drawErrorPicture(String url, BitmapLruCache drawableCache) {
+		UIHandler.instance.runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				// TODO use the ImageViewLoadingTag
+				view.setBackgroundResource(errorResId);
 			}
 		});
 	}

@@ -23,10 +23,19 @@ public class PrecacheImageLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	public void drawDefaultPicture(String url, BitmapLruCache drawableCache) {}
+	public void drawDefaultPicture(String url, BitmapLruCache drawableCache) {
+		// do nothing
+	}
 
 	@Override
-	public void drawBitmap(Drawable bmp, String url, Object cookie, BitmapLruCache drawableCache) {}
+	public void drawErrorPicture(String url, BitmapLruCache drawableCache) {
+		// do nothing
+	}
+
+	@Override
+	public void drawBitmap(Drawable bmp, String url, Object cookie, BitmapLruCache drawableCache) {
+		// do nothing
+	}
 
 	@Override
 	public boolean equals(Object o) {

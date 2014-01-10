@@ -16,7 +16,7 @@ import com.levelup.picturecache.transforms.storage.StorageTransform;
  * <p>It also handles the Bitmaps transformations use for storage and/or display</p>
  */
 public class ViewLoaderDefaultResource<T extends View> extends ViewLoader<T> {
-	private final int defaultDrawable;
+	private final int defaultDrawableResId;
 
 	/**
 	 * constructor of the {@link ViewLoaderDefaultResource}
@@ -27,27 +27,32 @@ public class ViewLoaderDefaultResource<T extends View> extends ViewLoader<T> {
 	 */
 	public ViewLoaderDefaultResource(T view, int defaultResourceId, StorageTransform storageTransform, BitmapTransform loadTransform) {
 		super(view, storageTransform, loadTransform);
-		this.defaultDrawable = defaultResourceId;
+		this.defaultDrawableResId = defaultResourceId;
 	}
 
 	@Override
 	public void displayDefaultView(BitmapLruCache drawableCache) {
 		if (getImageView() instanceof ImageView) {
 			if (drawableCache!=null) {
-				final String drawableName = "android.resource://" + defaultDrawable;
+				final String drawableName = "android.resource://" + defaultDrawableResId;
 				CacheableBitmapDrawable src = drawableCache.get(drawableName);
 				if (src != null) {
 					((ImageView) getImageView()).setImageDrawable(src);
 				} else {
-					Drawable resDrawable = getImageView().getResources().getDrawable(defaultDrawable);
+					Drawable resDrawable = getImageView().getResources().getDrawable(defaultDrawableResId);
 					((ImageView) getImageView()).setImageDrawable(resDrawable);
 					if (resDrawable instanceof BitmapDrawable) {
 						drawableCache.put(drawableName, ((BitmapDrawable) resDrawable).getBitmap());
 					}
 				}
 			} else {
-				((ImageView) getImageView()).setImageResource(defaultDrawable);
+				((ImageView) getImageView()).setImageResource(defaultDrawableResId);
 			}
 		}
+	}
+	
+	@Override
+	public void displayErrorView(BitmapLruCache drawableCache) {
+		displayDefaultView(drawableCache);
 	}
 }

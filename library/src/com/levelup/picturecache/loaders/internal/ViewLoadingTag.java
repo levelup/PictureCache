@@ -17,11 +17,12 @@ public class ViewLoadingTag {
 	private final BitmapLruCache cache;
 
 	private boolean isLoaded;
-	private boolean isDefault;
+	private DrawType drawType;
 
 	// pending draw data
-	private Drawable mPendingDraw;
+	private Drawable mPendingDrawable;
 	private String mPendingUrl;
+	private DrawType mPendingDrawType;
 	private DrawInUI mDrawInUI;
 
 	public ViewLoadingTag(BitmapLruCache cache, String url, StorageTransform storageTransform, BitmapTransform displayTransform) {
@@ -31,13 +32,14 @@ public class ViewLoadingTag {
 		this.storageTransform = storageTransform;
 	}
 
-	public void setPendingDraw(Drawable pendingDraw, String pendingUrl) {
+	public void setPendingDraw(Drawable pendingDrawable, String pendingUrl, DrawType drawType) {
 		if (mDrawInUI!=null)
-			mDrawInUI.setPendingDraw(pendingDraw, pendingUrl);
+			mDrawInUI.setPendingDrawable(pendingDrawable, pendingUrl, drawType);
 		else {
-			if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().i(PictureCache.LOG_TAG, "temporary store pending draw:"+pendingDraw+" for "+pendingUrl);
-			this.mPendingDraw = pendingDraw;
+			if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().i(PictureCache.LOG_TAG, "temporary store pending draw:"+pendingDrawable+" for "+pendingUrl);
+			this.mPendingDrawable = pendingDrawable;
 			this.mPendingUrl = pendingUrl;
+			this.mPendingDrawType = drawType;
 		}
 	}
 
@@ -45,22 +47,22 @@ public class ViewLoadingTag {
 		return isLoaded;
 	}
 
-	private void setUrlIsLoaded(boolean set) {
+	void setUrlIsLoaded(boolean set) {
 		isLoaded = set;
 	}
 
-	boolean isDefault() {
-		return isDefault;
+	public DrawType getDrawType() {
+		return drawType;
 	}
 
-	private boolean setAndGetIsDefault(boolean set) {
-		boolean old = isDefault;
-		isDefault = set;
-		return old;
+	public DrawType setDrawType(DrawType drawType) {
+		DrawType oldType = this.drawType;
+		this.drawType = drawType;
+		return oldType;
 	}
 
 	public void recoverStateFrom(ViewLoadingTag oldTag) {
-		setAndGetIsDefault(oldTag.isDefault());
+		drawType = oldTag.drawType;
 		mDrawInUI = oldTag.mDrawInUI;
 	}
 
@@ -77,70 +79,15 @@ public class ViewLoadingTag {
 
 	@Override
 	public String toString() {
-		return "ViewTag:"+url+(isDefault?"_def":"");
+		return "ViewTag:"+url+(drawType!=DrawType.LOADED_DRAWABLE?drawType:"");
 	}
-
-	private static class DrawInUI implements Runnable {
-		private final ViewLoader<?> viewLoader;
-		private final BitmapLruCache cache;
-
-		// pending draw data
-		private Drawable mPendingDrawable;
-		private String mPendingUrl;
-
-		DrawInUI(ViewLoader<?> view, BitmapLruCache cache) {
-			this.viewLoader = view;
-			this.cache = cache;
-		}
-
-		public void setPendingDraw(Drawable pendingDraw, String pendingUrl) {
-			synchronized (viewLoader.getImageView()) {
-				this.mPendingDrawable = pendingDraw;
-				this.mPendingUrl = pendingUrl;
-			}
-		}
-
-		@Override
-		public void run() {
-			synchronized (viewLoader.getImageView()) {
-				boolean skipDrawing = false;
-				final ViewLoadingTag tag = (ViewLoadingTag) viewLoader.getImageView().getTag();
-				if (tag!=null) {
-					if (mPendingDrawable!=null && mPendingUrl!=null && (tag.url==null || !mPendingUrl.equals(tag.url))) {
-						skipDrawing = true;
-						if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().e(PictureCache.LOG_TAG, viewLoader+" skip drawing "+mPendingUrl+" instead of "+tag.url+" with "+mPendingDrawable);
-						//throw new IllegalStateException(ImageViewLoader.this+" try to draw "+mPendingUrl+" instead of "+tag.url+" with "+mPendingDraw);
-					}
-				}
-
-				if (!skipDrawing) {
-					boolean wasAlreadyDefault = false; // false: by default nothing is drawn
-					if (tag!=null) {
-						wasAlreadyDefault = tag.setAndGetIsDefault(mPendingDrawable==null);
-						tag.setUrlIsLoaded(mPendingDrawable!=null);
-					}
-
-					if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" / "+viewLoader+" drawing "+(mPendingDrawable==null ? "default view" : mPendingDrawable)+" tag:"+tag);
-
-					if (mPendingDrawable==null) {
-						if (!wasAlreadyDefault)
-							viewLoader.displayDefaultView(cache);
-						else if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().e(PictureCache.LOG_TAG, viewLoader+" saved a default drawing");
-					} else {
-						viewLoader.displayCustomBitmap(mPendingDrawable);
-						mPendingDrawable = null;
-					}
-				}
-			}
-		}
-	};
 
 	public void drawInView(ViewLoader<?> viewLoader) {
 		if (mDrawInUI == null) {
-			if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, viewLoader+" create new DrawInUI with "+mPendingDraw+" for "+mPendingUrl);
+			if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, viewLoader+" create new DrawInUI with "+mPendingDrawable+" for "+mPendingUrl);
 			mDrawInUI = new DrawInUI(viewLoader, cache);
-			mDrawInUI.setPendingDraw(mPendingDraw, mPendingUrl);
-			mPendingDraw = null;
+			mDrawInUI.setPendingDrawable(mPendingDrawable, mPendingUrl, mPendingDrawType);
+			mPendingDrawable = null;
 			mPendingUrl = null;
 		}
 
@@ -151,6 +98,6 @@ public class ViewLoadingTag {
 	}
 
 	public boolean isBitmapPending() {
-		return mPendingDraw!=null;
+		return mPendingDrawable!=null;
 	}
 }

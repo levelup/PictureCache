@@ -32,6 +32,15 @@ public abstract class PictureLoaderHandler {
 	public abstract void drawDefaultPicture(String url, BitmapLruCache drawableCache);
 	
 	/**
+	 * Called when the download failed and an error should be displayed
+	 * <p>This method may be called outside of the UI thread</p>
+	 * 
+	 * @param url URL being loaded
+	 * @param drawableCache TODO
+	 */
+	public abstract void drawErrorPicture(String url, BitmapLruCache drawableCache);
+	
+	/**
 	 * Called when the downloaded {@link Bitmap} should be displayed 
 	 * <p>This method may be called outside of the UI thread</p>
 	 * 
