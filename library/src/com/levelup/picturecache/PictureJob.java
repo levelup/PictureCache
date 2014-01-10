@@ -2,6 +2,8 @@ package com.levelup.picturecache;
 
 import java.security.NoSuchAlgorithmException;
 
+import com.levelup.picturecache.internal.CacheKey;
+
 import android.text.TextUtils;
 
 public class PictureJob {

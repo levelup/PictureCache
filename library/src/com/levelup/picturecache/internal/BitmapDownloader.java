@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.levelup.picturecache;
+package com.levelup.picturecache.internal;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -23,10 +23,14 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.util.FloatMath;
 
-import com.levelup.picturecache.NetworkLoader.NetworkLoaderException;
+import com.levelup.picturecache.LifeSpan;
+import com.levelup.picturecache.LogManager;
+import com.levelup.picturecache.NetworkLoader;
+import com.levelup.picturecache.PictureCache;
+import com.levelup.picturecache.PictureLoaderHandler;
 import com.levelup.picturecache.loaders.ViewLoader;
 
-class BitmapDownloader implements Runnable {
+public class BitmapDownloader implements Runnable {
 
 	private static final boolean DEBUG_BITMAP_DOWNLOADER = false;
 
@@ -424,7 +428,7 @@ class BitmapDownloader implements Runnable {
 			LogManager.logger.w(PictureCache.LOG_TAG, "host not found in "+mURL, e);
 		} catch (OutOfMemoryError e) {
 			LogManager.logger.w(PictureCache.LOG_TAG, "Could not decode image " + mURL, e);
-			mCache.ooHandler.onOutOfMemoryError(e);
+			mCache.getOutOfMemoryHandler().onOutOfMemoryError(e);
 		} catch (IOException e) {
 			LogManager.logger.e(PictureCache.LOG_TAG, "Could not read " + mURL, e);
 		} catch (NetworkLoaderException e) {

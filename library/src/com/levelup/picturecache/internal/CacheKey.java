@@ -1,16 +1,18 @@
 /**
  * 
  */
-package com.levelup.picturecache;
+package com.levelup.picturecache.internal;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+
+import com.levelup.picturecache.StorageType;
 
 import android.graphics.Bitmap;
 import android.text.TextUtils;
 
 
-class CacheKey {
+public class CacheKey {
 
 	public final String UUID;          // key: the unique ID representing this item in the DB
 	public final boolean widthBased;   // key: whether it's width constrained or height constrained
@@ -21,7 +23,7 @@ class CacheKey {
 
 	private static class UseUrlBasedConstructor extends RuntimeException {private static final long serialVersionUID = -2231632339742517427L;}
 
-	static CacheKey newUUIDBasedKey(String uuid, int height, boolean widthBased, StorageType extensionMode, String variantString) throws UseUrlBasedConstructor {
+	public static CacheKey newUUIDBasedKey(String uuid, int height, boolean widthBased, StorageType extensionMode, String variantString) throws UseUrlBasedConstructor {
 		if (TextUtils.isEmpty(uuid))
 			throw new UseUrlBasedConstructor();
 
@@ -29,7 +31,7 @@ class CacheKey {
 		return new CacheKey(uuid, height, widthBased, extensionMode, variantString);
 	}
 
-	static CacheKey newUrlBasedKey(String srcURL, int height, boolean widthBased, StorageType extensionMode, String variantString) throws NoSuchAlgorithmException {
+	public static CacheKey newUrlBasedKey(String srcURL, int height, boolean widthBased, StorageType extensionMode, String variantString) throws NoSuchAlgorithmException {
 		try {
 			MessageDigest digest = MessageDigest.getInstance("MD5");
 			byte[] md5 = digest.digest(srcURL.getBytes());
@@ -42,13 +44,13 @@ class CacheKey {
 		}
 	}
 
-	CacheKey copyWithNewUuid(String newUUID) {
+	public final CacheKey copyWithNewUuid(String newUUID) {
 		if (null==newUUID) throw new IllegalArgumentException("use copyWithNewUrl() instead");
 		String uuid = newUUID.replace('/', '_').replace(':', '_').replace('\'', '_');
 		return new CacheKey(uuid, dimension, widthBased, extensionMode, variantString);
 	}
 
-	CacheKey copyWithNewUrl(String newURL) {
+	public final CacheKey copyWithNewUrl(String newURL) {
 		try {
 			return newUrlBasedKey(newURL, dimension, widthBased, extensionMode, variantString);
 		} catch (NoSuchAlgorithmException e) {
@@ -105,7 +107,7 @@ class CacheKey {
 		return hashBuilder.toString();
 	}
 
-	String getFilename() {
+	public final String getFilename() {
 		final StringBuilder filename = new StringBuilder(UUID);
 		filename.append("_").append(dimension);
 		if (variantString!=null)
@@ -114,21 +116,21 @@ class CacheKey {
 		return filename.toString();
 	}
 
-	private boolean isJPEG() {
+	private final boolean isJPEG() {
 		if (extensionMode==StorageType.JPEG) return true;
 		if (extensionMode==StorageType.PNG) return false;
 		return (widthBased && dimension > 150);
 	}
 
-	private String getExtension() {
+	private final String getExtension() {
 		return isJPEG() ? "jpg" : "png";
 	}
 
-	Bitmap.CompressFormat getCompression() {
+	public final Bitmap.CompressFormat getCompression() {
 		return isJPEG() ? Bitmap.CompressFormat.JPEG : Bitmap.CompressFormat.PNG;
 	}
 
-	int getCompRatio() {
+	public final int getCompRatio() {
 		return isJPEG() ? 92 : 100;
 	}
 
@@ -142,7 +144,7 @@ class CacheKey {
 		return newUUIDBasedKey(uuid, dimension, widthBased, extensionMode, variantString);
 	}
 
-	public String serialize() {
+	public final String serialize() {
 		return UUID+":"+dimension+":"+(widthBased?"w":"h")+":"+extensionMode.toStorage()+":"+(variantString==null?"":variantString);
 	}
 }

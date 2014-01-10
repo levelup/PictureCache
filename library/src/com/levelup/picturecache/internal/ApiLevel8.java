@@ -1,4 +1,4 @@
-package com.levelup.picturecache;
+package com.levelup.picturecache.internal;
 
 import java.io.File;
 

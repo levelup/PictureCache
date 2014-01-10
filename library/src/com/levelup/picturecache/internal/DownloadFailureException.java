@@ -1,4 +1,4 @@
-package com.levelup.picturecache;
+package com.levelup.picturecache.internal;
 
 public class DownloadFailureException extends RuntimeException {
 

@@ -1,48 +1,54 @@
 /**
  * 
  */
-package com.levelup.picturecache;
+package com.levelup.picturecache.internal;
 
 import java.io.File;
 
+import com.levelup.picturecache.LifeSpan;
 
-class CacheItem {
+
+public class CacheItem {
 	/**
 	 * the path in the cache directory
 	 */
-	final File path;
+	public final File path;
 	/**
 	 * the image URL used to generate this file 
 	 */
-	final String URL;
+	public final String URL;
 	/**
 	 *  the storage life span of URL see {@link LifeSpan}
 	 */
-	LifeSpan lifeSpan;
+	private LifeSpan lifeSpan;
 	/**
 	 * the last logical item date using to the cache item (if applicable)
 	 */
-	long remoteDate;
+	public long remoteDate;
 	/**
 	 * the date of last access to the item
 	 */
-	long lastAccessDate;
+	public long lastAccessDate;
 	
-	CacheItem(File path, String url) {
+	public CacheItem(File path, String url) {
 		this.path = path;
 		this.URL = url;
 	}
 	
-	@Override
-	public String toString() {
-		return lifeSpan+":"+URL+":"+getFileSize()+":"+path;
-	}
-	
-	long getFileSize() {
-		return path.length();
+	public final LifeSpan getLifeSpan() {
+		return lifeSpan;
 	}
 
-	public CacheItem copyWithNewPath(File dst) {
+	public final void setLifeSpan(LifeSpan lifeSpan) {
+		this.lifeSpan = lifeSpan;
+	}
+
+	@Override
+	public String toString() {
+		return lifeSpan+":"+URL+":"+path.length()+":"+path;
+	}
+	
+	public final CacheItem copyWithNewPath(File dst) {
 		CacheItem copy = new CacheItem(dst, URL);
 		copy.lifeSpan = lifeSpan;
 		copy.remoteDate = remoteDate;

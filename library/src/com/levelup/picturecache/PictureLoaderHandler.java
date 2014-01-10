@@ -49,11 +49,11 @@ public abstract class PictureLoaderHandler {
 		this.mBitmapTransform = bitmapTransform;
 	}
 	
-	protected StorageTransform getStorageTransform() {
+	public StorageTransform getStorageTransform() {
 		return mStorageTransform;
 	}
 	
-	protected BitmapTransform getDisplayTransform() {
+	public BitmapTransform getDisplayTransform() {
 		return mBitmapTransform;
 	}
 	
@@ -71,7 +71,11 @@ public abstract class PictureLoaderHandler {
 	abstract protected String getLoadingURL();
 	abstract protected boolean canDirectLoad(File file);
 
-	protected boolean isDownloadAllowed() {
+	/**
+	 * Callback to check if we want to disable all downloads
+	 * @return {@code false} if you don't want any downloads to happen
+	 */
+	public boolean isDownloadAllowed() {
 		return true;
 	}
 

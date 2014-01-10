@@ -2,6 +2,8 @@ package com.levelup.picturecache;
 
 import java.io.InputStream;
 
+import com.levelup.picturecache.internal.DownloadFailureException;
+
 public interface NetworkLoader {
 
 	public class NetworkLoaderException extends DownloadFailureException {

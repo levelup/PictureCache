@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.levelup.picturecache;
+package com.levelup.picturecache.internal;
 
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -15,9 +15,14 @@ import java.util.concurrent.TimeUnit;
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 
-import com.levelup.picturecache.BitmapDownloader.JobMonitor;
+import com.levelup.picturecache.LifeSpan;
+import com.levelup.picturecache.LogManager;
+import com.levelup.picturecache.NetworkLoader;
+import com.levelup.picturecache.PictureCache;
+import com.levelup.picturecache.PictureLoaderHandler;
+import com.levelup.picturecache.internal.BitmapDownloader.JobMonitor;
 
-class DownloadManager implements JobMonitor {
+public class DownloadManager implements JobMonitor {
 
 	private static final boolean DEBUG_DOWNLOADER = false;
 
@@ -38,18 +43,18 @@ class DownloadManager implements JobMonitor {
 		}
 	};
 
-	abstract interface JobsMonitor {
+	public abstract interface JobsMonitor {
 		abstract void onNewBitmapLoaded(HashMap<CacheVariant,Drawable> newBitmaps, String url, long cacheDate, LifeSpan lifeSpan);
 	}
 
 	private final Hashtable<String, BitmapDownloader> mJobs = new Hashtable<String, BitmapDownloader>();
 	private JobsMonitor mMonitor;
 
-	void setMonitor(JobsMonitor monitor) {
+	public void setMonitor(JobsMonitor monitor) {
 		mMonitor = monitor;
 	}
 
-	void addDownloadTarget(PictureCache cache, String URL, Object cookie, PictureLoaderHandler loadHandler, CacheKey key, long itemDate, LifeSpan lifeSpan, NetworkLoader networkLoader) {
+	public void addDownloadTarget(PictureCache cache, String URL, Object cookie, PictureLoaderHandler loadHandler, CacheKey key, long itemDate, LifeSpan lifeSpan, NetworkLoader networkLoader) {
 		// find out if that URL is already loading, if so add the view to the recipient
 		synchronized (mJobs) {
 			// add job by URL
@@ -82,7 +87,7 @@ class DownloadManager implements JobMonitor {
 	 * @param URL TODO
 	 * @return true if there was a task loading
 	 */
-	boolean cancelDownloadForLoader(PictureLoaderHandler loadHandler, String URL) {
+	public boolean cancelDownloadForLoader(PictureLoaderHandler loadHandler, String URL) {
 		synchronized (mJobs) {
 			if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "cancelDownloadForLoader for "+URL+" loadHandler:"+loadHandler);
 			if (!TextUtils.isEmpty(URL)) {

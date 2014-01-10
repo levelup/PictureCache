@@ -32,7 +32,13 @@ import android.os.Environment;
 import android.text.TextUtils;
 
 import com.levelup.FileUtils;
-import com.levelup.picturecache.DownloadManager.JobsMonitor;
+import com.levelup.picturecache.internal.ApiLevel8;
+import com.levelup.picturecache.internal.BitmapDownloader;
+import com.levelup.picturecache.internal.CacheItem;
+import com.levelup.picturecache.internal.CacheKey;
+import com.levelup.picturecache.internal.CacheVariant;
+import com.levelup.picturecache.internal.DownloadManager;
+import com.levelup.picturecache.internal.DownloadManager.JobsMonitor;
 import com.levelup.picturecache.loaders.PrecacheImageLoader;
 import com.levelup.picturecache.loaders.RemoteViewLoader;
 import com.levelup.picturecache.loaders.ViewLoader;
@@ -146,7 +152,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			if (!TextUtils.isEmpty(path)) {
 				CacheItem val = new CacheItem(new File(path), url);
 				if (val.path.exists()) {
-					val.lifeSpan = LifeSpan.fromStorage(c.getInt(indexType));
+					val.setLifeSpan(LifeSpan.fromStorage(c.getInt(indexType)));
 					val.remoteDate = c.getLong(indexRemoteDate);
 					val.lastAccessDate = c.getLong(indexDate);
 
@@ -161,7 +167,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			if (!TextUtils.isEmpty(pathr)) {
 				CacheItem val = new CacheItem(new File(pathr), url);
 				if (val.path.exists()) {
-					val.lifeSpan = LifeSpan.fromStorage(c.getInt(indexType));
+					val.setLifeSpan(LifeSpan.fromStorage(c.getInt(indexType)));
 					val.remoteDate = c.getLong(indexRemoteDate);
 					val.lastAccessDate = c.getLong(indexDate);
 
@@ -182,7 +188,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			}
 			File picSrc = new File(path);
 			CacheItem val = new CacheItem(picSrc, url);
-			val.lifeSpan = LifeSpan.fromStorage(c.getInt(indexType));
+			val.setLifeSpan(LifeSpan.fromStorage(c.getInt(indexType)));
 			val.remoteDate = c.getLong(indexRemoteDate);
 			val.lastAccessDate = c.getLong(indexDate);
 			if (!picSrc.exists() || !picSrc.isFile()) {
@@ -205,7 +211,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		ContentValues values = new ContentValues(6);
 		values.put("UUID", data.getKey().serialize());
 		values.put("SRC_URL", data.getValue().URL);
-		values.put("TYPE", data.getValue().lifeSpan.toStorage());
+		values.put("TYPE", data.getValue().getLifeSpan().toStorage());
 		values.put("PATH", data.getValue().path.getAbsolutePath());
 		values.put("REMOTE_DATE", data.getValue().remoteDate);
 		values.put("DATE", data.getValue().lastAccessDate);
@@ -400,8 +406,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			Entry<CacheKey, CacheItem> k;
 			while (v.hasNext()) {
 				k = v.next();
-				if (k.getValue().lifeSpan!=lifeSpan) continue;
-				result += k.getValue().getFileSize();
+				if (k.getValue().getLifeSpan()!=lifeSpan) continue;
+				result += k.getValue().path.length();
 			}
 		} catch (Throwable e) {
 			// workaround to avoid locking mData during read/write in the DB
@@ -417,7 +423,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		Entry<CacheKey, CacheItem> result = null;
 		for (Entry<CacheKey, CacheItem> entry : getMap().entrySet()) {
 			final CacheItem item = entry.getValue();
-			if (lifeSpan==item.lifeSpan && (result==null || result.getValue().lastAccessDate > item.lastAccessDate))
+			if (lifeSpan==item.getLifeSpan() && (result==null || result.getValue().lastAccessDate > item.lastAccessDate))
 				result = entry;
 		}
 		// LogManager.logger.e(TAG, "getCacheOldest out with "+result);
@@ -767,7 +773,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 					if (src.renameTo(dst)) {
 						remove(srcKey); // that key is not valid anymore
 						v = v.copyWithNewPath(dst);
-						v.lifeSpan = lifeSpan;
+						v.setLifeSpan(lifeSpan);
 						return put(dstKey, v) != null;
 					} else {
 						LogManager.logger.e(LOG_TAG, "Failed to rename path "+src+" to "+dst);
@@ -820,8 +826,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 						if (val.remoteDate < remoteDate)
 							val.remoteDate = remoteDate;
 
-						if (val.lifeSpan.compare(lifeSpan) < 0)
-							val.lifeSpan = lifeSpan;
+						if (val.getLifeSpan().compare(lifeSpan) < 0)
+							val.setLifeSpan(lifeSpan);
 
 						val.lastAccessDate = System.currentTimeMillis();
 						notifyItemChanged(variant.key);
@@ -832,7 +838,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 					} else {
 						val = new CacheItem(variant.path, url);
 						val.remoteDate = remoteDate;
-						val.lifeSpan = lifeSpan;
+						val.setLifeSpan(lifeSpan);
 						val.lastAccessDate = System.currentTimeMillis();
 						//LogManager.logger.v(TAG, "adding image " + key.toString() +" type:"+type+" bmpIsNew:"+bmpIsNew+" rbmpIsNew:"+rbmpIsNew+" url:"+url);
 						put(variant.key, val);
@@ -927,7 +933,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		return key;
 	}
 
-	File getCachedFile(CacheKey key) {
+	public File getCachedFile(CacheKey key) {
 		//if (URL!=null && !URL.contains("/profile_images/"))
 		//LogManager.logger.v(TAG, " getPicture URL:"+URL + " key:"+key);
 		if (key != null) {
