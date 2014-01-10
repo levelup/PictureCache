@@ -4,8 +4,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -38,7 +38,6 @@ import com.levelup.picturecache.internal.CacheItem;
 import com.levelup.picturecache.internal.CacheKey;
 import com.levelup.picturecache.internal.CacheVariant;
 import com.levelup.picturecache.internal.DownloadManager;
-import com.levelup.picturecache.internal.DownloadManager.JobsMonitor;
 import com.levelup.picturecache.loaders.PrecacheImageLoader;
 import com.levelup.picturecache.loaders.RemoteViewLoader;
 import com.levelup.picturecache.loaders.ViewLoader;
@@ -46,7 +45,7 @@ import com.levelup.picturecache.loaders.ViewLoader;
 /**
  * base class to use the picture cache to load images and keep a persistent cache 
  */
-public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem> implements JobsMonitor {
+public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem> {
 
 	public static final String LOG_TAG = "PictureCache";
 	final static boolean DEBUG_CACHE = false & BuildConfig.DEBUG;
@@ -297,8 +296,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			mCacheFolder = newdir;
 		}
 
-		mJobManager = new DownloadManager();
-		mJobManager.setMonitor(this);
+		mJobManager = new DownloadManager(this);
 
 		File olddb = context.getDatabasePath(OLD_DATABASE_NAME);
 		if (olddb.exists()) {
@@ -794,8 +792,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		scheduleCustomOperation(new RemoveExpired());
 	}
 
-	@Override
-	public void onNewBitmapLoaded(HashMap<CacheVariant,Drawable> newBitmaps, String url, long remoteDate, LifeSpan lifeSpan) {
+	public void onNewBitmapLoaded(Map<CacheVariant,Drawable> newBitmaps, String url, long remoteDate, LifeSpan lifeSpan) {
 		// handle the storing and adding to the cache
 		// save the bitmap for later use
 		long fileSizeAdded = 0;

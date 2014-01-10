@@ -20,9 +20,8 @@ import com.levelup.picturecache.LogManager;
 import com.levelup.picturecache.NetworkLoader;
 import com.levelup.picturecache.PictureCache;
 import com.levelup.picturecache.PictureLoaderHandler;
-import com.levelup.picturecache.internal.BitmapDownloader.JobMonitor;
 
-public class DownloadManager implements JobMonitor {
+public class DownloadManager {
 
 	private static final boolean DEBUG_DOWNLOADER = false;
 
@@ -43,15 +42,11 @@ public class DownloadManager implements JobMonitor {
 		}
 	};
 
-	public abstract interface JobsMonitor {
-		abstract void onNewBitmapLoaded(HashMap<CacheVariant,Drawable> newBitmaps, String url, long cacheDate, LifeSpan lifeSpan);
-	}
-
 	private final Hashtable<String, BitmapDownloader> mJobs = new Hashtable<String, BitmapDownloader>();
-	private JobsMonitor mMonitor;
+	private final PictureCache mCache;
 
-	public void setMonitor(JobsMonitor monitor) {
-		mMonitor = monitor;
+	public DownloadManager(PictureCache pictureCache) {
+		this.mCache = pictureCache;
 	}
 
 	public void addDownloadTarget(PictureCache cache, String URL, Object cookie, PictureLoaderHandler loadHandler, CacheKey key, long itemDate, LifeSpan lifeSpan, NetworkLoader networkLoader) {
@@ -64,8 +59,7 @@ public class DownloadManager implements JobMonitor {
 			if (!targetAdded) {
 				if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "add new downloader for "+URL+" key:"+key+" loader:"+loadHandler+" jobs:"+mJobs);
 				// create a fresh new one if an old one is not ready to accept our loadHandler
-				downloader = new BitmapDownloader(URL, networkLoader, cookie, cache);
-				downloader.setMonitor(this);
+				downloader = new BitmapDownloader(URL, networkLoader, cookie, cache, this);
 				downloader.addTarget(loadHandler, key, itemDate, lifeSpan);
 				try {
 					threadPool.execute(downloader);
@@ -119,18 +113,16 @@ public class DownloadManager implements JobMonitor {
 		return false;
 	}
 
-	@Override
-	public void onJobFinishedWithNewBitmaps(BitmapDownloader downloader, HashMap<CacheVariant,Drawable> newBitmaps) {
-		if (mMonitor!=null)
-			mMonitor.onNewBitmapLoaded(newBitmaps, downloader.getURL(), downloader.getItemDate(), downloader.getLifeSpan());
+	void onJobFinishedWithNewBitmaps(BitmapDownloader downloader, HashMap<CacheVariant,Drawable> newBitmaps) {
+		mCache.onNewBitmapLoaded(newBitmaps, downloader.mURL, downloader.getItemDate(), downloader.getLifeSpan());
 
 		synchronized (mJobs) {
-			if (mJobs.containsKey(downloader.getURL())) {
-				mJobs.remove(downloader.getURL());
-				if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "Job Finishing for "+downloader.getURL() + " remaining:"+mJobs);
+			if (mJobs.containsKey(downloader.mURL)) {
+				mJobs.remove(downloader.mURL);
+				if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "Job Finishing for "+downloader.mURL + " remaining:"+mJobs);
 			}
 			else
-				LogManager.getLogger().w(PictureCache.LOG_TAG, "Unknown job finishing for "+downloader.getURL() + " remaining:"+mJobs);
+				LogManager.getLogger().w(PictureCache.LOG_TAG, "Unknown job finishing for "+downloader.mURL + " remaining:"+mJobs);
 		}
 	}
 }

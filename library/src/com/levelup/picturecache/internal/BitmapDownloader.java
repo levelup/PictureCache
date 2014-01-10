@@ -62,17 +62,12 @@ public class BitmapDownloader implements Runnable {
 		}
 	}
 
-	abstract interface JobMonitor {
-		abstract void onJobFinishedWithNewBitmaps(BitmapDownloader job, HashMap<CacheVariant,Drawable> newBitmaps);
-	}
-
 	final String mURL;
 	final NetworkLoader networkLoader;
 	final Object mCookie;
 	final PictureCache mCache;
 	final CopyOnWriteArrayList<DownloadTarget> mTargets = new CopyOnWriteArrayList<DownloadTarget>();
-
-	private JobMonitor mMonitor;
+	final DownloadManager mMonitor;
 
 	// locked by mTargets
 	/** see {@link LifeSpan} values */
@@ -84,21 +79,15 @@ public class BitmapDownloader implements Runnable {
 
 	private static final int CONNECT_TIMEOUT_DL = 10000; // 10s
 
-	BitmapDownloader(String URL, NetworkLoader loader, Object cookie, PictureCache cache) {
+	BitmapDownloader(String URL, NetworkLoader loader, Object cookie, PictureCache cache, DownloadManager monitor) {
 		if (URL==null) throw new NullPointerException("How are we supposed to download a null URL?");
 		this.mURL = URL;
 		this.networkLoader = loader;
 		this.mCookie = cookie;
 		this.mCache = cache;
+		this.mMonitor = monitor;
 	}
 
-	void setMonitor(JobMonitor monitor) {
-		mMonitor = monitor;
-	}
-
-	String getURL() {
-		return mURL;
-	}
 	LifeSpan getLifeSpan() {
 		return mLifeSpan;
 	}
