@@ -342,7 +342,7 @@ class BitmapDownloader implements Runnable {
 		return opts;
 	}
 
-	private static class AbortDownload extends RuntimeException {
+	private static class AbortDownload extends DownloadFailureException {
 		private static final long serialVersionUID = 5568245153235248681L;
 	}
 

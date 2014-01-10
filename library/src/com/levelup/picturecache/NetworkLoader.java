@@ -4,7 +4,7 @@ import java.io.InputStream;
 
 public interface NetworkLoader {
 
-	public class NetworkLoaderException extends RuntimeException {
+	public class NetworkLoaderException extends DownloadFailureException {
 		private static final long serialVersionUID = -6401494306891861403L;
 
 		/**
