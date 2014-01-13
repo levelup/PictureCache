@@ -1,5 +1,7 @@
 package com.levelup.picturecache.loaders.internal;
 
+import java.util.HashSet;
+
 import uk.co.senab.bitmapcache.BitmapLruCache;
 import android.graphics.drawable.Drawable;
 
@@ -82,7 +84,10 @@ public class ViewLoadingTag {
 		return "ViewTag:"+url+(drawType!=DrawType.LOADED_DRAWABLE?drawType:"");
 	}
 
-	public void drawInView(ViewLoader<?> viewLoader) {
+	private static Runnable batchDisplay;
+	private static final HashSet<Runnable> pendingDraws = new HashSet<Runnable>();
+
+	public void drawInView(final ViewLoader<?> viewLoader) {
 		if (mDrawInUI == null) {
 			if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, viewLoader+" create new DrawInUI with "+mPendingDrawable+" for "+mPendingUrl);
 			mDrawInUI = new DrawInUI(viewLoader);
@@ -93,8 +98,25 @@ public class ViewLoadingTag {
 
 		if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().i(PictureCache.LOG_TAG, mDrawInUI+" / "+viewLoader+" drawInView run mDrawInUI bitmap:"+mDrawInUI.mPendingDrawable+" for "+mDrawInUI.mPendingUrl);
 
-		UIHandler.instance.removeCallbacks(mDrawInUI);
-		UIHandler.instance.runOnUiThread(mDrawInUI);
+		synchronized(viewLoader.getImageView()) {
+			pendingDraws.add(mDrawInUI);
+			if (null == batchDisplay) {
+				batchDisplay = new Runnable() {
+					@Override
+					public void run() {
+						synchronized(viewLoader.getImageView()) {
+							for (Runnable drawRunnable : pendingDraws) {
+								drawRunnable.run();
+							}
+							pendingDraws.clear();
+
+							batchDisplay = null;
+						}
+					}
+				};
+				UIHandler.instance.postDelayed(batchDisplay, 100);
+			}
+		}
 	}
 
 	public boolean isBitmapPending() {

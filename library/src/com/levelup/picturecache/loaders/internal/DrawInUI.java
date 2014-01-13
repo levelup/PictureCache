@@ -25,7 +25,7 @@ class DrawInUI implements Runnable {
 			this.mPendingDrawType = drawType;
 		}
 	}
-
+	
 	@Override
 	public void run() {
 		synchronized (viewLoader.getImageView()) {
