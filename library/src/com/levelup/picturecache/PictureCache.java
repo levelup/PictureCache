@@ -966,6 +966,18 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		return null;
 	}
 
+	@Override
+	protected void startLoadingFromCursor(Cursor c) {
+		try {
+			assertFolderExists();
+		} catch (SecurityException e) {
+			LogManager.logger.e(LOG_TAG, "can't use Cache folder", e);
+		} catch (IOException e) {
+			LogManager.logger.e(LOG_TAG, "can't use Cache folder", e);
+		}
+		super.startLoadingFromCursor(c);
+	}
+
 	public Context getContext() {
 		return mContext;
 	}
