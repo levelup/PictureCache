@@ -114,7 +114,7 @@ public class ViewLoadingTag {
 						}
 					}
 				};
-				if (immediate) {
+				if (immediate || drawType==DrawType.LOADED_DRAWABLE || drawType==DrawType.ERROR || mPendingDrawType==DrawType.DEFAULT) {
 					UIHandler.instance.removeCallbacks(batchDisplay);
 					UIHandler.instance.runOnUiThread(batchDisplay);
 				} else {
