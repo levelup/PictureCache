@@ -50,8 +50,6 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	public static final String LOG_TAG = "PictureCache";
 	final static boolean DEBUG_CACHE = false & BuildConfig.DEBUG;
 
-	static int MAXBITMAP_IN_MEMORY = 400000;
-
 	/**
 	 * How many new items need to be added to the database before a purge is done
 	 */
@@ -74,8 +72,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	abstract protected String getOldPicUUID(String uuid, String URL);
 
 	/**
-	 * the App name used to export the pictures in the gallery
-	 * @return the app name that will show up in the Gallery or null if you don't plan to use {@link #saveInGallery(String, int, boolean, boolean, int)}
+	 * @return The app name that will show up in the Gallery or null if you don't plan to use {@link #saveInGallery(String, int, boolean, boolean, int)}
 	 */
 	abstract protected String getAppName();
 
@@ -274,8 +271,6 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		};
 		else
 			this.ooHandler = ooHandler;
-
-		MAXBITMAP_IN_MEMORY = context.getResources().getDisplayMetrics().densityDpi * context.getResources().getDisplayMetrics().widthPixels * 4;
 
 		if (bitmapCacheSize==0)
 			this.mBitmapCache = null;
