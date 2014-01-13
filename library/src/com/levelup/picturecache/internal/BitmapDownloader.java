@@ -328,8 +328,8 @@ public class BitmapDownloader implements Runnable {
 			}
 			else opts.inSampleSize = 1;
 		}
-		opts.inInputShareable = true;
-		opts.inPurgeable = true;
+		//opts.inInputShareable = true;
+		//opts.inPurgeable = true;
 
 		return opts;
 	}
@@ -338,7 +338,10 @@ public class BitmapDownloader implements Runnable {
 		private static final long serialVersionUID = 5568245153235248681L;
 	}
 
-	private void checkAbort() {
+	/**
+	 * @throws AbortDownload if we should not download or decode any further
+	 */
+	private void checkAbort() throws AbortDownload {
 		synchronized (mTargets) {
 			if (mTargets.isEmpty()) {
 				if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, this+ " no more targets, aborting");
