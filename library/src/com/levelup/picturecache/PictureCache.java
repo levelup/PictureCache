@@ -985,6 +985,10 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		return mContext;
 	}
 
+	public File getCacheFolder() {
+		return mCacheFolder;
+	}
+
 	public BitmapLruCache getBitmapCache() {
 		return mBitmapCache;
 	}
