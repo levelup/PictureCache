@@ -318,6 +318,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			}
 			mCacheFolder = newdir;
 		}
+		if (null==mCacheFolder) throw new NullPointerException("We need a cache folder");
 	}
 
 	@Override
