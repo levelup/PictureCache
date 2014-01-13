@@ -583,19 +583,31 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				}
 				else if (loader.canDirectLoad(file)) {
 					try {
-						Bitmap bmp = BitmapFactory.decodeFile(file.getAbsolutePath());
-						if (bmp!=null) {
-							if (null != loader.getDisplayTransform())
-								bmp = loader.getDisplayTransform().transformBitmap(bmp);
+						if (mBitmapCache!=null) {
+							BitmapDrawable cachedBmp = mBitmapCache.put(bitmapCacheKey, file);
+							if (cachedBmp!=null) {
+								Bitmap bmp = cachedBmp.getBitmap();
+								if (bmp!=null) {
+									if (null != loader.getDisplayTransform()) {
+										bmp = loader.getDisplayTransform().transformBitmap(bmp);
+										cachedBmp = new BitmapDrawable(mContext.getResources(), bmp);
+									}
+									if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using direct file for URL "+URL+" file:"+file);
+									loader.drawBitmap(cachedBmp, URL, cookie, mBitmapCache);
+									return;
+								}
+							}
+						} else {
+							Bitmap bmp = BitmapFactory.decodeFile(file.getAbsolutePath());
+							if (bmp!=null) {
+								if (null != loader.getDisplayTransform())
+									bmp = loader.getDisplayTransform().transformBitmap(bmp);
 
-							Drawable cachedBmp = null;
-							if (mBitmapCache!=null && loader.canKeepBitmapInMemory(bmp))
-								cachedBmp = mBitmapCache.put(bitmapCacheKey, bmp);
-							if (cachedBmp==null)
-								cachedBmp = new BitmapDrawable(mContext.getResources(), bmp);
-							if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using direct file for URL "+URL+" file:"+file);
-							loader.drawBitmap(cachedBmp, URL, cookie, mBitmapCache);
-							return;
+								BitmapDrawable cachedBmp = new BitmapDrawable(mContext.getResources(), bmp);
+								if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using direct file for URL "+URL+" file:"+file);
+								loader.drawBitmap(cachedBmp, URL, cookie, mBitmapCache);
+								return;
+							}
 						}
 					} catch (OutOfMemoryError e) {
 						loader.drawDefaultPicture(URL, mBitmapCache);

@@ -16,6 +16,7 @@ import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import uk.co.senab.bitmapcache.CacheableBitmapDrawable;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
@@ -121,16 +122,23 @@ public class BitmapDownloader implements Runnable {
 					if (target.fileInCache!=null)
 						target.fileInCache.delete();
 					target.fileInCache = mCache.getCachedFilepath(target.mKey);
-					if (downloadToFile==null && mCanDownload)
-						downloadToFile = new File(mCache.getAvailaibleTempDir(), "tmp_"+target.mKey.getFilename());
+					if (downloadToFile==null && mCanDownload) {
+						if (target.loadHandler.getStorageTransform()==null)
+							downloadToFile = target.fileInCache;
+						else
+							downloadToFile = new File(mCache.getAvailaibleTempDir(), "tmp_"+target.mKey.getFilename());
+					}
 				}
 
 				if (target.fileInCache!=null) {
 					Drawable displayDrawable;
-					if (bitmapWasInCache)
-						displayDrawable = new BitmapDrawable(mCache.getContext().getResources(), target.fileInCache.getAbsolutePath());
-					else
+					if (!bitmapWasInCache) {
 						displayDrawable = null;
+					} else if (mCache.getBitmapCache()!=null) {
+						displayDrawable = mCache.getBitmapCache().put(keyToBitmapCacheKey(target.mKey, mURL, target.loadHandler), target.fileInCache, getOutputOptions(tmpFileOptions.outWidth, tmpFileOptions.outHeight, target.mKey));
+					} else {
+						displayDrawable = new BitmapDrawable(mCache.getContext().getResources(), target.fileInCache.getAbsolutePath());
+					}
 
 					if (displayDrawable==null) {
 						// we don't have that final file yet, use the download file to generate it
@@ -155,14 +163,20 @@ public class BitmapDownloader implements Runnable {
 								if (DEBUG_BITMAP_DOWNLOADER && tmpFileOptions.outHeight <= 0) LogManager.getLogger().i(PictureCache.LOG_TAG, this+" failed to get dimensions from "+downloadToFile);
 								downloaded = true;
 							} finally {
-								if (!downloaded)
+								if (!downloaded && downloadToFile!=target.fileInCache)
 									downloadToFile.delete();
 							}
 							checkAbort();
 						}
 
 						if (downloaded) {
-							Bitmap bitmap = BitmapFactory.decodeFile(downloadToFile.getAbsolutePath(), getOutputOptions(tmpFileOptions.outWidth, tmpFileOptions.outHeight, target.mKey));
+							Bitmap bitmap;
+							if (mCache.getBitmapCache()!=null) {
+								CacheableBitmapDrawable cachedDrawable = mCache.getBitmapCache().put(keyToBitmapCacheKey(target.mKey, mURL, target.loadHandler), downloadToFile, getOutputOptions(tmpFileOptions.outWidth, tmpFileOptions.outHeight, target.mKey));
+								bitmap = cachedDrawable.getBitmap();
+							} else {
+								bitmap = BitmapFactory.decodeFile(downloadToFile.getAbsolutePath(), getOutputOptions(tmpFileOptions.outWidth, tmpFileOptions.outHeight, target.mKey));
+							}
 							if (bitmap!=null) {
 								int finalHeight = target.mKey.getBitmapHeight(bitmap.getWidth(), bitmap.getHeight());
 								if (finalHeight!=0 && finalHeight != bitmap.getHeight()) {
@@ -227,16 +241,11 @@ public class BitmapDownloader implements Runnable {
 							if (j.getDisplayTransform()!=null)
 								bitmap = j.getDisplayTransform().transformBitmap(bitmap);
 
-							Drawable cacheableBmp = null;
-							if (mCache.getBitmapCache() != null && target.loadHandler.canKeepBitmapInMemory(bitmap))
-								cacheableBmp = mCache.getBitmapCache().put(keyToBitmapCacheKey(target.mKey, mURL, j), bitmap);
-
-							if (cacheableBmp == null) {
-								if (drawable instanceof BitmapDrawable && ((BitmapDrawable) drawable).getBitmap()==bitmap)
-									cacheableBmp = drawable;
-								else
-									cacheableBmp = new BitmapDrawable(mCache.getContext().getResources(), bitmap);
-							}
+							Drawable cacheableBmp;
+							if (drawable instanceof BitmapDrawable && ((BitmapDrawable) drawable).getBitmap()==bitmap)
+								cacheableBmp = drawable;
+							else
+								cacheableBmp = new BitmapDrawable(mCache.getContext().getResources(), bitmap);
 							j.drawBitmap(cacheableBmp, mURL, mCookie, mCache.getBitmapCache());
 						} else
 							j.drawErrorPicture(mURL, mCache.getBitmapCache());

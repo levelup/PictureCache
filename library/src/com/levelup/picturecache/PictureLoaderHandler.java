@@ -102,17 +102,4 @@ public abstract class PictureLoaderHandler {
 	public int hashCode() {
 		return (mBitmapTransform==null ? 0 : mBitmapTransform.hashCode()) * 31 + (mStorageTransform==null ? 0 : mStorageTransform.hashCode());
 	}
-
-	/**
-	 * Tell if the downloaded Bitmap can be kept in memory for later use (not recommended for large bitmaps)
-	 * <p>By default only allow bitmaps smaller than 1MB in memory</p>
-	 * <p>A {@link BitmapLruCache} must be provided in the {@link PictureCache} constructor</p>
-	 * @param bitmap The bitmap that should be kept in memory
-	 * @return
-	 */
-	public boolean canKeepBitmapInMemory(final Bitmap bitmap) {
-		if (bitmap==null)
-			return false;
-		return bitmap.getRowBytes() * bitmap.getHeight() < PictureCache.MAXBITMAP_IN_MEMORY;
-	}
 }
