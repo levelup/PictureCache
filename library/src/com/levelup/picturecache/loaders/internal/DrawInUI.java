@@ -31,26 +31,26 @@ class DrawInUI implements Runnable {
 		synchronized (viewLoader.getImageView()) {
 			final ViewLoadingTag tag = (ViewLoadingTag) viewLoader.getImageView().getTag();
 			if (tag!=null) {
-				if (mPendingDrawType==tag.getDrawType() && mPendingUrl!=null && (tag.url==null || !mPendingUrl.equals(tag.url))) {
+				if (mPendingDrawType==tag.getDrawnType() && mPendingUrl!=null && (tag.url==null || !mPendingUrl.equals(tag.url))) {
 					if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().e(PictureCache.LOG_TAG, viewLoader+" skip drawing "+mPendingUrl+" instead of "+tag.url+" with "+mPendingDrawable);
 					//throw new IllegalStateException(ImageViewLoader.this+" try to draw "+mPendingUrl+" instead of "+tag.url+" with "+mPendingDraw);
 				} else {
 					if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" / "+viewLoader+" drawing "+(mPendingDrawable==null ? "default view" : mPendingDrawable)+" tag:"+tag);
 
 					if (mPendingDrawType==DrawType.DEFAULT) {
-						if (tag.setDrawType(mPendingDrawType)!=DrawType.DEFAULT) {
+						if (tag.setDrawnType(mPendingDrawType)!=DrawType.DEFAULT) {
 							viewLoader.displayDefaultView(tag.bitmapCache);
 							tag.setUrlIsLoaded(false);
 						}
 						else if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().e(PictureCache.LOG_TAG, viewLoader+" saved a default drawing");
 					} else if (mPendingDrawType==DrawType.ERROR) {
-						if (tag.setDrawType(mPendingDrawType)!=DrawType.ERROR) {
+						if (tag.setDrawnType(mPendingDrawType)!=DrawType.ERROR) {
 							viewLoader.displayErrorView(tag.bitmapCache);
 							tag.setUrlIsLoaded(true);
 						}
 						else if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().e(PictureCache.LOG_TAG, viewLoader+" saved an error drawing");
 					} else {
-						tag.setDrawType(mPendingDrawType);
+						tag.setDrawnType(mPendingDrawType);
 						viewLoader.displayCustomBitmap(mPendingDrawable);
 						tag.setUrlIsLoaded(true);
 						mPendingDrawable = null;

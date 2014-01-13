@@ -19,7 +19,7 @@ public class ViewLoadingTag {
 	private final BitmapTransform displayTransform;
 
 	private boolean isLoaded;
-	private DrawType drawType;
+	private DrawType drawnType;
 
 	// pending draw data
 	private Drawable mPendingDrawable;
@@ -53,18 +53,18 @@ public class ViewLoadingTag {
 		isLoaded = set;
 	}
 
-	public DrawType getDrawType() {
-		return drawType;
+	DrawType getDrawnType() {
+		return drawnType;
 	}
 
-	public DrawType setDrawType(DrawType drawType) {
-		DrawType oldType = this.drawType;
-		this.drawType = drawType;
+	DrawType setDrawnType(DrawType drawType) {
+		DrawType oldType = this.drawnType;
+		this.drawnType = drawType;
 		return oldType;
 	}
 
 	public void recoverStateFrom(ViewLoadingTag oldTag) {
-		drawType = oldTag.drawType==DrawType.LOADED_DRAWABLE ? null : oldTag.drawType;
+		drawnType = oldTag.drawnType==DrawType.LOADED_DRAWABLE ? null : oldTag.drawnType;
 		mDrawInUI = oldTag.mDrawInUI;
 	}
 
@@ -81,7 +81,7 @@ public class ViewLoadingTag {
 
 	@Override
 	public String toString() {
-		return "ViewTag:"+url+(drawType!=DrawType.LOADED_DRAWABLE?drawType:"");
+		return "ViewTag:"+url+(drawnType!=DrawType.LOADED_DRAWABLE?drawnType:"");
 	}
 
 	private static Runnable batchDisplay;
@@ -114,7 +114,7 @@ public class ViewLoadingTag {
 						}
 					}
 				};
-				if (immediate || drawType==DrawType.LOADED_DRAWABLE || drawType==DrawType.ERROR || mPendingDrawType==DrawType.DEFAULT) {
+				if (immediate || drawnType==DrawType.LOADED_DRAWABLE || drawnType==DrawType.ERROR || mPendingDrawType==DrawType.DEFAULT) {
 					UIHandler.instance.removeCallbacks(batchDisplay);
 					UIHandler.instance.runOnUiThread(batchDisplay);
 				} else {
