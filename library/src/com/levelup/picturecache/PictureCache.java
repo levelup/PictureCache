@@ -99,7 +99,6 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 	private Boolean mDirAsserted = Boolean.FALSE;
 
-	protected final File mCacheFolder;
 	private final OutOfMemoryHandler ooHandler;
 
 	private final DownloadManager mJobManager;
@@ -107,6 +106,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 	private final BitmapLruCache mBitmapCache;
 
+	private File mCacheFolder;
+	
 	private AtomicInteger mPurgeCounterLongterm = new AtomicInteger();
 	private AtomicInteger mPurgeCounterShortterm = new AtomicInteger();
 
@@ -239,6 +240,16 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		this(context, logger, ooHandler, bitmapCacheSize, null);
 	}
 
+	private static class InitCookie {
+		final Context context;
+		final String folderName;
+		
+		InitCookie(Context context, String folderName) {
+			this.context = context;
+			this.folderName = folderName;
+		}
+	}
+	
 	/**
 	 * Constructor of a PictureCache
 	 * @param context Context of the application, may also be used to get a {@link ContentResolver}
@@ -248,8 +259,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @param folderName Storage folder name on the external disk (erased when the app is uninstalled). If you use multiple PictureCache instances you must use a different folder for each instance
 	 */
 	protected PictureCache(Context context, Logger logger, OutOfMemoryHandler ooHandler, int bitmapCacheSize, String folderName) {
-		super(context, null==folderName ? DATABASE_NAME : (folderName+"_pic.sqlite"), DATABASE_VERSION, logger);
-
+		super(context, null==folderName ? DATABASE_NAME : (folderName+"_pic.sqlite"), DATABASE_VERSION, logger, new InitCookie(context, folderName));
+		
 		LogManager.setLogger(logger==null ? new LogManager.LoggerDefault() : logger);
 		this.mContext = context;
 		if (ooHandler==null)
@@ -277,27 +288,33 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			this.mBitmapCache = builder.build();
 		}
 
-		File olddir = new File(Environment.getExternalStorageDirectory(), "/Android/data/"+context.getPackageName()+'/'+(null!=folderName ? folderName : "cache"));
+		mJobManager = new DownloadManager(this);
+
+		//getWritableDatabase().setLockingEnabled(false); // we do our own thread protection
+	}
+
+	@Override
+	protected void preloadInit(Object c) {
+		super.preloadInit(c);
+		InitCookie cookie = (InitCookie) c;
+	
+		File olddir = new File(Environment.getExternalStorageDirectory(), "/Android/data/"+cookie.context.getPackageName()+'/'+(null!=cookie.folderName ? cookie.folderName : "cache"));
 		if (olddir.exists())
 			mCacheFolder = olddir;
 		else {
 			File newdir = null;
 			try {
-				newdir = ApiLevel8.getPrivatePictureDir(context);
+				newdir = ApiLevel8.getPrivatePictureDir(cookie.context);
 			} catch (VerifyError e) {
 			} catch (NoSuchFieldError e) {
 			} finally {
 				if (newdir == null)
 					newdir = olddir;
-				else if (null!=folderName)
-					newdir = new File(newdir, folderName);
+				else if (null!=cookie.folderName)
+					newdir = new File(newdir, cookie.folderName);
 			}
 			mCacheFolder = newdir;
 		}
-
-		mJobManager = new DownloadManager(this);
-
-		//getWritableDatabase().setLockingEnabled(false); // we do our own thread protection
 	}
 
 	@Override
