@@ -209,6 +209,8 @@ public class BitmapDownloader implements Runnable {
 
 				if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, this+" target:"+target+" fileInCache:"+target.fileInCache+" bitmap:"+targetBitmaps.get(target.mKey));
 			}
+			
+			downloadToFile = null;
 		} catch (OutOfMemoryError e) {
 			mCache.getOutOfMemoryHandler().onOutOfMemoryError(e);
 			LogManager.getLogger().e(PictureCache.LOG_TAG, "Failed to load " + mURL, e);
