@@ -82,7 +82,7 @@ public class ViewBackgroundLoader<V extends View> extends PictureLoaderHandler {
 	}
 
 	@Override
-	public void drawBitmap(final Drawable bmp, final String url, Object cookie, BitmapLruCache drawableCache) {
+	public void drawBitmap(final Drawable bmp, final String url, Object cookie, BitmapLruCache drawableCache, boolean immediate) {
 		UIHandler.instance.runOnUiThread(new Runnable() {
 			@SuppressWarnings("deprecation")
 			@Override

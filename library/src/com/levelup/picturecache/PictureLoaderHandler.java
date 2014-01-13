@@ -44,12 +44,13 @@ public abstract class PictureLoaderHandler {
 	 * Called when the downloaded {@link Bitmap} should be displayed 
 	 * <p>This method may be called outside of the UI thread</p>
 	 * 
-	 * @param bmp Drawable to display
+	 * @param drawable Drawable to display
 	 * @param url URL corresponding to the bitmap
-	 * @param cookie data associated with the loaded URL
-	 * @param drawableCache TODO
+	 * @param cookie Data associated with the loaded URL, see {@link PictureJob.Builder#setCookie(Object)}
+	 * @param drawableCache The bitmap memory cache in case you need to do things with the Drawable
+	 * @param immediate {@code true} if the drawable should be displayed as soon as possible in the UI thread
 	 */
-	public abstract void drawBitmap(Drawable bmp, String url, Object cookie, BitmapLruCache drawableCache);
+	public abstract void drawBitmap(Drawable drawable, String url, Object cookie, BitmapLruCache drawableCache, boolean immediate);
 	
 	protected PictureLoaderHandler(StorageTransform bitmapStorageTransform, BitmapTransform bitmapTransform) {
 		this.mStorageTransform = bitmapStorageTransform;

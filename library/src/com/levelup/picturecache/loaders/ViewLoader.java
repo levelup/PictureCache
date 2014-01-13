@@ -82,7 +82,7 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 	@Override
 	public final void drawDefaultPicture(String url, BitmapLruCache drawableCache) {
 		if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" drawDefaultPicture");
-		showDrawable(drawableCache, null, url, DrawType.DEFAULT);
+		showDrawable(drawableCache, null, url, DrawType.DEFAULT, false);
 	}
 
 	/**
@@ -91,16 +91,16 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 	@Override
 	public final void drawErrorPicture(String url, BitmapLruCache drawableCache) {
 		if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" drawDefaultPicture");
-		showDrawable(drawableCache, null, url, DrawType.ERROR);
+		showDrawable(drawableCache, null, url, DrawType.ERROR, false);
 	}
 
 	/**
 	 * To override the drawable display, use {@link #displayCustomBitmap(Drawable)}
 	 */
 	@Override
-	public final void drawBitmap(Drawable bmp, String url, Object cookie, BitmapLruCache drawableCache) {
+	public final void drawBitmap(Drawable bmp, String url, Object cookie, BitmapLruCache drawableCache, boolean immediate) {
 		if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" drawBitmap "+view+" with "+bmp);
-		showDrawable(drawableCache, bmp, url, DrawType.LOADED_DRAWABLE);
+		showDrawable(drawableCache, bmp, url, DrawType.LOADED_DRAWABLE, immediate);
 	}
 
 	/**
@@ -130,7 +130,7 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 		view.setImageDrawable(pendingDrawable);
 	}
 
-	private void showDrawable(BitmapLruCache cache, Drawable drawable, String url, DrawType drawType) {
+	private void showDrawable(BitmapLruCache cache, Drawable drawable, String url, DrawType drawType, boolean immediate) {
 		synchronized (view.getImageView()) {
 			ViewLoadingTag tag = view.getTag();
 			if (tag==null) {
@@ -138,7 +138,7 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 				view.setTag(tag);
 			}
 			tag.setPendingDraw(drawable, url, drawType);
-			tag.drawInView(this);
+			tag.drawInView(this, immediate);
 		}
 	}
 

@@ -33,7 +33,7 @@ public class PrecacheImageLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	public void drawBitmap(Drawable bmp, String url, Object cookie, BitmapLruCache drawableCache) {
+	public void drawBitmap(Drawable bmp, String url, Object cookie, BitmapLruCache drawableCache, boolean immediate) {
 		// do nothing
 	}
 

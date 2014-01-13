@@ -64,7 +64,7 @@ public class ViewLoadingTag {
 	}
 
 	public void recoverStateFrom(ViewLoadingTag oldTag) {
-		drawType = oldTag.drawType;
+		drawType = oldTag.drawType==DrawType.LOADED_DRAWABLE ? null : oldTag.drawType;
 		mDrawInUI = oldTag.mDrawInUI;
 	}
 
@@ -87,7 +87,7 @@ public class ViewLoadingTag {
 	private static Runnable batchDisplay;
 	private static final HashSet<Runnable> pendingDraws = new HashSet<Runnable>();
 
-	public void drawInView(final ViewLoader<?> viewLoader) {
+	public void drawInView(final ViewLoader<?> viewLoader, boolean immediate) {
 		if (mDrawInUI == null) {
 			if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, viewLoader+" create new DrawInUI with "+mPendingDrawable+" for "+mPendingUrl);
 			mDrawInUI = new DrawInUI(viewLoader);
@@ -114,12 +114,17 @@ public class ViewLoadingTag {
 						}
 					}
 				};
-				UIHandler.instance.postDelayed(batchDisplay, 100);
+				if (immediate) {
+					UIHandler.instance.removeCallbacks(batchDisplay);
+					UIHandler.instance.runOnUiThread(batchDisplay);
+				} else {
+					UIHandler.instance.postDelayed(batchDisplay, 100);
+				}
 			}
 		}
 	}
 
 	public boolean isBitmapPending() {
-		return mPendingDrawable!=null;
+		return mPendingDrawable!=null && mPendingDrawType==DrawType.LOADED_DRAWABLE;
 	}
 }

@@ -568,7 +568,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				if (cachedBmp!=null) {
 					if (!cachedBmp.getBitmap().isRecycled()) {
 						if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using cached bitmap for URL "+URL+" key:"+bitmapCacheKey);
-						loader.drawBitmap(cachedBmp, URL, cookie, mBitmapCache);
+						loader.drawBitmap(cachedBmp, URL, cookie, mBitmapCache, true);
 						return;
 					}
 					LogManager.logger.w(LOG_TAG, "try to draw bitmap "+key+" already recycled in "+loader+" URL:"+URL);
@@ -593,7 +593,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 										cachedBmp = new BitmapDrawable(mContext.getResources(), bmp);
 									}
 									if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using direct file for URL "+URL+" file:"+file);
-									loader.drawBitmap(cachedBmp, URL, cookie, mBitmapCache);
+									loader.drawBitmap(cachedBmp, URL, cookie, mBitmapCache, true);
 									return;
 								}
 							}
@@ -605,7 +605,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 								BitmapDrawable cachedBmp = new BitmapDrawable(mContext.getResources(), bmp);
 								if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using direct file for URL "+URL+" file:"+file);
-								loader.drawBitmap(cachedBmp, URL, cookie, mBitmapCache);
+								loader.drawBitmap(cachedBmp, URL, cookie, mBitmapCache, true);
 								return;
 							}
 						}

@@ -246,7 +246,7 @@ public class BitmapDownloader implements Runnable {
 								cacheableBmp = drawable;
 							else
 								cacheableBmp = new BitmapDrawable(mCache.getContext().getResources(), bitmap);
-							j.drawBitmap(cacheableBmp, mURL, mCookie, mCache.getBitmapCache());
+							j.drawBitmap(cacheableBmp, mURL, mCookie, mCache.getBitmapCache(), false);
 						} else
 							j.drawErrorPicture(mURL, mCache.getBitmapCache());
 					}
