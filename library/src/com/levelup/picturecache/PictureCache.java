@@ -84,7 +84,6 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	}
 
 	private static final String DATABASE_NAME = "PictureCachev2.sqlite";
-	private static final String OLD_DATABASE_NAME = "PictureCache.sqlite";
 	private static final int DATABASE_VERSION = 1;
 	private static final String TABLE_NAME = "Pictures";
 
@@ -297,14 +296,6 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		}
 
 		mJobManager = new DownloadManager(this);
-
-		File olddb = context.getDatabasePath(OLD_DATABASE_NAME);
-		if (olddb.exists()) {
-			/* TODO: SQLiteDatabase oldDB = context.openOrCreateDatabase(OLD_DATABASE_NAME, 0, null);
-			reloadFromDB(oldDB, TABLE_NAME);
-			oldDB.close();
-			context.deleteDatabase(OLD_DATABASE_NAME);*/
-		}
 
 		//getWritableDatabase().setLockingEnabled(false); // we do our own thread protection
 	}
