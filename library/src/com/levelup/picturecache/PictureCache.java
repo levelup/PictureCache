@@ -79,6 +79,9 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 */
 	abstract protected String getAppName();
 
+	/**
+	 * Get the path for a previously used cache folder that you would like to be erased
+	 */
 	protected String getOldCacheFolder() {
 		return null;
 	}
@@ -112,7 +115,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	private AtomicInteger mPurgeCounterShortterm = new AtomicInteger();
 
 	@Override
-	protected String getMainTableName() {
+	protected final String getMainTableName() {
 		return TABLE_NAME;
 	}
 
