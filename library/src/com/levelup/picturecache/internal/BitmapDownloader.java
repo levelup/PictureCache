@@ -439,7 +439,7 @@ public class BitmapDownloader implements Runnable {
 	}
 
 	public static String keyToBitmapCacheKey(CacheKey key, String url, PictureLoaderHandler loader) {
-		final StringBuilder bitmapKey = new StringBuilder(key.UUID);
+		final StringBuilder bitmapKey = new StringBuilder(key.toString());
 		bitmapKey.append(url);
 		if (loader != null) {
 			if (loader.getStorageTransform() != null)
