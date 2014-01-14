@@ -559,9 +559,15 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 			final String bitmapCacheKey = mBitmapCache!=null ? BitmapDownloader.keyToBitmapCacheKey(key, URL, loader) : null;
 			if (mBitmapCache!=null) {
-				CacheableBitmapDrawable cachedBmp = mBitmapCache.get(bitmapCacheKey);
+				BitmapDrawable cachedBmp = mBitmapCache.get(bitmapCacheKey);
 				if (cachedBmp!=null) {
-					if (!cachedBmp.getBitmap().isRecycled()) {
+					Bitmap bmp = cachedBmp.getBitmap();
+					if (bmp!=null) {
+						if (null != loader.getDisplayTransform()) {
+							Bitmap newBmp = loader.getDisplayTransform().transformBitmap(bmp);
+							if (newBmp!=bmp)
+								cachedBmp = new BitmapDrawable(mContext.getResources(), bmp);
+						}
 						if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using cached bitmap for URL "+URL+" key:"+bitmapCacheKey);
 						loader.drawBitmap(cachedBmp, URL, cookie, mBitmapCache, true);
 						return;
@@ -584,8 +590,9 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 								Bitmap bmp = cachedBmp.getBitmap();
 								if (bmp!=null) {
 									if (null != loader.getDisplayTransform()) {
-										bmp = loader.getDisplayTransform().transformBitmap(bmp);
-										cachedBmp = new BitmapDrawable(mContext.getResources(), bmp);
+										Bitmap newBmp = loader.getDisplayTransform().transformBitmap(bmp);
+										if (newBmp!=bmp)
+											cachedBmp = new BitmapDrawable(mContext.getResources(), newBmp);
 									}
 									if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using direct file for URL "+URL+" file:"+file);
 									loader.drawBitmap(cachedBmp, URL, cookie, mBitmapCache, true);

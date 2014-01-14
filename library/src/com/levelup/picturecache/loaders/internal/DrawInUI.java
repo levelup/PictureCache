@@ -7,7 +7,7 @@ import com.levelup.picturecache.PictureCache;
 import com.levelup.picturecache.loaders.ViewLoader;
 
 class DrawInUI implements Runnable {
-	private final ViewLoader<?> viewLoader;
+	final ViewLoader<?> viewLoader;
 
 	// pending draw data
 	DrawType mPendingDrawType;

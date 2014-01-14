@@ -90,6 +90,14 @@ public class ViewLoadingTag {
 	//private static final Collection<Runnable> pendingDraws = Collections.synchronizedSet(new HashSet<Runnable>());
 
 	public void drawInView(final ViewLoader<?> viewLoader, boolean immediate) {
+		ViewLoader<?> wrongViewLoader = null;
+		if (mDrawInUI!=null && mDrawInUI.viewLoader!=viewLoader) {
+			wrongViewLoader = mDrawInUI.viewLoader;
+			mPendingDrawable = mDrawInUI.mPendingDrawable;
+			mPendingUrl = mDrawInUI.mPendingUrl;
+			mPendingDrawType = mDrawInUI.mPendingDrawType;
+			mDrawInUI = null;
+		}
 		if (mDrawInUI == null) {
 			if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, viewLoader+" create new DrawInUI with "+mPendingDrawable+" for "+mPendingUrl);
 			mDrawInUI = new DrawInUI(viewLoader);
@@ -101,6 +109,8 @@ public class ViewLoadingTag {
 		if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().i(PictureCache.LOG_TAG, mDrawInUI+" / "+viewLoader+" drawInView run mDrawInUI bitmap:"+mDrawInUI.mPendingDrawable+" for "+mDrawInUI.mPendingUrl);
 
 		synchronized(pendingDraws) {
+			if (null!=wrongViewLoader)
+				pendingDraws.remove(wrongViewLoader);
 			pendingDraws.add(mDrawInUI);
 			if (null == batchDisplay) {
 				batchDisplay = new Runnable() {
