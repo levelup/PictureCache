@@ -1,7 +1,6 @@
 package com.levelup.picturecache.loaders.internal;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 
 import uk.co.senab.bitmapcache.BitmapLruCache;
@@ -87,8 +86,8 @@ public class ViewLoadingTag {
 	}
 
 	private static Runnable batchDisplay;
-	//private static final Collection<Runnable> pendingDraws = new HashSet<Runnable>();
-	private static final Collection<Runnable> pendingDraws = Collections.synchronizedSet(new HashSet<Runnable>());
+	private static final Collection<Runnable> pendingDraws = new HashSet<Runnable>();
+	//private static final Collection<Runnable> pendingDraws = Collections.synchronizedSet(new HashSet<Runnable>());
 
 	public void drawInView(final ViewLoader<?> viewLoader, boolean immediate) {
 		if (mDrawInUI == null) {
@@ -101,13 +100,13 @@ public class ViewLoadingTag {
 
 		if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().i(PictureCache.LOG_TAG, mDrawInUI+" / "+viewLoader+" drawInView run mDrawInUI bitmap:"+mDrawInUI.mPendingDrawable+" for "+mDrawInUI.mPendingUrl);
 
-		synchronized(viewLoader.getImageView()) {
+		synchronized(pendingDraws) {
 			pendingDraws.add(mDrawInUI);
 			if (null == batchDisplay) {
 				batchDisplay = new Runnable() {
 					@Override
 					public void run() {
-						synchronized(viewLoader.getImageView()) {
+						synchronized(pendingDraws) {
 							if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, "draw all pending");
 							for (Runnable drawRunnable : pendingDraws) {
 								drawRunnable.run();
