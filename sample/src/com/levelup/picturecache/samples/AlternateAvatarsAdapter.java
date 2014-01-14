@@ -36,8 +36,8 @@ class AlternateAvatarsAdapter extends ArrayAdapter<SampleSource.Sample> {
 		}
 		
 		@Override
-		public void displayCustomBitmap(Drawable bmp) {
-			super.displayCustomBitmap(bmp);
+		public void displayLoadedDrawable(Drawable pendingDrawable) {
+			super.displayLoadedDrawable(pendingDrawable);
 			progress.setVisibility(View.INVISIBLE);
 		}
 		

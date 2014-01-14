@@ -28,7 +28,7 @@ import com.levelup.picturecache.transforms.storage.StorageTransform;
 
 /**
  * Base class used to display the loaded/default bitmap in an View
- * <p>You will likely want to override {@link #displayCustomBitmap(Drawable)}, {@link #displayDefaultView(BitmapLruCache)} or {@link #displayErrorView(BitmapLruCache)}</p>
+ * <p>You will likely want to override {@link #displayLoadedDrawable(Drawable)}, {@link #displayDefaultView(BitmapLruCache)} or {@link #displayErrorView(BitmapLruCache)}</p>
  * @see {@link ViewLoaderDefaultResource} and {@link ViewLoaderDefaultDrawable} 
  */
 public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
@@ -95,7 +95,7 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 	}
 
 	/**
-	 * To override the drawable display, use {@link #displayCustomBitmap(Drawable)}
+	 * To override the drawable display, use {@link #displayLoadedDrawable(Drawable)}
 	 */
 	@Override
 	public final void drawBitmap(Drawable bmp, String url, Object cookie, BitmapLruCache drawableCache, boolean immediate) {
@@ -126,7 +126,7 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 	 * <p>called in the UI thread under a lock on {@link view}</p>
 	 * @param pendingDrawable Drawable to display in {@link view}
 	 */
-	public void displayCustomBitmap(Drawable pendingDrawable) {
+	public void displayLoadedDrawable(Drawable pendingDrawable) {
 		view.setImageDrawable(pendingDrawable);
 	}
 
