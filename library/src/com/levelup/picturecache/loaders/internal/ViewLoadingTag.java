@@ -1,7 +1,8 @@
 package com.levelup.picturecache.loaders.internal;
 
 import java.util.Collection;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.Collections;
+import java.util.HashSet;
 
 import uk.co.senab.bitmapcache.BitmapLruCache;
 import android.graphics.drawable.Drawable;
@@ -86,7 +87,8 @@ public class ViewLoadingTag {
 	}
 
 	private static Runnable batchDisplay;
-	private static final Collection<Runnable> pendingDraws = new ConcurrentLinkedQueue<Runnable>();
+	//private static final Collection<Runnable> pendingDraws = new HashSet<Runnable>();
+	private static final Collection<Runnable> pendingDraws = Collections.synchronizedSet(new HashSet<Runnable>());
 
 	public void drawInView(final ViewLoader<?> viewLoader, boolean immediate) {
 		if (mDrawInUI == null) {
@@ -106,20 +108,24 @@ public class ViewLoadingTag {
 					@Override
 					public void run() {
 						synchronized(viewLoader.getImageView()) {
+							if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, "draw all pending");
 							for (Runnable drawRunnable : pendingDraws) {
 								drawRunnable.run();
 							}
 							pendingDraws.clear();
 
 							batchDisplay = null;
+							if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, "finished drawing all pending");
 						}
 					}
 				};
 
 				if (immediate || drawnType==DrawType.LOADED_DRAWABLE || drawnType==DrawType.ERROR || mPendingDrawType==DrawType.DEFAULT) {
+					if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, "draw the batch ASAP");
 					UIHandler.instance.removeCallbacks(batchDisplay);
 					UIHandler.instance.runOnUiThread(batchDisplay);
 				} else {
+					if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, "draw the batch in a bit");
 					UIHandler.instance.postDelayed(batchDisplay, 100);
 				}
 			}
