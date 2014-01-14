@@ -1,6 +1,7 @@
 package com.levelup.picturecache.loaders.internal;
 
-import java.util.HashSet;
+import java.util.Collection;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import uk.co.senab.bitmapcache.BitmapLruCache;
 import android.graphics.drawable.Drawable;
@@ -85,7 +86,7 @@ public class ViewLoadingTag {
 	}
 
 	private static Runnable batchDisplay;
-	private static final HashSet<Runnable> pendingDraws = new HashSet<Runnable>();
+	private static final Collection<Runnable> pendingDraws = new ConcurrentLinkedQueue<Runnable>();
 
 	public void drawInView(final ViewLoader<?> viewLoader, boolean immediate) {
 		if (mDrawInUI == null) {
@@ -114,6 +115,7 @@ public class ViewLoadingTag {
 						}
 					}
 				};
+
 				if (immediate || drawnType==DrawType.LOADED_DRAWABLE || drawnType==DrawType.ERROR || mPendingDrawType==DrawType.DEFAULT) {
 					UIHandler.instance.removeCallbacks(batchDisplay);
 					UIHandler.instance.runOnUiThread(batchDisplay);
