@@ -585,18 +585,20 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				else if (loader.canDirectLoad(file)) {
 					try {
 						if (mBitmapCache!=null) {
-							BitmapDrawable cachedBmp = mBitmapCache.put(bitmapCacheKey, file);
-							if (cachedBmp!=null) {
-								Bitmap bmp = cachedBmp.getBitmap();
-								if (bmp!=null) {
-									if (null != loader.getDisplayTransform()) {
-										Bitmap newBmp = loader.getDisplayTransform().transformBitmap(bmp);
-										if (newBmp!=bmp)
-											cachedBmp = new BitmapDrawable(mContext.getResources(), newBmp);
+							if (!UIHandler.isUIThread()) {
+								BitmapDrawable cachedBmp = mBitmapCache.put(bitmapCacheKey, file);
+								if (cachedBmp!=null) {
+									Bitmap bmp = cachedBmp.getBitmap();
+									if (bmp!=null) {
+										if (null != loader.getDisplayTransform()) {
+											Bitmap newBmp = loader.getDisplayTransform().transformBitmap(bmp);
+											if (newBmp!=bmp)
+												cachedBmp = new BitmapDrawable(mContext.getResources(), newBmp);
+										}
+										if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using direct file for URL "+URL+" file:"+file);
+										loader.drawBitmap(cachedBmp, URL, cookie, mBitmapCache, true);
+										return;
 									}
-									if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using direct file for URL "+URL+" file:"+file);
-									loader.drawBitmap(cachedBmp, URL, cookie, mBitmapCache, true);
-									return;
 								}
 							}
 						} else {
