@@ -9,15 +9,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import st.gaw.db.AsynchronousDbHelper;
-import st.gaw.db.AsynchronousDbOperation;
 import st.gaw.db.InMemoryHashmapDb;
 import st.gaw.db.Logger;
 import st.gaw.db.MapEntry;
 import uk.co.senab.bitmapcache.BitmapLruCache;
 import uk.co.senab.bitmapcache.BitmapLruCache.Builder;
 import uk.co.senab.bitmapcache.BitmapLruCache.RecyclePolicy;
-import uk.co.senab.bitmapcache.CacheableBitmapDrawable;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -38,6 +35,7 @@ import com.levelup.picturecache.internal.CacheItem;
 import com.levelup.picturecache.internal.CacheKey;
 import com.levelup.picturecache.internal.CacheVariant;
 import com.levelup.picturecache.internal.DownloadManager;
+import com.levelup.picturecache.internal.RemoveExpired;
 import com.levelup.picturecache.loaders.PrecacheImageLoader;
 import com.levelup.picturecache.loaders.RemoteViewLoader;
 import com.levelup.picturecache.loaders.ViewLoader;
@@ -48,7 +46,7 @@ import com.levelup.picturecache.loaders.ViewLoader;
 public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem> {
 
 	public static final String LOG_TAG = "PictureCache";
-	final static boolean DEBUG_CACHE = false & BuildConfig.DEBUG;
+	public final static boolean DEBUG_CACHE = false & BuildConfig.DEBUG;
 
 	/**
 	 * How many new items need to be added to the database before a purge is done
@@ -61,7 +59,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @return the amount available in bytes
 	 * @see {@link #notifyStorageSizeChanged()}
 	 */
-	protected abstract int getCacheMaxSize(LifeSpan lifeSpan);
+	public abstract int getCacheMaxSize(LifeSpan lifeSpan);
 
 	/**
 	 * return a different uuid for when the original uuid just got a new URL. this way we can keep the old and new versions in the cache
@@ -410,7 +408,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		}
 	}
 
-	private long getCacheSize(LifeSpan lifeSpan) {
+	public long getCacheSize(LifeSpan lifeSpan) {
 		long result = 0;
 		mDataLock.lock();
 		try {
@@ -430,80 +428,20 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		return result;
 	}
 
-	private Entry<CacheKey, CacheItem> getCacheOldestEntry(LifeSpan lifeSpan) {
+	public Entry<CacheKey, CacheItem> getCacheOldestEntry(LifeSpan lifeSpan) {
 		// LogManager.logger.d(TAG, "getCacheOldest in");
-		Entry<CacheKey, CacheItem> result = null;
-		for (Entry<CacheKey, CacheItem> entry : getMap().entrySet()) {
-			final CacheItem item = entry.getValue();
-			if (lifeSpan==item.getLifeSpan() && (result==null || result.getValue().lastAccessDate > item.lastAccessDate))
-				result = entry;
-		}
-		// LogManager.logger.e(TAG, "getCacheOldest out with "+result);
-		return result;
-	}
-
-	private static class RemoveExpired implements AsynchronousDbOperation<MapEntry<CacheKey,CacheItem>> {
-
-		private final LifeSpan lifeSpan;
-
-		RemoveExpired() {
-			this.lifeSpan = null;
-		}
-
-		RemoveExpired(LifeSpan cacheType) {
-			this.lifeSpan = cacheType;
-		}
-
-		@Override
-		public void runInMemoryDbOperation(AsynchronousDbHelper<MapEntry<CacheKey, CacheItem>> db) {
-			PictureCache cache = (PictureCache) db;
-			if (lifeSpan != null)
-				makeRoom(cache, lifeSpan);
-			else {
-				for (LifeSpan lifeSpan : LifeSpan.values())
-					makeRoom(cache, lifeSpan);
+		mDataLock.lock();
+		try {
+			Entry<CacheKey, CacheItem> result = null;
+			for (Entry<CacheKey, CacheItem> entry : getMap().entrySet()) {
+				final CacheItem item = entry.getValue();
+				if (lifeSpan==item.getLifeSpan() && (result==null || result.getValue().lastAccessDate > item.lastAccessDate))
+					result = entry;
 			}
-		}
-
-		private static void makeRoom(PictureCache cache, LifeSpan lifeSpan) {
-			if (DEBUG_CACHE) LogManager.logger.i(LOG_TAG, "start makeRoom for "+lifeSpan);
-			try {
-				long TotalSize = cache.getCacheSize(lifeSpan);
-				int MaxSize = cache.getCacheMaxSize(lifeSpan);
-				if (MaxSize != 0 && TotalSize > MaxSize) {
-					// make room in the DB/cache for this new element
-					while (TotalSize > MaxSize) {
-						//if (type != k.getValue().type) continue;
-						//long deleted = 0;
-						Entry<CacheKey, CacheItem> entry;
-						cache.mDataLock.lock();
-						try {
-							entry = cache.getCacheOldestEntry(lifeSpan);
-							if (entry == null)
-								break;
-						} finally {
-							cache.mDataLock.unlock();
-						}
-
-						if (DEBUG_CACHE) LogManager.logger.i(LOG_TAG, "remove "+entry+" from the cache for "+lifeSpan);
-						CacheItem item = cache.remove(entry.getKey());
-						if (item != null) {
-							File f = item.path;
-							if (f != null && f.exists()) {
-								long fSize = f.length();
-								if (f.delete()) {
-									TotalSize -= fSize;
-									//deleted += fSize;
-								}
-							}
-						}
-						//LogManager.logger.d(TAG, "makeroom");
-					}
-				}
-			} catch (NullPointerException e) {
-				LogManager.logger.w(LOG_TAG, "can't make room for type:"+lifeSpan,e);
-			}
-			if (DEBUG_CACHE) LogManager.logger.i(LOG_TAG, "finished makeRoom for "+lifeSpan);
+			// LogManager.logger.e(TAG, "getCacheOldest out with "+result);
+			return result;
+		} finally {
+			mDataLock.unlock();
 		}
 	}
 

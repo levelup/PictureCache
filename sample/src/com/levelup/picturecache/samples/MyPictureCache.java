@@ -34,7 +34,7 @@ public class MyPictureCache extends PictureCache {
 	}
 
 	@Override
-	protected int getCacheMaxSize(LifeSpan lifeSpan) {
+	public int getCacheMaxSize(LifeSpan lifeSpan) {
 		switch (lifeSpan) {
 		case ETERNAL: return CACHE_SIZE_ETERNAL;
 		case LONGTERM: return CACHE_SIZE_LONGTERM;
