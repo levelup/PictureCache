@@ -77,6 +77,12 @@ public abstract class PictureLoaderHandler {
 	 * @return
 	 */
 	abstract protected String getLoadingURL();
+	
+	/**
+	 * Allow downloading pictures in the calling thread (usually the UI thread), not recommended, won't happen in the UI thread in the memory cache
+	 * @param file File that we are trying to decode in the calling thread
+	 * @return {@code true} if the file can be decoded
+	 */
 	abstract protected boolean canDirectLoad(File file);
 
 	/**
