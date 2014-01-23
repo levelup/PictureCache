@@ -95,7 +95,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 					"DATE LONG not null DEFAULT -1, " +  // the date of last access to the item
 					"PRIMARY KEY (UUID));";
 
-	private Boolean mDirAsserted = Boolean.FALSE;
+	private Boolean mDirAsserted;
 
 	private final OutOfMemoryHandler ooHandler;
 
@@ -292,6 +292,9 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	@Override
 	protected void preloadInit(Object c) {
 		super.preloadInit(c);
+		
+		mDirAsserted = Boolean.FALSE;
+		
 		InitCookie cookie = (InitCookie) c;
 	
 		File olddir = new File(Environment.getExternalStorageDirectory(), "/Android/data/"+cookie.context.getPackageName()+'/'+(null!=cookie.folderName ? cookie.folderName : "cache"));
