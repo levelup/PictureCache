@@ -27,7 +27,7 @@ public class BitmapTransformSquareRoundedCorner implements BitmapTransform {
 	
 	/**
 	 * constructor of the {@link BitmapTransform} with the specified radius for the rounded corner
-	 * @param roundRadius
+	 * @param roundRadius 0 will not make rounded corners
 	 */
 	public BitmapTransformSquareRoundedCorner(int roundRadius) {
 		this.roundRadius = roundRadius;
@@ -59,27 +59,28 @@ public class BitmapTransformSquareRoundedCorner implements BitmapTransform {
 		// Get the pictures info
 		//mLogger.d( "Bitmap size: w: " + bitmap.getWidth() + " h: " + bitmap.getHeight() );
 
-		try {
-			Bitmap output = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Config.ARGB_8888);
-			final Canvas canvas = new Canvas(output);
+		if (0!=roundRadius)
+			try {
+				Bitmap output = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Config.ARGB_8888);
+				final Canvas canvas = new Canvas(output);
 
-			final BitmapShader shader;
-			shader = new BitmapShader(bitmap, TileMode.CLAMP, TileMode.CLAMP);
+				final BitmapShader shader;
+				shader = new BitmapShader(bitmap, TileMode.CLAMP, TileMode.CLAMP);
 
-			final Paint paint = new Paint();
-			paint.setAntiAlias(true);
-			paint.setShader(shader);
+				final Paint paint = new Paint();
+				paint.setAntiAlias(true);
+				paint.setShader(shader);
 
-			final RectF rect = new RectF(0.0f, 0.0f, bitmap.getWidth(), bitmap.getHeight());
+				final RectF rect = new RectF(0.0f, 0.0f, bitmap.getWidth(), bitmap.getHeight());
 
-			// rect contains the bounds of the shape
-			// radius is the radius in pixels of the rounded corners
-			// paint contains the shader that will texture the shape
-			canvas.drawRoundRect(rect, roundRadius, roundRadius, paint);
-			return output;
-		} catch (Throwable e) {
-			LogManager.getLogger().e(PictureCache.LOG_TAG, "getRoundedCornerBitmap exception", e);
-		}
+				// rect contains the bounds of the shape
+				// radius is the radius in pixels of the rounded corners
+				// paint contains the shader that will texture the shape
+				canvas.drawRoundRect(rect, roundRadius, roundRadius, paint);
+				return output;
+			} catch (Throwable e) {
+				LogManager.getLogger().e(PictureCache.LOG_TAG, "getRoundedCornerBitmap exception", e);
+			}
 
 		return bitmap;
 	}
