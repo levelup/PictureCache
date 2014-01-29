@@ -33,7 +33,6 @@ public abstract class PictureLoaderHandler {
 	
 	/**
 	 * Called when the download failed and an error should be displayed
-	 * <p>This method may be called outside of the UI thread</p>
 	 * 
 	 * @param url URL being loaded
 	 * @param drawableCache TODO

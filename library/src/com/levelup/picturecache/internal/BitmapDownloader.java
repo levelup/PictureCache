@@ -29,6 +29,7 @@ import com.levelup.picturecache.LogManager;
 import com.levelup.picturecache.NetworkLoader;
 import com.levelup.picturecache.PictureCache;
 import com.levelup.picturecache.PictureLoaderHandler;
+import com.levelup.picturecache.UIHandler;
 import com.levelup.picturecache.loaders.ViewLoader;
 
 public class BitmapDownloader implements Runnable {
@@ -209,7 +210,7 @@ public class BitmapDownloader implements Runnable {
 
 				if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, this+" target:"+target+" fileInCache:"+target.fileInCache+" bitmap:"+targetBitmaps.get(target.mKey));
 			}
-			
+
 			downloadToFile = null;
 		} catch (OutOfMemoryError e) {
 			mCache.getOutOfMemoryHandler().onOutOfMemoryError(e);
@@ -221,46 +222,48 @@ public class BitmapDownloader implements Runnable {
 		} catch (Throwable e) {
 			LogManager.getLogger().e(PictureCache.LOG_TAG, "exception on "+mURL, e);
 		} finally {
-			try {
-				// tell the monitor we are done
-				//LogManager.getLogger().i(PictureCache.TAG, "finished download thread for " + mURL + " bmp:"+bmp + " rbmp:"+rbmp);
-				//LogManager.getLogger().i(PictureCache.TAG, "send display bitmap "+mURL+" aborted:"+abortRequested.get()+" size:"+reqTargets.size());
-				//LogManager.getLogger().i(PictureCache.TAG, "ViewUpdate loop "+mURL+" aborted:"+abortRequested.get()+" size:"+reqTargets.size()+" bmp:"+bmp+" rbmp:"+rbmp);
-				synchronized (mTargets) {
-					if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" finished loading targets:"+mTargets+" bitmaps:"+targetBitmaps);
+			UIHandler.instance.runOnUiThread(new Runnable() {
+				@Override
+				public void run() {
+					// tell the monitor we are done
+					//LogManager.getLogger().i(PictureCache.TAG, "finished download thread for " + mURL + " bmp:"+bmp + " rbmp:"+rbmp);
+					//LogManager.getLogger().i(PictureCache.TAG, "send display bitmap "+mURL+" aborted:"+abortRequested.get()+" size:"+reqTargets.size());
+					//LogManager.getLogger().i(PictureCache.TAG, "ViewUpdate loop "+mURL+" aborted:"+abortRequested.get()+" size:"+reqTargets.size()+" bmp:"+bmp+" rbmp:"+rbmp);
+					synchronized (mTargets) {
+						if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" finished loading targets:"+mTargets+" bitmaps:"+targetBitmaps);
 
-					mAborting = true; // after this point new targets are not OK for this job
-					for (DownloadTarget target : mTargets) {
-						//LogManager.getLogger().i(PictureCache.TAG, false, "ViewUpdate "+mURL);
-						PictureLoaderHandler j = target.loadHandler;
-						Drawable drawable = targetBitmaps.get(target.mKey);
+						mAborting = true; // after this point new targets are not OK for this job
+						for (DownloadTarget target : mTargets) {
+							//LogManager.getLogger().i(PictureCache.TAG, false, "ViewUpdate "+mURL);
+							PictureLoaderHandler j = target.loadHandler;
+							Drawable drawable = targetBitmaps.get(target.mKey);
 
-						if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, this+" display "+drawable+" in "+target.loadHandler+" file:"+target.fileInCache+" key:"+target.mKey);
-						if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().v(PictureCache.LOG_TAG, this+"  targets:"+mTargets+" bitmaps:"+targetBitmaps);
-						//LogManager.getLogger().i(PictureCache.TAG, "display "+mURL+" in "+j+" abort:"+abortRequested);
-						if (drawable!=null) {
-							Bitmap bitmap = ViewLoader.drawableToBitmap(drawable);
-							if (j.getDisplayTransform()!=null)
-								bitmap = j.getDisplayTransform().transformBitmap(bitmap);
+							if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, this+" display "+drawable+" in "+target.loadHandler+" file:"+target.fileInCache+" key:"+target.mKey);
+							if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().v(PictureCache.LOG_TAG, this+"  targets:"+mTargets+" bitmaps:"+targetBitmaps);
+							//LogManager.getLogger().i(PictureCache.TAG, "display "+mURL+" in "+j+" abort:"+abortRequested);
+							if (drawable!=null) {
+								Bitmap bitmap = ViewLoader.drawableToBitmap(drawable);
+								if (j.getDisplayTransform()!=null)
+									bitmap = j.getDisplayTransform().transformBitmap(bitmap);
 
-							Drawable cacheableBmp;
-							if (drawable instanceof BitmapDrawable && ((BitmapDrawable) drawable).getBitmap()==bitmap)
-								cacheableBmp = drawable;
-							else
-								cacheableBmp = new BitmapDrawable(mCache.getContext().getResources(), bitmap);
-							j.drawBitmap(cacheableBmp, mURL, mCookie, mCache.getBitmapCache(), false);
-						} else
-							j.drawErrorPicture(mURL, mCache.getBitmapCache());
+								Drawable cacheableBmp;
+								if (drawable instanceof BitmapDrawable && ((BitmapDrawable) drawable).getBitmap()==bitmap)
+									cacheableBmp = drawable;
+								else
+									cacheableBmp = new BitmapDrawable(mCache.getContext().getResources(), bitmap);
+								j.drawBitmap(cacheableBmp, mURL, mCookie, mCache.getBitmapCache(), false);
+							} else
+								j.drawErrorPicture(mURL, mCache.getBitmapCache());
+						}
+						mTargets.clear();
 					}
-					mTargets.clear();
-				}
 
-				if (mMonitor!=null)
-					mMonitor.onJobFinishedWithNewBitmaps(this, targetNewBitmaps);
-			} finally {
-				if (downloadToFile!=null)
-					downloadToFile.delete();
-			}
+					if (mMonitor!=null)
+						mMonitor.onJobFinishedWithNewBitmaps(BitmapDownloader.this, targetNewBitmaps);
+				}
+			});
+			if (downloadToFile!=null)
+				downloadToFile.delete();
 		}
 	}
 
