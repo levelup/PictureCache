@@ -218,7 +218,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 		}, null);
 	}
 	 */
-	public void loadImageURL(PictureCache cache, String url, String UUID, NetworkLoader networkLoader, IPictureLoaderRender drawHandler, LifeSpan cacheLifespan, int maxWidth, int maxHeight, IPictureLoaderTransforms transforms, Object cookie) {
+	public void loadImageURL(PictureCache cache, String url, String UUID, NetworkLoader networkLoader, IPictureLoaderRender drawHandler, long urlFreshness, LifeSpan cacheLifespan, int maxWidth, int maxHeight, IPictureLoaderTransforms transforms, Object cookie) {
 		UIHandler.assertUIThread();
 
 		PictureJob.Builder newJobBuilder = new PictureJob.Builder(this, transforms, this);
@@ -226,6 +226,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 		.setUUID(UUID)
 		.setCookie(cookie)
 		.setLifeType(cacheLifespan)
+		.setFreshDate(urlFreshness)
 		.setNetworkLoader(networkLoader);
 		if (0==maxHeight)
 			newJobBuilder.setDimension(maxWidth, true);
