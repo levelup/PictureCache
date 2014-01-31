@@ -458,7 +458,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @param lifeSpan see {@link LifeSpan}
 	 * @param networkLoader TODO
 	 */
-	void getPicture(String URL, CacheKey key, Object cookie, long itemDate, PictureLoaderHandler loader, LifeSpan lifeSpan, NetworkLoader networkLoader)
+	void getPicture(String URL, CacheKey key, Object cookie, long itemDate, IPictureLoaderRender loader, IPictureLoaderTransforms transforms, IPictureLoadConcurrency concuHandler, LifeSpan lifeSpan, NetworkLoader networkLoader)
 	{
 		mDataLock.lock();
 		try {
@@ -472,13 +472,13 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			}
 			if (TextUtils.isEmpty(URL)) {
 				LogManager.logger.i(LOG_TAG, "no URL specified/known for "+key+" using default");
-				removePictureLoader(loader, null);
+				removePictureLoader(loader, concuHandler, null);
 				loader.drawDefaultPicture(null, mBitmapCache);
 				return;
 			}
 
 			//LogManager.logger.v(TAG, "load "+URL+" in "+target+" key:"+key);
-			String wasPreviouslyLoading = loader.setLoadingURL(URL, mBitmapCache); 
+			String wasPreviouslyLoading = concuHandler.setLoadingURL(URL, mBitmapCache); 
 			if (URL.equals(wasPreviouslyLoading)) {
 				if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, loader+" no need to draw anything");
 				return; // no need to do anything the image is the same or downloading for it
@@ -498,14 +498,14 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 			key = getStoredKey(key, URL, itemDate);
 
-			final String bitmapCacheKey = mBitmapCache!=null ? BitmapDownloader.keyToBitmapCacheKey(key, URL, loader) : null;
+			final String bitmapCacheKey = mBitmapCache!=null ? BitmapDownloader.keyToBitmapCacheKey(key, URL, transforms) : null;
 			if (mBitmapCache!=null) {
 				BitmapDrawable cachedBmp = mBitmapCache.get(bitmapCacheKey);
 				if (cachedBmp!=null) {
 					Bitmap bmp = cachedBmp.getBitmap();
 					if (bmp!=null) {
-						if (null != loader.getDisplayTransform()) {
-							Bitmap newBmp = loader.getDisplayTransform().transformBitmap(bmp);
+						if (null!=transforms && null != transforms.getDisplayTransform()) {
+							Bitmap newBmp = transforms.getDisplayTransform().transformBitmap(bmp);
 							if (newBmp!=bmp)
 								cachedBmp = new BitmapDrawable(mContext.getResources(), bmp);
 						}
@@ -523,7 +523,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 					LogManager.logger.w(LOG_TAG, "File "+file+" disappeared for "+key);
 					remove(key);
 				}
-				else if (loader.canDirectLoad(file)) {
+				else if (concuHandler.canDirectLoad(file)) {
 					try {
 						if (mBitmapCache!=null) {
 							if (!UIHandler.isUIThread()) {
@@ -531,8 +531,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 								if (cachedBmp!=null) {
 									Bitmap bmp = cachedBmp.getBitmap();
 									if (bmp!=null) {
-										if (null != loader.getDisplayTransform()) {
-											Bitmap newBmp = loader.getDisplayTransform().transformBitmap(bmp);
+										if (null!=transforms && null != transforms.getDisplayTransform()) {
+											Bitmap newBmp = transforms.getDisplayTransform().transformBitmap(bmp);
 											if (newBmp!=bmp)
 												cachedBmp = new BitmapDrawable(mContext.getResources(), newBmp);
 										}
@@ -545,8 +545,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 						} else {
 							Bitmap bmp = BitmapFactory.decodeFile(file.getAbsolutePath());
 							if (bmp!=null) {
-								if (null != loader.getDisplayTransform())
-									bmp = loader.getDisplayTransform().transformBitmap(bmp);
+								if (null!=transforms && null != transforms.getDisplayTransform())
+									bmp = transforms.getDisplayTransform().transformBitmap(bmp);
 
 								BitmapDrawable cachedBmp = new BitmapDrawable(mContext.getResources(), bmp);
 								if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using direct file for URL "+URL+" file:"+file);
@@ -567,7 +567,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 			// we could not read from the cache, load the URL
 			if (key!=null)
-				mJobManager.addDownloadTarget(this, URL, cookie, loader, key, itemDate, lifeSpan, networkLoader);
+				mJobManager.addDownloadTarget(this, URL, cookie, loader, transforms, concuHandler, key, itemDate, lifeSpan, networkLoader);
 		} finally {
 			mDataLock.unlock();
 		}
@@ -585,7 +585,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @param extensionMode The kind of file type we are loading, can be {@link StorageType#AUTO}, {@link StorageType#PNG} or {@link StorageType#JPEG}
 	 */
 	public void loadPictureWithFixedHeight(PictureLoaderHandler loader, String URL, String UUID, Object cookie, long itemDate, LifeSpan lifeSpan, int height, StorageType extensionMode) {
-		PictureJob pictureJob = new PictureJob.Builder(loader)
+		PictureJob pictureJob = new PictureJob.Builder(loader, loader, loader)
 		.setURL(URL).setUUID(UUID)
 		.setFreshDate(itemDate)
 		.setLifeType(lifeSpan)
@@ -613,7 +613,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @param extensionMode The kind of file type we are loading, can be {@link StorageType#AUTO}, {@link StorageType#PNG} or {@link StorageType#JPEG}
 	 */
 	public void loadPictureWithMaxWidth(PictureLoaderHandler loader, String URL, String UUID, Object cookie, long itemDate, LifeSpan lifeSpan, int width, StorageType extensionMode) {
-		PictureJob pictureJob = new PictureJob.Builder(loader)
+		PictureJob pictureJob = new PictureJob.Builder(loader, loader, loader)
 		.setURL(URL)
 		.setUUID(UUID)
 		.setFreshDate(itemDate)
@@ -634,7 +634,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @param loader
 	 * @param oldURL
 	 */
-	public void cancelPictureLoader(PictureLoaderHandler loader, String oldURL) {
+	public void cancelPictureLoader(IPictureLoaderRender loader, String oldURL) {
 		if (loader != null)
 			mJobManager.cancelDownloadForLoader(loader, oldURL);
 	}
@@ -644,10 +644,10 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @param loader
 	 * @param oldURL
 	 */
-	public void removePictureLoader(PictureLoaderHandler loader, String oldURL) {
+	public void removePictureLoader(IPictureLoaderRender loader, IPictureLoadConcurrency concuHandler, String oldURL) {
 		if (loader != null) {
 			if (DEBUG_CACHE) LogManager.logger.i(LOG_TAG, "removePictureLoader "+loader+" with old URL "+oldURL);
-			loader.setLoadingURL(null, mBitmapCache);
+			concuHandler.setLoadingURL(null, mBitmapCache);
 			mJobManager.cancelDownloadForLoader(loader, oldURL);
 		}
 	}

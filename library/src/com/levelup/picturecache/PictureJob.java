@@ -2,9 +2,9 @@ package com.levelup.picturecache;
 
 import java.security.NoSuchAlgorithmException;
 
-import com.levelup.picturecache.internal.CacheKey;
-
 import android.text.TextUtils;
+
+import com.levelup.picturecache.internal.CacheKey;
 
 public class PictureJob {
 
@@ -16,7 +16,9 @@ public class PictureJob {
 	public final int mDimension;
 	public final boolean mWidthBased;
 	public final StorageType mExtensionMode;
-	public final PictureLoaderHandler mHandler;
+	public final IPictureLoaderRender mDisplayHandler;
+	public final IPictureLoaderTransforms mTransformHandler;
+	public final IPictureLoadConcurrency mConcurrencyHandler;
 	public final NetworkLoader networkLoader;
 
 	public static class Builder {
@@ -29,11 +31,15 @@ public class PictureJob {
 		private int mDimension;
 		private boolean mWidthBased;
 		private StorageType mExtensionMode = StorageType.AUTO;
-		protected final PictureLoaderHandler mHandler;
+		protected final IPictureLoaderRender mDisplayHandler;
+		protected final IPictureLoaderTransforms mTransformHandler;
+		protected final IPictureLoadConcurrency mConcurrencyHandler;
 		private NetworkLoader networkLoader;
 
-		public Builder(PictureLoaderHandler handler) {
-			mHandler = handler;
+		public Builder(IPictureLoaderRender draw, IPictureLoaderTransforms transforms, IPictureLoadConcurrency concurrencyHandler) {
+			this.mDisplayHandler = draw;
+			this.mTransformHandler = transforms;
+			this.mConcurrencyHandler = concurrencyHandler;
 		}
 
 		public Builder setURL(String URL) {
@@ -96,18 +102,20 @@ public class PictureJob {
 		this.mDimension = builder.mDimension;
 		this.mWidthBased = builder.mWidthBased;
 		this.mExtensionMode = builder.mExtensionMode;
-		this.mHandler = builder.mHandler;
+		this.mDisplayHandler = builder.mDisplayHandler;
+		this.mTransformHandler = builder.mTransformHandler;
+		this.mConcurrencyHandler = builder.mConcurrencyHandler;
 		this.networkLoader = builder.networkLoader;
 	}
 
 	private CacheKey buildKey() throws NoSuchAlgorithmException {
 		if (!TextUtils.isEmpty(mUUID))
 			return CacheKey.newUUIDBasedKey(mUUID, mDimension, mWidthBased, mExtensionMode,
-					mHandler.getStorageTransform() != null ? mHandler.getStorageTransform().getVariantPostfix() : null);
+					null!=mTransformHandler && mTransformHandler.getStorageTransform() != null ? mTransformHandler.getStorageTransform().getVariantPostfix() : null);
 
 		if (!TextUtils.isEmpty(mURL))
 			return CacheKey.newUrlBasedKey(mURL, mDimension, mWidthBased, mExtensionMode,
-					mHandler.getStorageTransform() != null ? mHandler.getStorageTransform().getVariantPostfix() : null);
+					null!=mTransformHandler && mTransformHandler.getStorageTransform() != null ? mTransformHandler.getStorageTransform().getVariantPostfix() : null);
 
 		return null;
 	}
@@ -125,6 +133,6 @@ public class PictureJob {
 			return;
 		}
 
-		cache.getPicture(mURL, key, mCookie, mFreshDate, mHandler, mLifeSpan, networkLoader);
+		cache.getPicture(mURL, key, mCookie, mFreshDate, mDisplayHandler, mTransformHandler, mConcurrencyHandler, mLifeSpan, networkLoader);
 	}
 }

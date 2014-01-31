@@ -16,10 +16,12 @@ import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 
 import com.levelup.picturecache.LifeSpan;
+import com.levelup.picturecache.IPictureLoadConcurrency;
+import com.levelup.picturecache.IPictureLoaderRender;
+import com.levelup.picturecache.IPictureLoaderTransforms;
 import com.levelup.picturecache.LogManager;
 import com.levelup.picturecache.NetworkLoader;
 import com.levelup.picturecache.PictureCache;
-import com.levelup.picturecache.PictureLoaderHandler;
 
 public class DownloadManager {
 
@@ -49,18 +51,18 @@ public class DownloadManager {
 		this.mCache = pictureCache;
 	}
 
-	public void addDownloadTarget(PictureCache cache, String URL, Object cookie, PictureLoaderHandler loadHandler, CacheKey key, long itemDate, LifeSpan lifeSpan, NetworkLoader networkLoader) {
+	public void addDownloadTarget(PictureCache cache, String URL, Object cookie, IPictureLoaderRender loadHandler, IPictureLoaderTransforms transforms, IPictureLoadConcurrency concuHandler, CacheKey key, long itemDate, LifeSpan lifeSpan, NetworkLoader networkLoader) {
 		// find out if that URL is already loading, if so add the view to the recipient
 		synchronized (mJobs) {
 			// add job by URL
 			BitmapDownloader downloader = mJobs.get(URL);
 			if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "add loader:"+loadHandler+" to downloader:"+downloader);
-			final boolean targetAdded = downloader!=null && downloader.addTarget(loadHandler, key, itemDate, lifeSpan);
+			final boolean targetAdded = downloader!=null && downloader.addTarget(loadHandler, transforms, concuHandler, key, itemDate, lifeSpan);
 			if (!targetAdded) {
 				if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "add new downloader for "+URL+" key:"+key+" loader:"+loadHandler+" jobs:"+mJobs);
 				// create a fresh new one if an old one is not ready to accept our loadHandler
 				downloader = new BitmapDownloader(URL, networkLoader, cookie, cache, this);
-				downloader.addTarget(loadHandler, key, itemDate, lifeSpan);
+				downloader.addTarget(loadHandler, transforms, concuHandler, key, itemDate, lifeSpan);
 				try {
 					threadPool.execute(downloader);
 					mJobs.put(URL, downloader);
@@ -81,7 +83,7 @@ public class DownloadManager {
 	 * @param URL TODO
 	 * @return true if there was a task loading
 	 */
-	public boolean cancelDownloadForLoader(PictureLoaderHandler loadHandler, String URL) {
+	public boolean cancelDownloadForLoader(IPictureLoaderRender loadHandler, String URL) {
 		synchronized (mJobs) {
 			if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "cancelDownloadForLoader for "+URL+" loadHandler:"+loadHandler);
 			if (!TextUtils.isEmpty(URL)) {

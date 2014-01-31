@@ -60,7 +60,7 @@ class AlternateAvatarsAdapter extends ArrayAdapter<SampleSource.Sample> {
 			LoaderWithProgress loader = new LoaderWithProgress((ImageView) view.findViewById(R.id.avatar), view.findViewById(R.id.progressBar1));
 
 			// prepare a basic picture job to load the avatar URL with a specific UUID
-			PictureJob avatarJob = new PictureJob.Builder(loader)
+			PictureJob avatarJob = new PictureJob.Builder(loader, loader, loader)
 			.setURL(getItem(position).picURL)
 			.setUUID("avatar_" + getItem(position).name)
 			.build();

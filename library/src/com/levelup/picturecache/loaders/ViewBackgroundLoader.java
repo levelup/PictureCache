@@ -96,7 +96,7 @@ public class ViewBackgroundLoader<V extends View> extends PictureLoaderHandler {
 	}
 
 	@Override
-	protected String setLoadingURL(String newURL, BitmapLruCache cache) {
+	public String setLoadingURL(String newURL, BitmapLruCache cache) {
 		// TODO use the ImageViewLoadingTag
 		String oldLoadingUrl = mLoadingUrl;
 		mLoadingUrl = newURL;
@@ -110,7 +110,7 @@ public class ViewBackgroundLoader<V extends View> extends PictureLoaderHandler {
 	}
 
 	@Override
-	protected boolean canDirectLoad(File file) {
+	public boolean canDirectLoad(File file) {
 		return true;
 	}
 

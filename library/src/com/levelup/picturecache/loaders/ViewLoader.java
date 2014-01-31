@@ -185,7 +185,7 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 	}
 
 	@Override
-	protected boolean canDirectLoad(File file) {
+	public boolean canDirectLoad(File file) {
 		return !UIHandler.isUIThread() || file.length() < MAX_SIZE_IN_UI_THREAD;
 	}
 

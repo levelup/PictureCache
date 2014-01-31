@@ -25,23 +25,29 @@ import android.net.Uri;
 import android.util.FloatMath;
 
 import com.levelup.picturecache.LifeSpan;
+import com.levelup.picturecache.IPictureLoadConcurrency;
+import com.levelup.picturecache.IPictureLoaderRender;
+import com.levelup.picturecache.IPictureLoaderTransforms;
 import com.levelup.picturecache.LogManager;
 import com.levelup.picturecache.NetworkLoader;
 import com.levelup.picturecache.PictureCache;
-import com.levelup.picturecache.PictureLoaderHandler;
 import com.levelup.picturecache.UIHandler;
 import com.levelup.picturecache.loaders.ViewLoader;
+import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
+import com.levelup.picturecache.transforms.storage.StorageTransform;
 
 public class BitmapDownloader implements Runnable {
 
 	private static final boolean DEBUG_BITMAP_DOWNLOADER = false;
 
-	private static class DownloadTarget {
-		final PictureLoaderHandler loadHandler;
+	private static class DownloadTarget implements IPictureLoaderTransforms {
+		final IPictureLoaderRender loadHandler;
+		private final IPictureLoaderTransforms transformHandler;
 		final CacheKey mKey;
 		File fileInCache;
-		DownloadTarget(PictureLoaderHandler handler, CacheKey key) {
-			this.loadHandler = handler;
+		DownloadTarget(IPictureLoaderRender loader, IPictureLoaderTransforms transforms, CacheKey key) {
+			this.loadHandler = loader;
+			this.transformHandler = transforms;
 			this.mKey = key;
 		}
 
@@ -55,12 +61,22 @@ public class BitmapDownloader implements Runnable {
 
 		@Override
 		public int hashCode() {
-			return mKey.hashCode() * 31 + loadHandler.hashCode();
+			return (mKey.hashCode() * 31 + loadHandler.hashCode()) * 31 + (null==transformHandler ? 0 : transformHandler.hashCode());
 		}
 
 		@Override
 		public String toString() {
-			return "DownloadTarget:"+loadHandler;
+			return "DownloadTarget:"+loadHandler+':'+transformHandler;
+		}
+
+		@Override
+		public StorageTransform getStorageTransform() {
+			return null==transformHandler ? null : transformHandler.getStorageTransform();
+		}
+
+		@Override
+		public BitmapTransform getDisplayTransform() {
+			return null==transformHandler ? null : transformHandler.getDisplayTransform();
 		}
 	}
 
@@ -124,7 +140,7 @@ public class BitmapDownloader implements Runnable {
 						target.fileInCache.delete();
 					target.fileInCache = mCache.getCachedFilepath(target.mKey);
 					if (downloadToFile==null && mCanDownload) {
-						if (target.loadHandler.getStorageTransform()==null)
+						if (target.getStorageTransform()==null)
 							downloadToFile = target.fileInCache;
 						else
 							downloadToFile = new File(mCache.getAvailaibleTempDir(), "tmp_"+target.mKey.getFilename());
@@ -136,7 +152,7 @@ public class BitmapDownloader implements Runnable {
 					if (!bitmapWasInCache) {
 						displayDrawable = null;
 					} else if (mCache.getBitmapCache()!=null) {
-						displayDrawable = mCache.getBitmapCache().put(keyToBitmapCacheKey(target.mKey, mURL, target.loadHandler), target.fileInCache, getOutputOptions(tmpFileOptions.outWidth, tmpFileOptions.outHeight, target.mKey));
+						displayDrawable = mCache.getBitmapCache().put(keyToBitmapCacheKey(target.mKey, mURL, target), target.fileInCache, getOutputOptions(tmpFileOptions.outWidth, tmpFileOptions.outHeight, target.mKey));
 					} else {
 						displayDrawable = new BitmapDrawable(mCache.getContext().getResources(), target.fileInCache.getAbsolutePath());
 					}
@@ -148,8 +164,8 @@ public class BitmapDownloader implements Runnable {
 							displayDrawable = loadResourceDrawable(mURL);
 
 							if (displayDrawable!=null) {
-								if (target.loadHandler.getStorageTransform()!=null)
-									displayDrawable = new BitmapDrawable(target.loadHandler.getStorageTransform().transformBitmapForStorage(ViewLoader.drawableToBitmap(displayDrawable)));
+								if (target.getStorageTransform()!=null)
+									displayDrawable = new BitmapDrawable(target.getStorageTransform().transformBitmapForStorage(ViewLoader.drawableToBitmap(displayDrawable)));
 								else
 									bitmapWasInCache = true; // do not store the drawable as a bitmap as it is equal to the source
 							}
@@ -173,7 +189,7 @@ public class BitmapDownloader implements Runnable {
 						if (downloaded) {
 							Bitmap bitmap;
 							if (mCache.getBitmapCache()!=null) {
-								CacheableBitmapDrawable cachedDrawable = mCache.getBitmapCache().put(keyToBitmapCacheKey(target.mKey, mURL, target.loadHandler), downloadToFile, getOutputOptions(tmpFileOptions.outWidth, tmpFileOptions.outHeight, target.mKey));
+								CacheableBitmapDrawable cachedDrawable = mCache.getBitmapCache().put(keyToBitmapCacheKey(target.mKey, mURL, target), downloadToFile, getOutputOptions(tmpFileOptions.outWidth, tmpFileOptions.outHeight, target.mKey));
 								bitmap = cachedDrawable.getBitmap();
 							} else {
 								bitmap = BitmapFactory.decodeFile(downloadToFile.getAbsolutePath(), getOutputOptions(tmpFileOptions.outWidth, tmpFileOptions.outHeight, target.mKey));
@@ -188,8 +204,8 @@ public class BitmapDownloader implements Runnable {
 									bitmap = newBmp;
 								}
 
-								if (target.loadHandler.getStorageTransform()!=null)
-									bitmap = target.loadHandler.getStorageTransform().transformBitmapForStorage(bitmap);
+								if (target.getStorageTransform()!=null)
+									bitmap = target.getStorageTransform().transformBitmapForStorage(bitmap);
 
 								displayDrawable = new BitmapDrawable(mCache.getContext().getResources(), bitmap);
 							}
@@ -235,7 +251,7 @@ public class BitmapDownloader implements Runnable {
 						mAborting = true; // after this point new targets are not OK for this job
 						for (DownloadTarget target : mTargets) {
 							//LogManager.getLogger().i(PictureCache.TAG, false, "ViewUpdate "+mURL);
-							PictureLoaderHandler j = target.loadHandler;
+							IPictureLoaderRender k = target.loadHandler;
 							Drawable drawable = targetBitmaps.get(target.mKey);
 
 							if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, this+" display "+drawable+" in "+target.loadHandler+" file:"+target.fileInCache+" key:"+target.mKey);
@@ -243,17 +259,17 @@ public class BitmapDownloader implements Runnable {
 							//LogManager.getLogger().i(PictureCache.TAG, "display "+mURL+" in "+j+" abort:"+abortRequested);
 							if (drawable!=null) {
 								Bitmap bitmap = ViewLoader.drawableToBitmap(drawable);
-								if (j.getDisplayTransform()!=null)
-									bitmap = j.getDisplayTransform().transformBitmap(bitmap);
+								if (target.getDisplayTransform()!=null)
+									bitmap = target.getDisplayTransform().transformBitmap(bitmap);
 
 								Drawable cacheableBmp;
 								if (drawable instanceof BitmapDrawable && ((BitmapDrawable) drawable).getBitmap()==bitmap)
 									cacheableBmp = drawable;
 								else
 									cacheableBmp = new BitmapDrawable(mCache.getContext().getResources(), bitmap);
-								j.drawBitmap(cacheableBmp, mURL, mCookie, mCache.getBitmapCache(), false);
+								k.drawBitmap(cacheableBmp, mURL, mCookie, mCache.getBitmapCache(), false);
 							} else
-								j.drawErrorPicture(mURL, mCache.getBitmapCache());
+								k.drawErrorPicture(mURL, mCache.getBitmapCache());
 						}
 						mTargets.clear();
 					}
@@ -275,9 +291,9 @@ public class BitmapDownloader implements Runnable {
 	 * @param lifeSpan
 	 * @return
 	 */
-	boolean addTarget(PictureLoaderHandler loadHandler, CacheKey key, long itemDate, LifeSpan lifeSpan)
+	boolean addTarget(IPictureLoaderRender loadHandler, IPictureLoaderTransforms transforms, IPictureLoadConcurrency concuHandler, CacheKey key, long itemDate, LifeSpan lifeSpan)
 	{
-		DownloadTarget newTarget = new DownloadTarget(loadHandler, key);
+		DownloadTarget newTarget = new DownloadTarget(loadHandler, transforms, key);
 		//LogManager.getLogger().i(PictureCache.TAG, "add recipient view "+view+" for " + mURL);
 		if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" addTarget "+loadHandler+" key:"+key);
 		synchronized (mTargets) {
@@ -293,7 +309,7 @@ public class BitmapDownloader implements Runnable {
 			}
 			mTargets.add(newTarget);
 
-			mCanDownload |= loadHandler.isDownloadAllowed();
+			mCanDownload |= concuHandler.isDownloadAllowed();
 
 			if (mItemDate < itemDate)
 				mItemDate = itemDate;
@@ -306,7 +322,7 @@ public class BitmapDownloader implements Runnable {
 		return true;
 	}
 
-	boolean removeTarget(PictureLoaderHandler target) {
+	boolean removeTarget(IPictureLoaderRender target) {
 		synchronized (mTargets) {
 
 			boolean deleted = false;
@@ -443,14 +459,14 @@ public class BitmapDownloader implements Runnable {
 		}
 	}
 
-	public static String keyToBitmapCacheKey(CacheKey key, String url, PictureLoaderHandler loader) {
+	public static String keyToBitmapCacheKey(CacheKey key, String url, IPictureLoaderTransforms transforms) {
 		final StringBuilder bitmapKey = new StringBuilder(key.toString());
 		bitmapKey.append(url);
-		if (loader != null) {
-			if (loader.getStorageTransform() != null)
-				bitmapKey.append(loader.getStorageTransform().getVariantPostfix());
-			if (loader.getDisplayTransform() != null)
-				bitmapKey.append(loader.getDisplayTransform().getVariant());
+		if (transforms != null) {
+			if (transforms.getStorageTransform() != null)
+				bitmapKey.append(transforms.getStorageTransform().getVariantPostfix());
+			if (transforms.getDisplayTransform() != null)
+				bitmapKey.append(transforms.getDisplayTransform().getVariant());
 		}
 		return bitmapKey.toString();
 	}
