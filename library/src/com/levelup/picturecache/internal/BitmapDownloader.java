@@ -238,17 +238,20 @@ public class BitmapDownloader implements Runnable {
 		} catch (Throwable e) {
 			LogManager.getLogger().e(PictureCache.LOG_TAG, "exception on "+mURL, e);
 		} finally {
+			synchronized (mTargets) {
+				if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" finished loading targets:"+mTargets+" bitmaps:"+targetBitmaps);
+
+				mAborting = true; // after this point new targets are not OK for this job
+			}
+
 			UIHandler.instance.runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-					// tell the monitor we are done
-					//LogManager.getLogger().i(PictureCache.TAG, "finished download thread for " + mURL + " bmp:"+bmp + " rbmp:"+rbmp);
-					//LogManager.getLogger().i(PictureCache.TAG, "send display bitmap "+mURL+" aborted:"+abortRequested.get()+" size:"+reqTargets.size());
-					//LogManager.getLogger().i(PictureCache.TAG, "ViewUpdate loop "+mURL+" aborted:"+abortRequested.get()+" size:"+reqTargets.size()+" bmp:"+bmp+" rbmp:"+rbmp);
+						// tell the monitor we are done
+						//LogManager.getLogger().i(PictureCache.TAG, "finished download thread for " + mURL + " bmp:"+bmp + " rbmp:"+rbmp);
+						//LogManager.getLogger().i(PictureCache.TAG, "send display bitmap "+mURL+" aborted:"+abortRequested.get()+" size:"+reqTargets.size());
+						//LogManager.getLogger().i(PictureCache.TAG, "ViewUpdate loop "+mURL+" aborted:"+abortRequested.get()+" size:"+reqTargets.size()+" bmp:"+bmp+" rbmp:"+rbmp);
 					synchronized (mTargets) {
-						if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" finished loading targets:"+mTargets+" bitmaps:"+targetBitmaps);
-
-						mAborting = true; // after this point new targets are not OK for this job
 						for (DownloadTarget target : mTargets) {
 							//LogManager.getLogger().i(PictureCache.TAG, false, "ViewUpdate "+mURL);
 							IPictureLoaderRender k = target.loadHandler;
