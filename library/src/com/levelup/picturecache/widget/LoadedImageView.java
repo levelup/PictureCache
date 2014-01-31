@@ -60,38 +60,73 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 	}
 	
 	// IPictureLoaderRender
-	@Override
-	public void drawDefaultPicture(String url, BitmapLruCache drawableCache) {
+    private boolean isInLayout;
+	private IPictureLoaderRender currentRender;
+
+    @Override
+	public void drawDefaultPicture(final String url, final BitmapLruCache drawableCache) {
 		UIHandler.assertUIThread();
 		if (!url.equals(currentURL)) {
 			// we don't care about this anymore
 			return;
 		}
+		
+		if (isInLayout) {
+			post(new Runnable() {
+				@Override
+				public void run() {
+					drawDefaultPicture(url, drawableCache);
+				}
+			});
+			return;
+		}
+		
 		currentRender.drawDefaultPicture(url, drawableCache);
 	}
 
 	@Override
-	public void drawErrorPicture(String url, BitmapLruCache drawableCache) {
+	public void drawErrorPicture(final String url, final BitmapLruCache drawableCache) {
 		UIHandler.assertUIThread();
 		if (!url.equals(currentURL)) {
 			// we don't care about this anymore
 			return;
 		}
+		
+		if (isInLayout) {
+			post(new Runnable() {
+				@Override
+				public void run() {
+					drawErrorPicture(url, drawableCache);
+				}
+			});
+			return;
+		}
+		
 		currentRender.drawErrorPicture(url, drawableCache);
 	}
 
 	@Override
-	public void drawBitmap(Drawable drawable, String url, Object cookie, BitmapLruCache drawableCache, boolean immediate) {
+	public void drawBitmap(final Drawable drawable, final String url, final Object cookie, final BitmapLruCache drawableCache, final boolean immediate) {
 		UIHandler.assertUIThread();
 		if (!url.equals(currentURL)) {
 			// we don't care about this anymore
 			return;
 		}
+		
+		if (isInLayout) {
+			post(new Runnable() {
+				@Override
+				public void run() {
+					drawBitmap(drawable, url, cookie, drawableCache, immediate);
+				}
+			});
+			return;
+		}
+		
 		currentRender.drawBitmap(drawable, url, cookie, drawableCache, immediate);
 	}
 
 
-	private IPictureLoaderRender currentRender;
 	private PictureJob currentJob;
 
 	public LoadedImageView(Context context) {
@@ -160,5 +195,12 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 	public void resetImageURL(PictureCache cache) {
 		UIHandler.assertUIThread();
 		cache.cancelPictureLoader(currentRender, currentURL);
+	}
+	
+	@Override
+	protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+		isInLayout = true;
+		super.onLayout(changed, left, top, right, bottom);
+		isInLayout = false;
 	}
 }
