@@ -208,6 +208,12 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 	}
 
 	@Override
+	public void requestLayout() {
+		if (isInLayout) throw new IllegalStateException();
+		super.requestLayout();
+	}
+
+	@Override
 	public void setImageResource(final int resId) {
 		UIHandler.assertUIThread();
 		if (isInLayout) {
