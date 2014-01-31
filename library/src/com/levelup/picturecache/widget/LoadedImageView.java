@@ -175,11 +175,11 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 		});
 
 		if (immediate) {
-			UIHandler.instance.removeCallbacks(batchDisplay);
+			removeCallbacks(batchDisplay);
 			batchDisplay.run();
 			drawsEnqueued = false;
 		} else if (!drawsEnqueued) {
-			UIHandler.instance.postDelayed(batchDisplay, 100);
+			postDelayed(batchDisplay, 100);
 			drawsEnqueued = true;
 		}
 	}
@@ -281,7 +281,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 	protected void onDetachedFromWindow() {
 		super.onDetachedFromWindow();
 		resetImageURL();
-		setImageDrawable(null);
+		super.setImageDrawable(null);
 		currentDrawType = null;
 	}
 
