@@ -14,13 +14,16 @@ import com.levelup.picturecache.IPictureLoadConcurrency;
 import com.levelup.picturecache.IPictureLoaderRender;
 import com.levelup.picturecache.IPictureLoaderTransforms;
 import com.levelup.picturecache.LifeSpan;
+import com.levelup.picturecache.LogManager;
 import com.levelup.picturecache.NetworkLoader;
 import com.levelup.picturecache.PictureCache;
 import com.levelup.picturecache.PictureJob;
 import com.levelup.picturecache.UIHandler;
+import com.levelup.picturecache.loaders.ViewLoader;
+import com.levelup.picturecache.loaders.internal.DrawType;
 
 public class LoadedImageView extends CacheableImageView implements IPictureLoadConcurrency, IPictureLoaderRender {
-/*
+	/*
 	public class BaseImageViewDrawHandler implements IPictureLoaderRender {
 		@Override
 		public void drawBitmap(Drawable drawable, String url, Object cookie, BitmapLruCache drawableCache, boolean immediate) {
@@ -37,7 +40,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 			// do nothing by default
 		}
 	}
-*/
+	 */
 	// IPictureLoadConcurrency
 	private String currentURL;
 
@@ -53,24 +56,25 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 		currentURL = url;
 		return oldURL;
 	}
-	
+
 	@Override
 	public boolean canDirectLoad(File file) {
 		return false;
 	}
-	
-	// IPictureLoaderRender
-    private boolean isInLayout;
-	private IPictureLoaderRender currentRender;
 
-    @Override
+	// IPictureLoaderRender
+	private boolean isInLayout;
+	private IPictureLoaderRender currentRender;
+	private DrawType currentDrawType; // TODO should be reset if the default/error displaying is different between the calls
+
+	@Override
 	public void drawDefaultPicture(final String url, final BitmapLruCache drawableCache) {
 		UIHandler.assertUIThread();
 		if (!url.equals(currentURL)) {
 			// we don't care about this anymore
 			return;
 		}
-		
+
 		if (isInLayout) {
 			post(new Runnable() {
 				@Override
@@ -80,8 +84,13 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 			});
 			return;
 		}
-		
-		currentRender.drawDefaultPicture(url, drawableCache);
+
+		if (currentDrawType!=DrawType.DEFAULT) {
+			currentRender.drawDefaultPicture(url, drawableCache);
+			currentDrawType = DrawType.DEFAULT;
+		} else {
+			if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" saved default display");
+		}
 	}
 
 	@Override
@@ -91,7 +100,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 			// we don't care about this anymore
 			return;
 		}
-		
+
 		if (isInLayout) {
 			post(new Runnable() {
 				@Override
@@ -101,8 +110,13 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 			});
 			return;
 		}
-		
-		currentRender.drawErrorPicture(url, drawableCache);
+
+		if (currentDrawType!=DrawType.ERROR) {
+			currentRender.drawErrorPicture(url, drawableCache);
+			currentDrawType = DrawType.ERROR;
+		} else {
+			if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" saved error display");
+		}
 	}
 
 	@Override
@@ -112,7 +126,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 			// we don't care about this anymore
 			return;
 		}
-		
+
 		if (isInLayout) {
 			post(new Runnable() {
 				@Override
@@ -122,8 +136,9 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 			});
 			return;
 		}
-		
+
 		currentRender.drawBitmap(drawable, url, cookie, drawableCache, immediate);
+		currentDrawType = DrawType.LOADED_DRAWABLE;
 	}
 
 
@@ -140,7 +155,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 	public LoadedImageView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 	}
-/*
+	/*
 	public void loadImageURL(PictureCache cache, String url) {
 		loadImageURL(cache, url, null, null, 0, 0, null, null, null);
 	}
@@ -158,7 +173,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 			}
 		}, null);
 	}
-*/
+	 */
 	public void loadImageURL(PictureCache cache, String url, String UUID, NetworkLoader networkLoader, IPictureLoaderRender drawHandler, LifeSpan cacheLifespan, int maxWidth, int maxHeight, IPictureLoaderTransforms transforms, Object cookie) {
 		UIHandler.assertUIThread();
 
@@ -199,7 +214,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 		UIHandler.assertUIThread();
 		cache.cancelPictureLoader(currentRender, currentURL);
 	}
-	
+
 	@Override
 	protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
 		isInLayout = true;
@@ -217,15 +232,15 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 	public void setImageResource(final int resId) {
 		UIHandler.assertUIThread();
 		if (isInLayout) {
-            post(new Runnable() {
-                @Override
-                public void run() {
-                    LoadedImageView.super.setImageResource(resId);
-                }
-            });
-            return;
+			post(new Runnable() {
+				@Override
+				public void run() {
+					LoadedImageView.super.setImageResource(resId);
+				}
+			});
+			return;
 		}
-		
+
 		super.setImageResource(resId);
 	}
 
@@ -233,15 +248,15 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 	public void setImageDrawable(final Drawable drawable) {
 		UIHandler.assertUIThread();
 		if (isInLayout) {
-            post(new Runnable() {
-                @Override
-                public void run() {
-                	LoadedImageView.super.setImageDrawable(drawable);
-                }
-            });
-            return;
+			post(new Runnable() {
+				@Override
+				public void run() {
+					LoadedImageView.super.setImageDrawable(drawable);
+				}
+			});
+			return;
 		}
-		
+
 		super.setImageDrawable(drawable);
 	}
 
@@ -249,15 +264,15 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 	public void setImageBitmap(final Bitmap bm) {
 		UIHandler.assertUIThread();
 		if (isInLayout) {
-            post(new Runnable() {
-                @Override
-                public void run() {
-                	LoadedImageView.super.setImageBitmap(bm);
-                }
-            });
-            return;
+			post(new Runnable() {
+				@Override
+				public void run() {
+					LoadedImageView.super.setImageBitmap(bm);
+				}
+			});
+			return;
 		}
-		
+
 		super.setImageBitmap(bm);
 	}
 }
