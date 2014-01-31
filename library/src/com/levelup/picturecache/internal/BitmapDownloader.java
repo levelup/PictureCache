@@ -273,11 +273,12 @@ public class BitmapDownloader implements Runnable {
 						}
 						mTargets.clear();
 					}
-
-					if (mMonitor!=null)
-						mMonitor.onJobFinishedWithNewBitmaps(BitmapDownloader.this, targetNewBitmaps);
 				}
 			});
+
+			if (mMonitor!=null)
+				mMonitor.onJobFinishedWithNewBitmaps(this, targetNewBitmaps);
+
 			if (downloadToFile!=null)
 				downloadToFile.delete();
 		}

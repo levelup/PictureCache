@@ -786,6 +786,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 					LogManager.logger.i(LOG_TAG, "tried to save a null bitmap "+variant.key+" from "+url+" using "+drawable);
 					continue;
 				}
+				UIHandler.assertNotUIThread();
 				FileOutputStream fos = new FileOutputStream(variant.path, false);
 				bmp.compress(variant.key.getCompression(), variant.key.getCompRatio(), fos);
 				fos.close();

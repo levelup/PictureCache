@@ -205,6 +205,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 
 	@Override
 	public void setImageResource(final int resId) {
+		UIHandler.assertUIThread();
 		if (isInLayout) {
             post(new Runnable() {
                 @Override
@@ -220,6 +221,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 
 	@Override
 	public void setImageDrawable(final Drawable drawable) {
+		UIHandler.assertUIThread();
 		if (isInLayout) {
             post(new Runnable() {
                 @Override
@@ -235,6 +237,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 
 	@Override
 	public void setImageBitmap(final Bitmap bm) {
+		UIHandler.assertUIThread();
 		if (isInLayout) {
             post(new Runnable() {
                 @Override
