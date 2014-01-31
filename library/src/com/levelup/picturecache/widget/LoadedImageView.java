@@ -11,6 +11,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
+import android.widget.ImageView;
 
 import com.levelup.picturecache.IPictureLoadConcurrency;
 import com.levelup.picturecache.IPictureLoaderRender;
@@ -263,6 +264,8 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 			currentCache.cancelPictureLoader(currentRender, currentURL);
 			currentCache = null;
 		}
+		if (currentDrawType!=DrawType.LOADED_DRAWABLE)
+			currentURL = null;
 	}
 
 	@Override
@@ -286,8 +289,42 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 		currentDrawType = null;
 	}
 
+	/**
+	 * Load a resource as an image in the View, similar to {@link ImageView#setImageResource(int) setImageResource(int)} but canceling the previous network load if there was any
+	 * @param resId the resource identifier of the drawable
+	 */
+	public void loadImageResource(int resId) {
+		currentDrawType = null;
+		resetImageURL();
+		super.setImageResource(resId);
+	}
+
+	/**
+	 * Load a Drawable as an image in the View, similar to {@link ImageView#setImageDrawable(Drawable) setImageDrawable(Drawable)} but canceling the previous network load if there was any
+	 * @param drawable The drawable to set
+	 */
+	public void loadImageDrawable(Drawable drawable) {
+		currentDrawType = null;
+		resetImageURL();
+		super.setImageDrawable(drawable);
+	}
+
+	/**
+	 * Load a Bitmap as an image in the View, similar to {@link ImageView#setImageBitmap(Bitmap) setImageBitmap(Bitmap)} but canceling the previous network load if there was any
+	 * @param bm The bitmap to set
+	 */
+	public void loadImageBitmap(Bitmap bm) {
+		currentDrawType = null;
+		resetImageURL();
+		super.setImageBitmap(bm);
+	}
+
+	/**
+	 * @deprecated use {@link #loadImageResource(int)}
+	 */
+	@Deprecated
 	@Override
-	public void setImageResource(final int resId) {
+	public final void setImageResource(final int resId) {
 		UIHandler.assertUIThread();
 		if (isInLayout) {
 			post(new Runnable() {
@@ -302,8 +339,12 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 		super.setImageResource(resId);
 	}
 
+	/**
+	 * @deprecated use {@link #loadImageDrawable(Drawable)}
+	 */
+	@Deprecated
 	@Override
-	public void setImageDrawable(final Drawable drawable) {
+	public final void setImageDrawable(final Drawable drawable) {
 		UIHandler.assertUIThread();
 		if (isInLayout) {
 			post(new Runnable() {
@@ -318,8 +359,12 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 		super.setImageDrawable(drawable);
 	}
 
+	/**
+	 * @deprecated use {@link #loadImageBitmap(Bitmap)}
+	 */
+	@Deprecated
 	@Override
-	public void setImageBitmap(final Bitmap bm) {
+	public final void setImageBitmap(final Bitmap bm) {
 		UIHandler.assertUIThread();
 		if (isInLayout) {
 			post(new Runnable() {
