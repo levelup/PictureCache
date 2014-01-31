@@ -227,7 +227,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 		.setUUID(UUID)
 		.setCookie(cookie)
 		.setLifeType(cacheLifespan)
-		.setFreshDate(urlFreshness)
+		//.setFreshDate(urlFreshness)
 		.setNetworkLoader(networkLoader);
 		if (0==maxHeight)
 			newJobBuilder.setDimension(maxWidth, true);
