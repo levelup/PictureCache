@@ -186,6 +186,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 
 
 	private PictureJob currentJob;
+	private PictureCache currentCache;
 
 	public LoadedImageView(Context context) {
 		super(context);
@@ -244,19 +245,23 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 		}
 
 		currentJob = newJob;
+		currentCache = cache;
 		currentRender = drawHandler;
 		try {
-			currentJob.startLoading(cache);
+			currentJob.startLoading(currentCache);
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
-	public void resetImageURL(PictureCache cache) {
+	public void resetImageURL() {
 		UIHandler.assertUIThread();
 		pendingDraws.remove(this);
-		cache.cancelPictureLoader(currentRender, currentURL);
+		if (null!=currentCache) {
+			currentCache.cancelPictureLoader(currentRender, currentURL);
+			currentCache = null;
+		}
 	}
 
 	@Override
@@ -270,6 +275,14 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 	public void requestLayout() {
 		if (isInLayout) throw new IllegalStateException();
 		super.requestLayout();
+	}
+
+	@Override
+	protected void onDetachedFromWindow() {
+		super.onDetachedFromWindow();
+		resetImageURL();
+		setImageDrawable(null);
+		currentDrawType = null;
 	}
 
 	@Override
