@@ -2,6 +2,8 @@ package com.levelup.picturecache.widget;
 
 import java.io.File;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.Map.Entry;
 
 import uk.co.senab.bitmapcache.BitmapLruCache;
 import uk.co.senab.bitmapcache.CacheableImageView;
@@ -85,12 +87,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 			return;
 		}
 
-		if (currentDrawType!=DrawType.DEFAULT) {
-			currentRender.drawDefaultPicture(url, drawableCache);
-			currentDrawType = DrawType.DEFAULT;
-		} else {
-			if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" saved default display");
-		}
+		drawInView(DrawType.DEFAULT, url, drawableCache, null, null, true, currentRender);
 	}
 
 	@Override
@@ -111,12 +108,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 			return;
 		}
 
-		if (currentDrawType!=DrawType.ERROR) {
-			currentRender.drawErrorPicture(url, drawableCache);
-			currentDrawType = DrawType.ERROR;
-		} else {
-			if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" saved error display");
-		}
+		drawInView(DrawType.ERROR, url, drawableCache, null, null, true, currentRender);
 	}
 
 	@Override
@@ -137,8 +129,59 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 			return;
 		}
 
-		currentRender.drawBitmap(drawable, url, cookie, drawableCache, immediate);
-		currentDrawType = DrawType.LOADED_DRAWABLE;
+		drawInView(DrawType.LOADED_DRAWABLE, url, drawableCache, drawable, cookie, immediate, currentRender);
+	}
+
+	private static boolean drawsEnqueued;
+	private static final HashMap<LoadedImageView,Runnable> pendingDraws = new HashMap<LoadedImageView,Runnable>();
+	private static final Runnable batchDisplay = new Runnable() {
+		@Override
+		public void run() {
+			for (Entry<LoadedImageView, Runnable> displayJob : pendingDraws.entrySet()) {
+				displayJob.getValue().run();
+			}
+			pendingDraws.clear();
+			drawsEnqueued = false;
+		}
+	};
+
+	private void drawInView(final DrawType type, final String url, final BitmapLruCache drawableCache, final Drawable drawable, final Object cookie, boolean immediate, final IPictureLoaderRender renderer) {
+		pendingDraws.put(this, new Runnable() {
+			@Override
+			public void run() {
+				if (type==DrawType.DEFAULT) {
+					if (currentDrawType!=DrawType.DEFAULT) {
+						renderer.drawDefaultPicture(url, drawableCache);
+						currentDrawType = DrawType.DEFAULT;
+					} else {
+						if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" saved default display");
+					}
+				}
+
+				else if (type==DrawType.ERROR) {
+					if (currentDrawType!=DrawType.ERROR) {
+						renderer.drawErrorPicture(url, drawableCache);
+						currentDrawType = DrawType.ERROR;
+					} else {
+						if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" saved error display");
+					}
+				}
+
+				else if (type==DrawType.LOADED_DRAWABLE) {
+					renderer.drawBitmap(drawable, url, cookie, drawableCache, true);
+					currentDrawType = DrawType.LOADED_DRAWABLE;
+				}
+			}
+		});
+
+		if (immediate) {
+			UIHandler.instance.removeCallbacks(batchDisplay);
+			batchDisplay.run();
+			drawsEnqueued = false;
+		} else if (!drawsEnqueued) {
+			UIHandler.instance.postDelayed(batchDisplay, 100);
+			drawsEnqueued = true;
+		}
 	}
 
 
@@ -212,6 +255,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 
 	public void resetImageURL(PictureCache cache) {
 		UIHandler.assertUIThread();
+		pendingDraws.remove(this);
 		cache.cancelPictureLoader(currentRender, currentURL);
 	}
 
