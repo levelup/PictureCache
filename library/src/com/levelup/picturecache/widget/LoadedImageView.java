@@ -178,7 +178,8 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 		}
 
 		if (null!=currentRender) {
-			cache.cancelPictureLoader(this, currentURL);
+			// TODO should cancel using the currentJob 
+			cache.cancelPictureLoader(this, null);
 		}
 
 		currentJob = newJob;
