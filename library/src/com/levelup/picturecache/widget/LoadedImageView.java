@@ -19,7 +19,7 @@ import com.levelup.picturecache.UIHandler;
 import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
 import com.levelup.picturecache.transforms.storage.StorageTransform;
 
-public class LoadedImageView extends CacheableImageView {
+public class LoadedImageView extends CacheableImageView implements IPictureLoadConcurrency, IPictureLoaderRender {
 
 	public class BaseImageViewDrawHandler implements IPictureLoaderRender {
 		@Override
@@ -37,70 +37,62 @@ public class LoadedImageView extends CacheableImageView {
 			// do nothing by default
 		}
 	}
+
+	// IPictureLoadConcurrency
+	private String currentURL;
+
+	@Override
+	public boolean isDownloadAllowed() {
+		// TODO implement a cache/wide setting
+		return true;
+	}
+
+	@Override
+	public String setLoadingURL(String url, BitmapLruCache mBitmapCache) {
+		String oldURL = currentURL;
+		currentURL = url;
+		return oldURL;
+	}
 	
-	public class BaseConcurrencyHandler implements IPictureLoadConcurrency {
-		private String currentURL;
-		
-		@Override
-		public boolean isDownloadAllowed() {
-			// TODO Auto-generated method stub
-			return true;
+	@Override
+	public boolean canDirectLoad(File file) {
+		return false;
+	}
+	
+	// IPictureLoaderRender
+	@Override
+	public void drawDefaultPicture(String url, BitmapLruCache drawableCache) {
+		UIHandler.assertUIThread();
+		if (!url.equals(currentURL)) {
+			// we don't care about this anymore
+			return;
 		}
-
-		@Override
-		public String setLoadingURL(String url, BitmapLruCache mBitmapCache) {
-			String oldURL = currentURL;
-			currentURL = url;
-			return oldURL;
-		}
-
-		@Override
-		public boolean canDirectLoad(File file) {
-			return false;
-		}
+		currentRender.drawDefaultPicture(url, drawableCache);
 	}
 
-	private class LoadedImageViewDrawHandler implements IPictureLoaderRender {
-		private final IPictureLoaderRender drawHandler;
-
-		public LoadedImageViewDrawHandler(IPictureLoaderRender drawHandler) {
-			this.drawHandler = drawHandler;
+	@Override
+	public void drawErrorPicture(String url, BitmapLruCache drawableCache) {
+		UIHandler.assertUIThread();
+		if (!url.equals(currentURL)) {
+			// we don't care about this anymore
+			return;
 		}
-
-		@Override
-		public void drawDefaultPicture(String url, BitmapLruCache drawableCache) {
-			UIHandler.assertUIThread();
-			if (!url.equals(concuHandler.currentURL)) {
-				// we don't care about this anymore
-				return;
-			}
-			drawHandler.drawDefaultPicture(url, drawableCache);
-		}
-
-		@Override
-		public void drawErrorPicture(String url, BitmapLruCache drawableCache) {
-			UIHandler.assertUIThread();
-			if (!url.equals(concuHandler.currentURL)) {
-				// we don't care about this anymore
-				return;
-			}
-			drawHandler.drawErrorPicture(url, drawableCache);
-		}
-
-		@Override
-		public void drawBitmap(Drawable drawable, String url, Object cookie, BitmapLruCache drawableCache, boolean immediate) {
-			UIHandler.assertUIThread();
-			if (!url.equals(concuHandler.currentURL)) {
-				// we don't care about this anymore
-				return;
-			}
-			drawHandler.drawBitmap(drawable, url, cookie, drawableCache, immediate);
-		}
+		currentRender.drawErrorPicture(url, drawableCache);
 	}
 
-	private LoadedImageViewDrawHandler currentLoader;
+	@Override
+	public void drawBitmap(Drawable drawable, String url, Object cookie, BitmapLruCache drawableCache, boolean immediate) {
+		UIHandler.assertUIThread();
+		if (!url.equals(currentURL)) {
+			// we don't care about this anymore
+			return;
+		}
+		currentRender.drawBitmap(drawable, url, cookie, drawableCache, immediate);
+	}
+
+
+	private IPictureLoaderRender currentRender;
 	private PictureJob currentJob;
-	private final BaseConcurrencyHandler concuHandler = new BaseConcurrencyHandler();
 
 	public LoadedImageView(Context context) {
 		super(context);
@@ -124,7 +116,7 @@ public class LoadedImageView extends CacheableImageView {
 			public StorageTransform getStorageTransform() {
 				return bitmapStorageTransform;
 			}
-			
+
 			@Override
 			public BitmapTransform getDisplayTransform() {
 				return bitmapTransform;
@@ -135,9 +127,7 @@ public class LoadedImageView extends CacheableImageView {
 	public void loadImageURL(PictureCache cache, String url, String UUID, IPictureLoaderRender drawHandler, LifeSpan cacheLifespan, int maxWidth, int maxHeight, IPictureLoaderTransforms transforms, Object cookie) {
 		UIHandler.assertUIThread();
 
-		LoadedImageViewDrawHandler newLoader = new LoadedImageViewDrawHandler(drawHandler);
-
-		PictureJob.Builder newJobBuilder = new PictureJob.Builder(newLoader, transforms, concuHandler);
+		PictureJob.Builder newJobBuilder = new PictureJob.Builder(this, transforms, this);
 		newJobBuilder.setURL(url)
 		.setUUID(UUID)
 		.setCookie(cookie)
@@ -148,17 +138,17 @@ public class LoadedImageView extends CacheableImageView {
 			newJobBuilder.setDimension(maxHeight, false);
 
 		PictureJob newJob = newJobBuilder.build();
-		if (null!=currentJob && currentJob.equals(newJob) && null!=currentLoader && currentLoader.equals(newLoader)) {
+		if (null!=currentJob && currentJob.equals(newJob) && null!=currentRender && currentRender.equals(drawHandler)) {
 			// nothing to do, we're already on it
 			return;
 		}
 
-		if (null!=currentLoader) {
-			cache.cancelPictureLoader(currentLoader, concuHandler.currentURL);
+		if (null!=currentRender) {
+			cache.cancelPictureLoader(this, currentURL);
 		}
 
 		currentJob = newJob;
-		currentLoader = newLoader;
+		currentRender = drawHandler;
 		try {
 			currentJob.startLoading(cache);
 		} catch (NoSuchAlgorithmException e) {
@@ -167,12 +157,8 @@ public class LoadedImageView extends CacheableImageView {
 		}
 	}
 
-	public BaseConcurrencyHandler getConcurrencyHandler() {
-		return concuHandler;
-	}
-	
 	public void resetImageURL(PictureCache cache) {
 		UIHandler.assertUIThread();
-		cache.cancelPictureLoader(currentLoader, concuHandler.currentURL);
+		cache.cancelPictureLoader(currentRender, currentURL);
 	}
 }
