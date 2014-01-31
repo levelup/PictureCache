@@ -9,18 +9,16 @@ import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 
-import com.levelup.picturecache.LifeSpan;
 import com.levelup.picturecache.IPictureLoadConcurrency;
 import com.levelup.picturecache.IPictureLoaderRender;
 import com.levelup.picturecache.IPictureLoaderTransforms;
+import com.levelup.picturecache.LifeSpan;
 import com.levelup.picturecache.PictureCache;
 import com.levelup.picturecache.PictureJob;
 import com.levelup.picturecache.UIHandler;
-import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
-import com.levelup.picturecache.transforms.storage.StorageTransform;
 
 public class LoadedImageView extends CacheableImageView implements IPictureLoadConcurrency, IPictureLoaderRender {
-
+/*
 	public class BaseImageViewDrawHandler implements IPictureLoaderRender {
 		@Override
 		public void drawBitmap(Drawable drawable, String url, Object cookie, BitmapLruCache drawableCache, boolean immediate) {
@@ -37,7 +35,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 			// do nothing by default
 		}
 	}
-
+*/
 	// IPictureLoadConcurrency
 	private String currentURL;
 
@@ -140,11 +138,11 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 	public LoadedImageView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 	}
-
+/*
 	public void loadImageURL(PictureCache cache, String url) {
 		loadImageURL(cache, url, null, null, 0, 0, null, null, null);
 	}
-
+/*
 	public void loadImageURL(PictureCache cache, String url, String UUID, LifeSpan cacheLifespan, int maxWidth, int maxHeight, final StorageTransform bitmapStorageTransform, final BitmapTransform bitmapTransform, Object cookie) {
 		loadImageURL(cache, url, UUID, new BaseImageViewDrawHandler(), null, maxWidth, maxHeight, new IPictureLoaderTransforms() {
 			@Override
@@ -158,7 +156,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 			}
 		}, null);
 	}
-
+*/
 	public void loadImageURL(PictureCache cache, String url, String UUID, IPictureLoaderRender drawHandler, LifeSpan cacheLifespan, int maxWidth, int maxHeight, IPictureLoaderTransforms transforms, Object cookie) {
 		UIHandler.assertUIThread();
 
