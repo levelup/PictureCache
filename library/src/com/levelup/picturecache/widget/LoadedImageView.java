@@ -14,6 +14,7 @@ import com.levelup.picturecache.IPictureLoadConcurrency;
 import com.levelup.picturecache.IPictureLoaderRender;
 import com.levelup.picturecache.IPictureLoaderTransforms;
 import com.levelup.picturecache.LifeSpan;
+import com.levelup.picturecache.NetworkLoader;
 import com.levelup.picturecache.PictureCache;
 import com.levelup.picturecache.PictureJob;
 import com.levelup.picturecache.UIHandler;
@@ -158,14 +159,15 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 		}, null);
 	}
 */
-	public void loadImageURL(PictureCache cache, String url, String UUID, IPictureLoaderRender drawHandler, LifeSpan cacheLifespan, int maxWidth, int maxHeight, IPictureLoaderTransforms transforms, Object cookie) {
+	public void loadImageURL(PictureCache cache, String url, String UUID, NetworkLoader networkLoader, IPictureLoaderRender drawHandler, LifeSpan cacheLifespan, int maxWidth, int maxHeight, IPictureLoaderTransforms transforms, Object cookie) {
 		UIHandler.assertUIThread();
 
 		PictureJob.Builder newJobBuilder = new PictureJob.Builder(this, transforms, this);
 		newJobBuilder.setURL(url)
 		.setUUID(UUID)
 		.setCookie(cookie)
-		.setLifeType(cacheLifespan);
+		.setLifeType(cacheLifespan)
+		.setNetworkLoader(networkLoader);
 		if (0==maxHeight)
 			newJobBuilder.setDimension(maxWidth, true);
 		else
