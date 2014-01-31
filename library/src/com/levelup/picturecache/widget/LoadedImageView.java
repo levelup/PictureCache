@@ -6,6 +6,7 @@ import java.security.NoSuchAlgorithmException;
 import uk.co.senab.bitmapcache.BitmapLruCache;
 import uk.co.senab.bitmapcache.CacheableImageView;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 
@@ -200,5 +201,50 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 		isInLayout = true;
 		super.onLayout(changed, left, top, right, bottom);
 		isInLayout = false;
+	}
+
+	@Override
+	public void setImageResource(final int resId) {
+		if (isInLayout) {
+            post(new Runnable() {
+                @Override
+                public void run() {
+                    LoadedImageView.super.setImageResource(resId);
+                }
+            });
+            return;
+		}
+		
+		super.setImageResource(resId);
+	}
+
+	@Override
+	public void setImageDrawable(final Drawable drawable) {
+		if (isInLayout) {
+            post(new Runnable() {
+                @Override
+                public void run() {
+                	LoadedImageView.super.setImageDrawable(drawable);
+                }
+            });
+            return;
+		}
+		
+		super.setImageDrawable(drawable);
+	}
+
+	@Override
+	public void setImageBitmap(final Bitmap bm) {
+		if (isInLayout) {
+            post(new Runnable() {
+                @Override
+                public void run() {
+                	LoadedImageView.super.setImageBitmap(bm);
+                }
+            });
+            return;
+		}
+		
+		super.setImageBitmap(bm);
 	}
 }
