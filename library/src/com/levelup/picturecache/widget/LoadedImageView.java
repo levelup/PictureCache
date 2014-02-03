@@ -66,7 +66,6 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 
 	// IPictureLoaderRender
 	private boolean isInLayout;
-	private IPictureLoaderRender currentRender;
 	private DrawType currentDrawType; // TODO should be reset if the default/error displaying is different between the calls
 
 	@Override
@@ -87,7 +86,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 			return;
 		}
 
-		drawInView(DrawType.DEFAULT, url, drawableCache, null, null, true, currentRender);
+		drawInView(DrawType.DEFAULT, url, drawableCache, null, null, true, currentJob.mDisplayHandler);
 	}
 
 	@Override
@@ -108,7 +107,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 			return;
 		}
 
-		drawInView(DrawType.ERROR, url, drawableCache, null, null, true, currentRender);
+		drawInView(DrawType.ERROR, url, drawableCache, null, null, true, currentJob.mDisplayHandler);
 	}
 
 	@Override
@@ -129,7 +128,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 			return;
 		}
 
-		drawInView(DrawType.LOADED_DRAWABLE, url, drawableCache, drawable, cookie, immediate, currentRender);
+		drawInView(DrawType.LOADED_DRAWABLE, url, drawableCache, drawable, cookie, immediate, currentJob.mDisplayHandler);
 	}
 
 	private static boolean drawsEnqueued;
@@ -227,7 +226,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 			throw new IllegalArgumentException("We need a drawHandler to draw");
 		}
 
-		PictureJob.Builder newJobBuilder = new PictureJob.Builder(this, transforms, this);
+		PictureJob.Builder newJobBuilder = new PictureJob.Builder(drawHandler, transforms, this);
 		newJobBuilder.setURL(url)
 		.setUUID(UUID)
 		.setDrawCookie(drawCookie)
@@ -240,34 +239,35 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 			newJobBuilder.setDimension(maxHeight, false);
 
 		PictureJob newJob = newJobBuilder.build();
-		if (null!=currentJob && currentJob.equals(newJob) && null!=currentRender && currentRender.equals(drawHandler)) {
+		if (null!=currentJob && currentJob.equals(newJob)) {
 			// nothing to do, we're already on it
 			return;
 		}
 
-		if (null!=currentRender) {
+		if (null!=currentJob) {
 			// TODO should cancel using the currentJob 
-			cache.cancelPictureLoader(this, currentURL);
+			cache.cancelPictureLoader(currentJob.mDisplayHandler, currentURL);
 			currentURL = null; // TODO should be done for every cancel or better handled with setLoadingURL()
 		}
 
 		currentJob = newJob;
 		currentCache = cache;
-		currentRender = drawHandler;
 		currentJob.startLoading(currentCache);
 	}
 
 	public void resetImageURL(boolean resetToDefault) {
 		UIHandler.assertUIThread();
 		pendingDraws.remove(this);
-		if (resetToDefault) {
-			IPictureLoaderRender renderer = null!=currentRender ? currentRender : (null!=currentJob ? currentJob.mDisplayHandler : null);
-			if (null!=renderer)
-				drawInView(DrawType.DEFAULT, currentURL, null, null, null, true, renderer);
-		}
 		if (null!=currentCache) {
-			currentCache.cancelPictureLoader(currentRender, currentURL);
+			if (null!=currentJob) {
+				currentJob.stopLoading(currentCache, resetToDefault);
+			}
 			currentCache = null;
+		} else {
+			if (resetToDefault) {
+				if (null!=currentJob.mDisplayHandler)
+					drawInView(DrawType.DEFAULT, currentURL, null, null, null, true, currentJob.mDisplayHandler);
+			}
 		}
 		if (currentDrawType!=DrawType.LOADED_DRAWABLE)
 			currentURL = null;
