@@ -1,9 +1,9 @@
 package com.levelup.picturecache.loaders;
 
+import android.widget.ImageView;
+
 import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
 import com.levelup.picturecache.transforms.storage.StorageTransform;
-
-import android.widget.ImageView;
 
 /**
  * Abstract class used to display the loaded/default/error bitmap in an ImageView

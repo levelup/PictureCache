@@ -1,8 +1,8 @@
 package com.levelup.picturecache.transforms.storage;
 
-import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
-
 import android.graphics.Bitmap;
+
+import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
 
 /** a {@link StorageTransform} that consists of running a {@link BitmapTransform} */
 public class StorageTransformWithBitmapTransform<T extends BitmapTransform> implements StorageTransform {

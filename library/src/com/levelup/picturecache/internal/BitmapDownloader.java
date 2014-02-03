@@ -24,10 +24,10 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.util.FloatMath;
 
-import com.levelup.picturecache.LifeSpan;
 import com.levelup.picturecache.IPictureLoadConcurrency;
 import com.levelup.picturecache.IPictureLoaderRender;
 import com.levelup.picturecache.IPictureLoaderTransforms;
+import com.levelup.picturecache.LifeSpan;
 import com.levelup.picturecache.LogManager;
 import com.levelup.picturecache.NetworkLoader;
 import com.levelup.picturecache.PictureCache;

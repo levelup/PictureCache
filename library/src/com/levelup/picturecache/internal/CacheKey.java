@@ -6,10 +6,10 @@ package com.levelup.picturecache.internal;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import com.levelup.picturecache.StorageType;
-
 import android.graphics.Bitmap;
 import android.text.TextUtils;
+
+import com.levelup.picturecache.StorageType;
 
 
 public class CacheKey {
