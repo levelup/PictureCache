@@ -1,7 +1,6 @@
 package com.levelup.picturecache.widget;
 
 import java.io.File;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -249,12 +248,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 		currentJob = newJob;
 		currentCache = cache;
 		currentRender = drawHandler;
-		try {
-			currentJob.startLoading(currentCache);
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		currentJob.startLoading(currentCache);
 	}
 
 	public void resetImageURL() {

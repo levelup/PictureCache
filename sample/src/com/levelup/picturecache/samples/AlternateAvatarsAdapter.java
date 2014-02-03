@@ -1,11 +1,8 @@
 package com.levelup.picturecache.samples;
 
-import java.security.NoSuchAlgorithmException;
-
 import uk.co.senab.bitmapcache.BitmapLruCache;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -29,47 +26,43 @@ class AlternateAvatarsAdapter extends ArrayAdapter<SampleSource.Sample> {
 	private static class LoaderWithProgress extends ImageViewLoaderDefaultResource {
 
 		private final View progress;
-		
+
 		public LoaderWithProgress(ImageView view, View progress) {
 			super(view, R.drawable.picholder, null, null);
 			this.progress = progress;
 		}
-		
+
 		@Override
 		public void displayLoadedDrawable(Drawable pendingDrawable) {
 			super.displayLoadedDrawable(pendingDrawable);
 			progress.setVisibility(View.INVISIBLE);
 		}
-		
+
 		@Override
 		public void displayDefaultView(BitmapLruCache drawableCache) {
 			//no need to display the default view super.displayDefaultView();
 			getImageView().setImageDrawable(null);
 			progress.setVisibility(View.VISIBLE);
 		}
-		
+
 	}
-	
+
 	@Override
 	public final View getView(int position, View convertView, ViewGroup parent) {
 		View view = super.getView(position, convertView, parent);
-		
+
 		// set the avatar on the inflated view at the specified position in the list
-		try {
-			// basic loader into an image view with a default display as "picholder" while it's loading 
-			LoaderWithProgress loader = new LoaderWithProgress((ImageView) view.findViewById(R.id.avatar), view.findViewById(R.id.progressBar1));
+		// basic loader into an image view with a default display as "picholder" while it's loading 
+		LoaderWithProgress loader = new LoaderWithProgress((ImageView) view.findViewById(R.id.avatar), view.findViewById(R.id.progressBar1));
 
-			// prepare a basic picture job to load the avatar URL with a specific UUID
-			PictureJob avatarJob = new PictureJob.Builder(loader, loader, loader)
-			.setURL(getItem(position).picURL)
-			.setUUID("avatar_" + getItem(position).name)
-			.build();
+		// prepare a basic picture job to load the avatar URL with a specific UUID
+		PictureJob avatarJob = new PictureJob.Builder(loader, loader, loader)
+		.setURL(getItem(position).picURL)
+		.setUUID("avatar_" + getItem(position).name)
+		.build();
 
-			// run the job in the picture cache
-			avatarJob.startLoading(mCache);
-		} catch (NoSuchAlgorithmException e) {
-			Log.d("ListView","failed to use the avatar URL "+getItem(position).picURL);
-		}
+		// run the job in the picture cache
+		avatarJob.startLoading(mCache);
 
 		return view;
 	}

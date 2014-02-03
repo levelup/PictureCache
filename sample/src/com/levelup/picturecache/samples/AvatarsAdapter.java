@@ -1,9 +1,6 @@
 package com.levelup.picturecache.samples;
 
-import java.security.NoSuchAlgorithmException;
-
 import android.content.Context;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -27,23 +24,19 @@ class AvatarsAdapter extends ArrayAdapter<SampleSource.Sample> {
 	@Override
 	public final View getView(int position, View convertView, ViewGroup parent) {
 		View view = super.getView(position, convertView, parent);
-		
+
 		// set the avatar on the inflated view at the specified position in the list
-		try {
-			// basic loader into an image view with a default display as "picholder" while it's loading 
-			ImageViewLoaderDefaultResource loader = new ImageViewLoaderDefaultResource((ImageView) view.findViewById(R.id.avatar), R.drawable.picholder, null, null);
+		// basic loader into an image view with a default display as "picholder" while it's loading 
+		ImageViewLoaderDefaultResource loader = new ImageViewLoaderDefaultResource((ImageView) view.findViewById(R.id.avatar), R.drawable.picholder, null, null);
 
-			// prepare a basic picture job to load the avatar URL with a specific UUID
-			PictureJob avatarJob = new PictureJob.Builder(loader, loader, loader)
-			.setURL(getItem(position).picURL)
-			.setUUID("avatar_" + getItem(position).name)
-			.build();
+		// prepare a basic picture job to load the avatar URL with a specific UUID
+		PictureJob avatarJob = new PictureJob.Builder(loader, loader, loader)
+		.setURL(getItem(position).picURL)
+		.setUUID("avatar_" + getItem(position).name)
+		.build();
 
-			// run the job in the picture cache
-			avatarJob.startLoading(mCache);
-		} catch (NoSuchAlgorithmException e) {
-			Log.d("ListView","failed to use the avatar URL "+getItem(position).picURL);
-		}
+		// run the job in the picture cache
+		avatarJob.startLoading(mCache);
 
 		return view;
 	}

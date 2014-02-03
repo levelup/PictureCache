@@ -458,20 +458,20 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @param lifeSpan see {@link LifeSpan}
 	 * @param networkLoader TODO
 	 */
-	void getPicture(PictureJob job, CacheKey key) {
+	void getPicture(PictureJob job) {
 		mDataLock.lock();
 		try {
-			if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "getting picture "+job.mURL+" into "+job.mDisplayHandler+" key:"+key);
+			if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "getting picture "+job.mURL+" into "+job.mDisplayHandler+" key:"+job.key);
 			if (TextUtils.isEmpty(job.mURL)) {
 				// get the URL matching the UUID if we don't have a forced one
-				CacheItem v = getMap().get(key);
+				CacheItem v = getMap().get(job.key);
 				if (v!=null) {
 					job = job.cloneBuilder().setURL(v.URL).build();
 				}
 				//LogManager.logger.i("no URL specified for "+key+" using "+URL);
 			}
 			if (TextUtils.isEmpty(job.mURL)) {
-				LogManager.logger.i(LOG_TAG, "no URL specified/known for "+key+" using default");
+				LogManager.logger.i(LOG_TAG, "no URL specified/known for "+job.key+" using default");
 				removePictureLoader(job.mDisplayHandler, job.mConcurrencyHandler, null);
 				job.mDisplayHandler.drawDefaultPicture(null, mBitmapCache);
 				return;
@@ -496,9 +496,12 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			return;
 		}*/
 
-			key = getStoredKey(key, job.mURL, job.mFreshDate);
+			CacheKey newKey = getStoredKey(job.key, job.mURL, job.mFreshDate);
+			if (newKey!=job.key) {
+				job = job.cloneBuilder().forceCacheKey(newKey).build();
+			}
 
-			final String bitmapCacheKey = mBitmapCache!=null ? BitmapDownloader.keyToBitmapCacheKey(key, job.mURL, job.mTransformHandler) : null;
+			final String bitmapCacheKey = mBitmapCache!=null ? BitmapDownloader.keyToBitmapCacheKey(job.key, job.mURL, job.mTransformHandler) : null;
 			if (mBitmapCache!=null) {
 				BitmapDrawable cachedBmp = mBitmapCache.get(bitmapCacheKey);
 				if (cachedBmp!=null) {
@@ -513,15 +516,15 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 						job.mDisplayHandler.drawBitmap(cachedBmp, job.mURL, job.mCookie, mBitmapCache, true);
 						return;
 					}
-					LogManager.logger.w(LOG_TAG, "try to draw bitmap "+key+" already recycled in "+job.mDisplayHandler+" URL:"+job.mURL);
+					LogManager.logger.w(LOG_TAG, "try to draw bitmap "+job.key+" already recycled in "+job.mDisplayHandler+" URL:"+job.mURL);
 				}
 			}
 
-			File file = getCachedFile(key);
+			File file = getCachedFile(job.key);
 			if (file!=null) {
 				if (!file.exists() || !file.isFile()) {
-					LogManager.logger.w(LOG_TAG, "File "+file+" disappeared for "+key);
-					remove(key);
+					LogManager.logger.w(LOG_TAG, "File "+file+" disappeared for "+job.key);
+					remove(job.key);
 				}
 				else if (job.mConcurrencyHandler.canDirectLoad(file)) {
 					try {
@@ -566,8 +569,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			job.mDisplayHandler.drawDefaultPicture(job.mURL, mBitmapCache);
 
 			// we could not read from the cache, load the URL
-			if (key!=null)
-				mJobManager.addDownloadTarget(this, job, key);
+			if (job.key!=null)
+				mJobManager.addDownloadTarget(this, job, job.key);
 		} finally {
 			mDataLock.unlock();
 		}
@@ -594,11 +597,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		.setCookie(cookie)
 		.build();
 
-		try {
-			pictureJob.startLoading(this);
-		} catch (NoSuchAlgorithmException e) {
-			LogManager.logger.d(LOG_TAG, "can't load picture", e);
-		}
+		pictureJob.startLoading(this);
 	}
 
 	/**
@@ -622,11 +621,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		.setDimension(width, true)
 		.setCookie(cookie)
 		.build();
-		try {
-			pictureJob.startLoading(this);
-		} catch (NoSuchAlgorithmException e) {
-			LogManager.logger.d(LOG_TAG, "can't load picture", e);
-		}
+
+		pictureJob.startLoading(this);
 	}
 
 	/**

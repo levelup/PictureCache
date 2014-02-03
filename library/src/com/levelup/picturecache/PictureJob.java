@@ -20,9 +20,13 @@ public class PictureJob {
 	public final IPictureLoaderTransforms mTransformHandler;
 	public final IPictureLoadConcurrency mConcurrencyHandler;
 	public final NetworkLoader networkLoader;
+	public final CacheKey key;
 
 	public static class Builder {
 
+		protected final IPictureLoaderRender mDisplayHandler;
+		protected final IPictureLoaderTransforms mTransformHandler;
+		protected final IPictureLoadConcurrency mConcurrencyHandler;
 		private String mURL;
 		private String mUUID;
 		private Object mCookie;
@@ -31,10 +35,8 @@ public class PictureJob {
 		private int mDimension;
 		private boolean mWidthBased;
 		private StorageType mExtensionMode = StorageType.AUTO;
-		protected final IPictureLoaderRender mDisplayHandler;
-		protected final IPictureLoaderTransforms mTransformHandler;
-		protected final IPictureLoadConcurrency mConcurrencyHandler;
 		private NetworkLoader networkLoader;
+		private CacheKey key;
 
 		public Builder(IPictureLoaderRender draw, IPictureLoaderTransforms transforms, IPictureLoadConcurrency concurrencyHandler) {
 			this.mDisplayHandler = draw;
@@ -87,9 +89,19 @@ public class PictureJob {
 			this.networkLoader = networkLoader;
 			return this;
 		}
+		
+		Builder forceCacheKey(CacheKey key) {
+			this.key = key;
+			return this;
+		}
 
 		public PictureJob build() {
 			return new PictureJob(this);
+		}
+		
+		@Override
+		public String toString() {
+			return "{PictureJob.Builder "+mUUID+" / "+mURL+'}';
 		}
 	}
 
@@ -106,6 +118,11 @@ public class PictureJob {
 		this.mWidthBased = builder.mWidthBased;
 		this.mExtensionMode = builder.mExtensionMode;
 		this.networkLoader = builder.networkLoader;
+		if (null!=builder.key)
+			this.key = builder.key;
+		else
+			this.key = buildKey(builder);
+		if (null==this.key) throw new IllegalStateException("failed to create a CacheKey with "+builder);
 	}
 	
 	public Builder cloneBuilder() {
@@ -122,14 +139,18 @@ public class PictureJob {
 		return builder;
 	}
 
-	private CacheKey buildKey() throws NoSuchAlgorithmException {
-		if (!TextUtils.isEmpty(mUUID))
-			return CacheKey.newUUIDBasedKey(mUUID, mDimension, mWidthBased, mExtensionMode,
-					null!=mTransformHandler && mTransformHandler.getStorageTransform() != null ? mTransformHandler.getStorageTransform().getVariantPostfix() : null);
+	private static CacheKey buildKey(Builder builder) {
+		if (!TextUtils.isEmpty(builder.mUUID))
+			return CacheKey.newUUIDBasedKey(builder.mUUID, builder.mDimension, builder.mWidthBased, builder.mExtensionMode,
+					null!=builder.mTransformHandler && builder.mTransformHandler.getStorageTransform() != null ? builder.mTransformHandler.getStorageTransform().getVariantPostfix() : null);
 
-		if (!TextUtils.isEmpty(mURL))
-			return CacheKey.newUrlBasedKey(mURL, mDimension, mWidthBased, mExtensionMode,
-					null!=mTransformHandler && mTransformHandler.getStorageTransform() != null ? mTransformHandler.getStorageTransform().getVariantPostfix() : null);
+		if (!TextUtils.isEmpty(builder.mURL))
+			try {
+				return CacheKey.newUrlBasedKey(builder.mURL, builder.mDimension, builder.mWidthBased, builder.mExtensionMode,
+						null!=builder.mTransformHandler && builder.mTransformHandler.getStorageTransform() != null ? builder.mTransformHandler.getStorageTransform().getVariantPostfix() : null);
+			} catch (NoSuchAlgorithmException e) {
+				LogManager.getLogger().w(PictureCache.LOG_TAG, "Failed to create a CacheKey for "+builder, e);
+			}
 
 		return null;
 	}
@@ -138,15 +159,8 @@ public class PictureJob {
 	 * Retrieve picture into cache
 	 * 
 	 * @param cache
-	 * @throws NoSuchAlgorithmException if the UUID is {@code null} and the URL cannot be used
 	 */
-	public void startLoading(PictureCache cache) throws NoSuchAlgorithmException {
-		CacheKey key = buildKey();
-		if (key == null) {
-			LogManager.logger.w(PictureCache.LOG_TAG, "could not generate a CacheKey for " + mUUID + " / " + mURL);
-			return;
-		}
-
-		cache.getPicture(this, key);
+	public void startLoading(PictureCache cache) {
+		cache.getPicture(this);
 	}
 }
