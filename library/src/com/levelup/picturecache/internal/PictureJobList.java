@@ -242,10 +242,10 @@ public class PictureJobList implements Runnable {
 			UIHandler.instance.runOnUiThread(new Runnable() {
 				@Override
 				public void run() {
-						// tell the monitor we are done
-						//LogManager.getLogger().i(PictureCache.TAG, "finished download thread for " + mURL + " bmp:"+bmp + " rbmp:"+rbmp);
-						//LogManager.getLogger().i(PictureCache.TAG, "send display bitmap "+mURL+" aborted:"+abortRequested.get()+" size:"+reqTargets.size());
-						//LogManager.getLogger().i(PictureCache.TAG, "ViewUpdate loop "+mURL+" aborted:"+abortRequested.get()+" size:"+reqTargets.size()+" bmp:"+bmp+" rbmp:"+rbmp);
+					// tell the monitor we are done
+					//LogManager.getLogger().i(PictureCache.TAG, "finished download thread for " + mURL + " bmp:"+bmp + " rbmp:"+rbmp);
+					//LogManager.getLogger().i(PictureCache.TAG, "send display bitmap "+mURL+" aborted:"+abortRequested.get()+" size:"+reqTargets.size());
+					//LogManager.getLogger().i(PictureCache.TAG, "ViewUpdate loop "+mURL+" aborted:"+abortRequested.get()+" size:"+reqTargets.size()+" bmp:"+bmp+" rbmp:"+rbmp);
 					synchronized (mTargetJobs) {
 						for (DownloadTarget target : mTargetJobs) {
 							//LogManager.getLogger().i(PictureCache.TAG, false, "ViewUpdate "+mURL);
@@ -288,7 +288,7 @@ public class PictureJobList implements Runnable {
 	 */
 	boolean addJob(PictureJob job) {
 		if (BuildConfig.DEBUG && !job.url.equals(url)) throw new InvalidParameterException(this+" wrong job URL "+job);
-		
+
 		DownloadTarget newTarget = new DownloadTarget(job);
 		//LogManager.getLogger().i(PictureCache.TAG, "add recipient view "+view+" for " + mURL);
 		if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" addTarget "+job.mDisplayHandler+" key:"+job.key);
@@ -319,9 +319,9 @@ public class PictureJobList implements Runnable {
 	}
 
 	boolean removeJob(PictureJob job) {
-		synchronized (mTargetJobs) {
+		boolean deleted = false;
 
-			boolean deleted = false;
+		synchronized (mTargetJobs) {
 			if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" removeTarget "+job);
 			for (int i=0;i<mTargetJobs.size();++i) {
 				if (mTargetJobs.get(i).job.mDisplayHandler.equals(job.mDisplayHandler)) {
@@ -329,16 +329,16 @@ public class PictureJobList implements Runnable {
 					break;
 				}
 			}
-
-			if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" removeTarget "+job+" = "+deleted+" remains:"+mTargetJobs.size());
-			if (deleted) {
-				//LogManager.getLogger().v(" deleted job view:"+target+" for "+mURL);
-				//target.setLoadingURL(mCache, mURL);
-				job.mDisplayHandler.drawDefaultPicture(url, mCache.getBitmapCache());
-			}
-			//else LogManager.getLogger().i(PictureCache.TAG, " keep downloading URL:" + mURL + " remaining views:" + reqViews.size() + " like view:"+reqViews.get(0));
-			return deleted;
 		}
+
+		if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" removeTarget "+job+" = "+deleted+" remains:"+mTargetJobs.size());
+		/*if (deleted) {
+			//LogManager.getLogger().v(" deleted job view:"+target+" for "+mURL);
+			//target.setLoadingURL(mCache, mURL);
+			job.mDisplayHandler.drawDefaultPicture(url, mCache.getBitmapCache());
+		}*/
+		//else LogManager.getLogger().i(PictureCache.TAG, " keep downloading URL:" + mURL + " remaining views:" + reqViews.size() + " like view:"+reqViews.get(0));
+		return deleted;
 	}
 
 	private BitmapFactory.Options getOutputOptions(int srcWidth, int srcHeight, CacheKey key) {
