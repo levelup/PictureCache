@@ -62,7 +62,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	public abstract int getCacheMaxSize(LifeSpan lifeSpan);
 
 	/**
-	 * return a different uuid for when the original uuid just got a new URL. this way we can keep the old and new versions in the cache
+	 * Return a different uuid for when the original uuid just got a new URL. this way we can keep the old and new versions in the cache
 	 * @param uuid base UUID
 	 * @param URL old URL
 	 * @return different UUID to stored the old cached version, {@code null} if you don't want to deal with this
@@ -462,9 +462,10 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		mDataLock.lock();
 		try {
 			if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "getting picture "+job.mURL+" into "+job.mDisplayHandler+" key:"+job.key);
+			CacheItem v = getMap().get(job.key);
+
 			if (TextUtils.isEmpty(job.mURL)) {
 				// get the URL matching the UUID if we don't have a forced one
-				CacheItem v = getMap().get(job.key);
 				if (v!=null) {
 					job = job.cloneBuilder().setURL(v.URL).build();
 				}
@@ -496,10 +497,46 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			return;
 		}*/
 
-			CacheKey newKey = getStoredKey(job.key, job.mURL, job.mFreshDate);
-			if (newKey!=job.key) {
-				job = job.cloneBuilder().forceCacheKey(newKey).build();
+			//if (URL!=null && !URL.contains("/profile_images/"))
+			if (v != null) {
+				if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, job.key+" found cache item "+v+" URL:"+job.mURL);
+				try {
+					if (job.mURL != null && !job.mURL.equals(v.URL)) {
+						// the URL for the cached item changed
+						if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, job.key+" changed from "+v.URL+" to "+job.mURL+" remoteDate:"+v.remoteDate+" was "+job.mFreshDate);
+						if (v.remoteDate <= job.mFreshDate) { // '=' favor the newer url when dates are 0
+							// the item in the Cache is older than this request, the image changed for a newer one
+							// we need to mark the old one as short term with a UUID that has the picture ID inside
+							String deprecatedUUID = getOldPicUUID(job.key.UUID, v.URL);
+							CacheKey oldVersionKey;
+							if (!TextUtils.isEmpty(deprecatedUUID))
+								oldVersionKey = job.key.copyWithNewUuid(deprecatedUUID);
+							else
+								oldVersionKey = job.key.copyWithNewUrl(v.URL);
+							// move the current content to the deprecated key
+							moveCachedFiles(job.key, oldVersionKey, LifeSpan.SHORTTERM);
+							if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, job.key+" moved to "+oldVersionKey);
+						} else {
+							// use the old image from the cache with that URL
+							String dstUUID = getOldPicUUID(job.key.UUID, job.mURL);
+							final CacheKey newKey;
+							if (!TextUtils.isEmpty(dstUUID)) {
+								newKey = job.key.copyWithNewUuid(dstUUID);
+							} else {
+								newKey = job.key.copyWithNewUrl(job.mURL);
+							}
+							job = job.cloneBuilder().forceCacheKey(newKey).build();
+							if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, job.key+" will be used for that old version");
+						}
+					}
+				} catch (SecurityException e) {
+					LogManager.logger.e(LOG_TAG, "getPicture exception:" + e.getMessage(), e);
+				} catch (OutOfMemoryError e) {
+					LogManager.logger.w(LOG_TAG, "Could not decode image " + job.mURL, e);
+					ooHandler.onOutOfMemoryError(e);
+				}
 			}
+			//else LogManager.logger.i(key.toString()+" not found in "+mData.size()+" cache elements");
 
 			final String bitmapCacheKey = mBitmapCache!=null ? BitmapDownloader.keyToBitmapCacheKey(job.key, job.mURL, job.mTransformHandler) : null;
 			if (mBitmapCache!=null) {
@@ -569,8 +606,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			job.mDisplayHandler.drawDefaultPicture(job.mURL, mBitmapCache);
 
 			// we could not read from the cache, load the URL
-			if (job.key!=null)
-				mJobManager.addDownloadTarget(this, job, job.key);
+			mJobManager.addDownloadTarget(this, job, job.key);
 		} finally {
 			mDataLock.unlock();
 		}
@@ -843,64 +879,6 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				scheduleCustomOperation(new RemoveExpired(lifeSpan));
 			}
 		}
-	}
-
-	/**
-	 * Get the correct storage key for the given key, URL and itemDate.
-	 * It may differ from the source key if it's referring an older or newer version of the key/URL combo compared to the one already stored
-	 * @param key The source key we want to use in the database
-	 * @param URL The URL associated with the key in storage
-	 * @param itemDate The date corresponding to the key/URL combo (can be 0)
-	 * @return a key corresponding to the right item in the database to load/store
-	 */
-	private CacheKey getStoredKey(CacheKey key, String URL, long itemDate) {
-		if (key != null) {
-			mDataLock.lock();
-			try {
-				CacheItem v = getMap().get(key);
-
-				//if (URL!=null && !URL.contains("/profile_images/"))
-				if (v != null) {
-					if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, key+" found cache item "+v+" for key "+key+" URL:"+URL);
-					try {
-						if (URL != null && !URL.equals(v.URL)) {
-							// the URL for the cached item changed
-							if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, key+" changed from "+v.URL+" to "+URL+" remoteDate:"+v.remoteDate+" was "+itemDate);
-							if (v.remoteDate <= itemDate) { // '=' favor the newer url when dates are 0
-								// the item in the Cache is older than this request, the image changed for a newer one
-								// we need to mark the old one as short term with a UUID that has the picture ID inside
-								String deprecatedUUID = getOldPicUUID(key.UUID, v.URL);
-								CacheKey oldVersionKey;
-								if (!TextUtils.isEmpty(deprecatedUUID))
-									oldVersionKey = key.copyWithNewUuid(deprecatedUUID);
-								else
-									oldVersionKey = key.copyWithNewUrl(v.URL);
-								// move the current content to the deprecated key
-								moveCachedFiles(key, oldVersionKey, LifeSpan.SHORTTERM);
-								if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, key+" moved to "+oldVersionKey);
-							} else {
-								// use the old image from the cache with that URL
-								String dstUUID = getOldPicUUID(key.UUID, URL);
-								if (!TextUtils.isEmpty(dstUUID))
-									key = key.copyWithNewUuid(dstUUID);
-								else
-									key = key.copyWithNewUrl(URL);
-								if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, key+" will be used for that old version");
-							}
-						}
-					} catch (SecurityException e) {
-						LogManager.logger.e(LOG_TAG, "getPicture exception:" + e.getMessage(), e);
-					} catch (OutOfMemoryError e) {
-						LogManager.logger.w(LOG_TAG, "Could not decode image " + URL, e);
-						ooHandler.onOutOfMemoryError(e);
-					}
-				}
-				//else LogManager.logger.i(key.toString()+" not found in "+mData.size()+" cache elements");
-			} finally {
-				mDataLock.unlock();
-			}
-		}
-		return key;
 	}
 
 	public File getCachedFile(CacheKey key) {
