@@ -73,7 +73,7 @@ public class CacheKey {
 		if (!(o instanceof CacheKey)) return false;
 		CacheKey k = (CacheKey) o;
 		//TouiteurLog.v(this.toString() + " == " + k.toString() + ":" + (k.Height==Height && k.UUID.equals(UUID)));
-		return k.dimension==dimension && k.widthBased==widthBased && UUID.equals(k.UUID) && (variantString==null && k.variantString==null || variantString!=null && variantString.equals(k.variantString));
+		return k.dimension==dimension && k.widthBased==widthBased && UUID.equals(k.UUID) && TextUtils.equals(variantString, k.variantString);
 	}
 
 	/* (non-Javadoc)
