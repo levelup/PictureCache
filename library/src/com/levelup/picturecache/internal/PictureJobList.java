@@ -26,7 +26,6 @@ import android.net.Uri;
 import android.util.FloatMath;
 
 import com.levelup.picturecache.BuildConfig;
-import com.levelup.picturecache.IPictureLoaderRender;
 import com.levelup.picturecache.IPictureLoaderTransforms;
 import com.levelup.picturecache.LifeSpan;
 import com.levelup.picturecache.LogManager;
@@ -78,10 +77,10 @@ public class PictureJobList implements Runnable {
 		}
 	}
 
-	final String mURL;
+	final String url;
 	final NetworkLoader networkLoader;
 	final PictureCache mCache;
-	final CopyOnWriteArrayList<DownloadTarget> mTargets = new CopyOnWriteArrayList<DownloadTarget>();
+	final CopyOnWriteArrayList<DownloadTarget> mTargetJobs = new CopyOnWriteArrayList<DownloadTarget>();
 	final DownloadManager mMonitor;
 
 	// locked by mTargets
@@ -96,7 +95,7 @@ public class PictureJobList implements Runnable {
 
 	PictureJobList(PictureJob job, PictureCache cache, DownloadManager monitor) {
 		if (job.url==null) throw new NullPointerException("How are we supposed to download a null URL?");
-		this.mURL = job.url;
+		this.url = job.url;
 		this.networkLoader = job.networkLoader;
 		this.mCache = cache;
 		this.mMonitor = monitor;
@@ -111,7 +110,7 @@ public class PictureJobList implements Runnable {
 
 	@Override
 	public String toString() {
-		return "BitmapLoader:"+mURL+"@"+super.hashCode();
+		return "BitmapLoader:"+url+"@"+super.hashCode();
 	}
 
 	public void run() {
@@ -124,8 +123,8 @@ public class PictureJobList implements Runnable {
 			BitmapFactory.Options tmpFileOptions = new BitmapFactory.Options();
 			tmpFileOptions.inJustDecodeBounds = false;
 
-			for (int i=0;i<mTargets.size();++i) {
-				DownloadTarget target = mTargets.get(i);
+			for (int i=0;i<mTargetJobs.size();++i) {
+				DownloadTarget target = mTargetJobs.get(i);
 				checkAbort();
 
 				target.fileInCache = mCache.getCachedFile(target.job.key);
@@ -148,7 +147,7 @@ public class PictureJobList implements Runnable {
 					if (!bitmapWasInCache) {
 						displayDrawable = null;
 					} else if (mCache.getBitmapCache()!=null) {
-						displayDrawable = mCache.getBitmapCache().put(keyToBitmapCacheKey(target.job.key, mURL, target), target.fileInCache, getOutputOptions(tmpFileOptions.outWidth, tmpFileOptions.outHeight, target.job.key));
+						displayDrawable = mCache.getBitmapCache().put(keyToBitmapCacheKey(target.job.key, url, target), target.fileInCache, getOutputOptions(tmpFileOptions.outWidth, tmpFileOptions.outHeight, target.job.key));
 					} else {
 						displayDrawable = new BitmapDrawable(mCache.getContext().getResources(), target.fileInCache.getAbsolutePath());
 					}
@@ -157,7 +156,7 @@ public class PictureJobList implements Runnable {
 						// we don't have that final file yet, use the download file to generate it
 						displayDrawable = targetBitmaps.get(target.job.key);
 						if (displayDrawable==null) {
-							displayDrawable = loadResourceDrawable(mURL);
+							displayDrawable = loadResourceDrawable(url);
 
 							if (displayDrawable!=null) {
 								if (target.getStorageTransform()!=null)
@@ -185,7 +184,7 @@ public class PictureJobList implements Runnable {
 						if (downloaded) {
 							Bitmap bitmap;
 							if (mCache.getBitmapCache()!=null) {
-								CacheableBitmapDrawable cachedDrawable = mCache.getBitmapCache().put(keyToBitmapCacheKey(target.job.key, mURL, target), downloadToFile, getOutputOptions(tmpFileOptions.outWidth, tmpFileOptions.outHeight, target.job.key));
+								CacheableBitmapDrawable cachedDrawable = mCache.getBitmapCache().put(keyToBitmapCacheKey(target.job.key, url, target), downloadToFile, getOutputOptions(tmpFileOptions.outWidth, tmpFileOptions.outHeight, target.job.key));
 								bitmap = cachedDrawable.getBitmap();
 							} else {
 								bitmap = BitmapFactory.decodeFile(downloadToFile.getAbsolutePath(), getOutputOptions(tmpFileOptions.outWidth, tmpFileOptions.outHeight, target.job.key));
@@ -226,16 +225,16 @@ public class PictureJobList implements Runnable {
 			downloadToFile = null;
 		} catch (OutOfMemoryError e) {
 			mCache.getOutOfMemoryHandler().onOutOfMemoryError(e);
-			LogManager.getLogger().e(PictureCache.LOG_TAG, "Failed to load " + mURL, e);
+			LogManager.getLogger().e(PictureCache.LOG_TAG, "Failed to load " + url, e);
 			/*} catch (InterruptedException e) {
 			LogManager.getLogger().e(PictureCache.TAG, "Interrupted while loading " + mURL, e);*/
 		} catch (DownloadFailureException e) {
 			// do nothing
 		} catch (Throwable e) {
-			LogManager.getLogger().e(PictureCache.LOG_TAG, "exception on "+mURL, e);
+			LogManager.getLogger().e(PictureCache.LOG_TAG, "exception on "+url, e);
 		} finally {
-			synchronized (mTargets) {
-				if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" finished loading targets:"+mTargets+" bitmaps:"+targetBitmaps);
+			synchronized (mTargetJobs) {
+				if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" finished loading targets:"+mTargetJobs+" bitmaps:"+targetBitmaps);
 
 				mAborting = true; // after this point new targets are not OK for this job
 			}
@@ -247,13 +246,13 @@ public class PictureJobList implements Runnable {
 						//LogManager.getLogger().i(PictureCache.TAG, "finished download thread for " + mURL + " bmp:"+bmp + " rbmp:"+rbmp);
 						//LogManager.getLogger().i(PictureCache.TAG, "send display bitmap "+mURL+" aborted:"+abortRequested.get()+" size:"+reqTargets.size());
 						//LogManager.getLogger().i(PictureCache.TAG, "ViewUpdate loop "+mURL+" aborted:"+abortRequested.get()+" size:"+reqTargets.size()+" bmp:"+bmp+" rbmp:"+rbmp);
-					synchronized (mTargets) {
-						for (DownloadTarget target : mTargets) {
+					synchronized (mTargetJobs) {
+						for (DownloadTarget target : mTargetJobs) {
 							//LogManager.getLogger().i(PictureCache.TAG, false, "ViewUpdate "+mURL);
 							Drawable drawable = targetBitmaps.get(target.job.key);
 
 							if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, this+" display "+drawable+" in "+target.job.mDisplayHandler+" file:"+target.fileInCache+" key:"+target.job.key);
-							if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().v(PictureCache.LOG_TAG, this+"  targets:"+mTargets+" bitmaps:"+targetBitmaps);
+							if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().v(PictureCache.LOG_TAG, this+"  targets:"+mTargetJobs+" bitmaps:"+targetBitmaps);
 							//LogManager.getLogger().i(PictureCache.TAG, "display "+mURL+" in "+j+" abort:"+abortRequested);
 							if (drawable!=null) {
 								Bitmap bitmap = ViewLoader.drawableToBitmap(drawable);
@@ -265,11 +264,11 @@ public class PictureJobList implements Runnable {
 									cacheableBmp = drawable;
 								else
 									cacheableBmp = new BitmapDrawable(mCache.getContext().getResources(), bitmap);
-								target.job.mDisplayHandler.drawBitmap(cacheableBmp, mURL, target.job.drawCookie, mCache.getBitmapCache(), false);
+								target.job.mDisplayHandler.drawBitmap(cacheableBmp, url, target.job.drawCookie, mCache.getBitmapCache(), false);
 							} else
-								target.job.mDisplayHandler.drawErrorPicture(mURL, mCache.getBitmapCache());
+								target.job.mDisplayHandler.drawErrorPicture(url, mCache.getBitmapCache());
 						}
-						mTargets.clear();
+						mTargetJobs.clear();
 					}
 				}
 			});
@@ -288,23 +287,23 @@ public class PictureJobList implements Runnable {
 	 * @return {@code false} is the job was not added to this target (if the download is aborting)
 	 */
 	boolean addJob(PictureJob job) {
-		if (BuildConfig.DEBUG && !job.url.equals(mURL)) throw new InvalidParameterException(this+" wrong job URL "+job);
+		if (BuildConfig.DEBUG && !job.url.equals(url)) throw new InvalidParameterException(this+" wrong job URL "+job);
 		
 		DownloadTarget newTarget = new DownloadTarget(job);
 		//LogManager.getLogger().i(PictureCache.TAG, "add recipient view "+view+" for " + mURL);
 		if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" addTarget "+job.mDisplayHandler+" key:"+job.key);
-		synchronized (mTargets) {
+		synchronized (mTargetJobs) {
 			if (mAborting) {
 				if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().w(PictureCache.LOG_TAG, this+ " is aborting");
 				return false;
 			}
 
-			if (mTargets.contains(newTarget)) {
+			if (mTargetJobs.contains(newTarget)) {
 				// TODO: update the rounded/rotation status
 				if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" target "+newTarget+" already pending");
 				return true;
 			}
-			mTargets.add(newTarget);
+			mTargetJobs.add(newTarget);
 
 			mCanDownload |= job.mConcurrencyHandler.isDownloadAllowed();
 
@@ -320,22 +319,22 @@ public class PictureJobList implements Runnable {
 	}
 
 	boolean removeJob(PictureJob job) {
-		synchronized (mTargets) {
+		synchronized (mTargetJobs) {
 
 			boolean deleted = false;
 			if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" removeTarget "+job);
-			for (int i=0;i<mTargets.size();++i) {
-				if (mTargets.get(i).job.mDisplayHandler.equals(job.mDisplayHandler)) {
-					deleted = mTargets.remove(i)!=null;
+			for (int i=0;i<mTargetJobs.size();++i) {
+				if (mTargetJobs.get(i).job.mDisplayHandler.equals(job.mDisplayHandler)) {
+					deleted = mTargetJobs.remove(i)!=null;
 					break;
 				}
 			}
 
-			if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" removeTarget "+job+" = "+deleted+" remains:"+mTargets.size());
+			if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" removeTarget "+job+" = "+deleted+" remains:"+mTargetJobs.size());
 			if (deleted) {
 				//LogManager.getLogger().v(" deleted job view:"+target+" for "+mURL);
 				//target.setLoadingURL(mCache, mURL);
-				job.mDisplayHandler.drawDefaultPicture(mURL, mCache.getBitmapCache());
+				job.mDisplayHandler.drawDefaultPicture(url, mCache.getBitmapCache());
 			}
 			//else LogManager.getLogger().i(PictureCache.TAG, " keep downloading URL:" + mURL + " remaining views:" + reqViews.size() + " like view:"+reqViews.get(0));
 			return deleted;
@@ -345,7 +344,7 @@ public class PictureJobList implements Runnable {
 	private BitmapFactory.Options getOutputOptions(int srcWidth, int srcHeight, CacheKey key) {
 		BitmapFactory.Options opts = new BitmapFactory.Options();
 		if (srcHeight <= 0) {
-			LogManager.getLogger().i(PictureCache.LOG_TAG, "could not get the dimension for " + mURL+" use raw decoding");
+			LogManager.getLogger().i(PictureCache.LOG_TAG, "could not get the dimension for " + url+" use raw decoding");
 		} else {
 			int finalHeight = key.getBitmapHeight(srcWidth, srcHeight);
 
@@ -369,8 +368,8 @@ public class PictureJobList implements Runnable {
 	 * @throws AbortDownload if we should not download or decode any further
 	 */
 	private void checkAbort() throws AbortDownload {
-		synchronized (mTargets) {
-			if (mTargets.isEmpty()) {
+		synchronized (mTargetJobs) {
+			if (mTargetJobs.isEmpty()) {
 				if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, this+ " no more targets, aborting");
 				mAborting = true;
 				throw new AbortDownload();
@@ -379,8 +378,8 @@ public class PictureJobList implements Runnable {
 	}
 
 	protected boolean isEmpty() {
-		synchronized (mTargets) {
-			return mTargets.isEmpty();
+		synchronized (mTargetJobs) {
+			return mTargetJobs.isEmpty();
 		}
 	}
 
@@ -389,15 +388,15 @@ public class PictureJobList implements Runnable {
 		InputStream is = null;
 		try {
 			try {
-				is = mCache.getContext().getContentResolver().openInputStream(Uri.parse(mURL));
+				is = mCache.getContext().getContentResolver().openInputStream(Uri.parse(url));
 				//LogManager.getLogger().v("using the content resolver for "+mURL);
 			} catch (FileNotFoundException e) {
 				//LogManager.getLogger().d(PictureCache.TAG, false, "cache error trying ContentResolver on "+mURL);
 				if (null!=networkLoader)
-					is = networkLoader.loadURL(mURL);
+					is = networkLoader.loadURL(url);
 
 				if (null==is) {
-					URL url = new URL(mURL);
+					URL url = new URL(this.url);
 					URLConnection conn = url.openConnection();
 					conn.setConnectTimeout(CONNECT_TIMEOUT_DL);
 					conn.setUseCaches(false);
@@ -407,15 +406,15 @@ public class PictureJobList implements Runnable {
 					try {
 						is = conn.getInputStream();
 					} catch (FileNotFoundException ee) {
-						throw new DownloadFailureException("cache URL not found "+mURL, e);
+						throw new DownloadFailureException("cache URL not found "+url, e);
 					} catch (Exception ee) {
-						throw new DownloadFailureException("cache error opening "+mURL, e);
+						throw new DownloadFailureException("cache error opening "+url, e);
 					}
 				}
 			}
 
 			if (is==null) {
-				throw new DownloadFailureException("impossible to get a stream for "+mURL);
+				throw new DownloadFailureException("impossible to get a stream for "+url);
 			}
 
 			checkAbort();
@@ -438,14 +437,14 @@ public class PictureJobList implements Runnable {
 
 			//LogManager.getLogger().v(" got direct:"+bmp);
 		} catch (MalformedURLException e) {
-			throw new DownloadFailureException("bad URL " + mURL, e);
+			throw new DownloadFailureException("bad URL " + url, e);
 		} catch (UnknownHostException e) {
-			throw new DownloadFailureException("host not found in "+mURL, e);
+			throw new DownloadFailureException("host not found in "+url, e);
 		} catch (OutOfMemoryError e) {
 			mCache.getOutOfMemoryHandler().onOutOfMemoryError(e);
-			throw new DownloadFailureException("Could not decode image " + mURL, e);
+			throw new DownloadFailureException("Could not decode image " + url, e);
 		} catch (IOException e) {
-			throw new DownloadFailureException("Could not read " + mURL, e);
+			throw new DownloadFailureException("Could not read " + url, e);
 		} finally {
 			try {
 				if (is!=null)

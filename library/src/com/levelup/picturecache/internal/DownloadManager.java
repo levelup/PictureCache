@@ -32,7 +32,7 @@ public class DownloadManager {
 		protected void beforeExecute(Thread t, Runnable r) {
 			super.beforeExecute(t, r);
 			if (r instanceof PictureJobList) {
-				t.setName("PictureDL-"+((PictureJobList) r).mURL.hashCode());
+				t.setName("PictureDL-"+((PictureJobList) r).url.hashCode());
 			} else {
 				t.setName("PictureDL-"+t);
 			}
@@ -48,7 +48,7 @@ public class DownloadManager {
 		this.mCache = pictureCache;
 	}
 
-	public void addDownloadTarget(PictureCache cache, PictureJob job) {
+	public void addDownloadTarget(PictureJob job) {
 		// find out if that URL is already loading, if so add the view to the recipient
 		boolean isNewJobList = false;
 		PictureJobList jobList = null;
@@ -60,13 +60,13 @@ public class DownloadManager {
 			if (!jobAdded) {
 				if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "add new downloader for "+job.url+" key:"+job.key+" job:"+job+" jobs:"+mDownloadJobs);
 				// create a fresh new one if an old one is not ready to accept our loadHandler
-				jobList = new PictureJobList(job, cache, this);
+				jobList = new PictureJobList(job, mCache, this);
 				jobList.addJob(job);
 				mDownloadJobs.put(job.url, jobList);
 				isNewJobList = true;
 			}
 		}
-		
+
 		if (isNewJobList)
 			try {
 				threadPool.execute(jobList);
@@ -83,50 +83,49 @@ public class DownloadManager {
 	 * has to be done before a new {@link PictureLoaderHandler.setLoadingNewURL(DownloadManager, String, SimpleLogger)}
 	 * @param job
 	 * @param URL TODO
-	 * @return true if there was a task loading
 	 */
-	public boolean removeDownloadTarget(PictureJob job, String URL) {
+	public void removeDownloadTarget(PictureJob job, String URL) {
+		if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "cancelDownloadForLoader for "+URL+" job:"+job);
+
 		synchronized (mDownloadJobs) {
-			if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "cancelDownloadForLoader for "+URL+" job:"+job);
 			if (!TextUtils.isEmpty(URL)) {
 				PictureJobList downloader = mDownloadJobs.get(URL);
 				if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, " cancelDownloadForLoader job:"+job+" found:"+downloader);
 				if (downloader!=null) {
 					//LogManager.getLogger().d(PictureCache.TAG, "cancelDownloadForTarget for URL " + URL+" for "+loader);
-					boolean removed = downloader.removeJob(job);
+					downloader.removeJob(job);
 					if (downloader.isEmpty())
 						threadPool.remove(downloader);
-					return removed;
+					return;
+				}
+			}
+
+			// find the target by view
+			//LogManager.getLogger().w(PictureCache.TAG, "cancelDownloadForTarget by key " + loader);
+			Enumeration<PictureJobList> downloaders = mDownloadJobs.elements();
+			while (downloaders.hasMoreElements()) {
+				PictureJobList downloader = downloaders.nextElement();
+				if (downloader.removeJob(job)) {
+					if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, " cancelDownloadForLoader loadHandler:"+job+" deleted on:"+downloader/*+" url:"+url*/);
+					if (downloader.isEmpty())
+						threadPool.remove(downloader);
+					break;
 				}
 			}
 		}
-
-		// find the target by view
-		//LogManager.getLogger().w(PictureCache.TAG, "cancelDownloadForTarget by key " + loader);
-		Enumeration<PictureJobList> downloaders = mDownloadJobs.elements();
-		while (downloaders.hasMoreElements()) {
-			PictureJobList downloader = downloaders.nextElement();
-			if (downloader.removeJob(job)) {
-				if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, " cancelDownloadForLoader loadHandler:"+job+" deleted on:"+downloader/*+" url:"+url*/);
-				if (downloader.isEmpty())
-					threadPool.remove(downloader);
-				return true;
-			}
-		}
+		
 		if (DEBUG_DOWNLOADER) LogManager.getLogger().w(PictureCache.LOG_TAG, "cancelDownloadForLoader do nothing for loadHandler:"+job);
-		return false;
 	}
 
 	void onJobFinishedWithNewBitmaps(PictureJobList downloader, HashMap<CacheVariant,Drawable> newBitmaps) {
-		mCache.onNewBitmapLoaded(newBitmaps, downloader.mURL, downloader.getItemDate(), downloader.getLifeSpan());
+		mCache.onNewBitmapLoaded(newBitmaps, downloader.url, downloader.getItemDate(), downloader.getLifeSpan());
 
 		synchronized (mDownloadJobs) {
-			if (mDownloadJobs.containsKey(downloader.mURL)) {
-				mDownloadJobs.remove(downloader.mURL);
-				if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "Job Finishing for "+downloader.mURL + " remaining:"+mDownloadJobs);
+			if (null != mDownloadJobs.remove(downloader.url)) {
+				if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "Job Finishing for "+downloader.url + " remaining:"+mDownloadJobs);
+			} else {
+				LogManager.getLogger().w(PictureCache.LOG_TAG, "Unknown job finishing for "+downloader.url + " remaining:"+mDownloadJobs);
 			}
-			else
-				LogManager.getLogger().w(PictureCache.LOG_TAG, "Unknown job finishing for "+downloader.mURL + " remaining:"+mDownloadJobs);
 		}
 	}
 }

@@ -606,7 +606,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			job.mDisplayHandler.drawDefaultPicture(job.url, mBitmapCache);
 
 			// we could not read from the cache, load the URL
-			mJobManager.addDownloadTarget(this, job);
+			mJobManager.addDownloadTarget(job);
 		} finally {
 			mDataLock.unlock();
 		}
@@ -786,7 +786,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		scheduleCustomOperation(new RemoveExpired());
 	}
 
-	public void onNewBitmapLoaded(Map<CacheVariant,Drawable> newBitmaps, String url, long remoteDate, LifeSpan lifeSpan) {
+	public final void onNewBitmapLoaded(Map<CacheVariant,Drawable> newBitmaps, String url, long remoteDate, LifeSpan lifeSpan) {
 		// handle the storing and adding to the cache
 		// save the bitmap for later use
 		long fileSizeAdded = 0;
