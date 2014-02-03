@@ -94,6 +94,9 @@ public class PictureJob {
 	}
 
 	protected PictureJob(Builder builder) {
+		this.mDisplayHandler = builder.mDisplayHandler;
+		this.mTransformHandler = builder.mTransformHandler;
+		this.mConcurrencyHandler = builder.mConcurrencyHandler;
 		this.mURL = builder.mURL;
 		this.mUUID = builder.mUUID;
 		this.mCookie = builder.mCookie;
@@ -102,10 +105,21 @@ public class PictureJob {
 		this.mDimension = builder.mDimension;
 		this.mWidthBased = builder.mWidthBased;
 		this.mExtensionMode = builder.mExtensionMode;
-		this.mDisplayHandler = builder.mDisplayHandler;
-		this.mTransformHandler = builder.mTransformHandler;
-		this.mConcurrencyHandler = builder.mConcurrencyHandler;
 		this.networkLoader = builder.networkLoader;
+	}
+	
+	public Builder cloneBuilder() {
+		Builder builder = new Builder(mDisplayHandler, mTransformHandler, mConcurrencyHandler);
+		builder.mURL = this.mURL;
+		builder.mUUID = this.mUUID;
+		builder.mCookie = this.mCookie;
+		builder.mFreshDate = this.mFreshDate;
+		builder.mLifeSpan = this.mLifeSpan;
+		builder.mDimension = this.mDimension;
+		builder.mWidthBased = this.mWidthBased;
+		builder.mExtensionMode = this.mExtensionMode;
+		builder.networkLoader = this.networkLoader;
+		return builder;
 	}
 
 	private CacheKey buildKey() throws NoSuchAlgorithmException {
@@ -133,6 +147,6 @@ public class PictureJob {
 			return;
 		}
 
-		cache.getPicture(mURL, key, mCookie, mFreshDate, mDisplayHandler, mTransformHandler, mConcurrencyHandler, mLifeSpan, networkLoader);
+		cache.getPicture(this, key);
 	}
 }

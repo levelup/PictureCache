@@ -15,13 +15,10 @@ import java.util.concurrent.TimeUnit;
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 
-import com.levelup.picturecache.LifeSpan;
-import com.levelup.picturecache.IPictureLoadConcurrency;
 import com.levelup.picturecache.IPictureLoaderRender;
-import com.levelup.picturecache.IPictureLoaderTransforms;
 import com.levelup.picturecache.LogManager;
-import com.levelup.picturecache.NetworkLoader;
 import com.levelup.picturecache.PictureCache;
+import com.levelup.picturecache.PictureJob;
 
 public class DownloadManager {
 
@@ -51,28 +48,28 @@ public class DownloadManager {
 		this.mCache = pictureCache;
 	}
 
-	public void addDownloadTarget(PictureCache cache, String URL, Object cookie, IPictureLoaderRender loadHandler, IPictureLoaderTransforms transforms, IPictureLoadConcurrency concuHandler, CacheKey key, long itemDate, LifeSpan lifeSpan, NetworkLoader networkLoader) {
+	public void addDownloadTarget(PictureCache cache, PictureJob job, CacheKey key) {
 		// find out if that URL is already loading, if so add the view to the recipient
 		synchronized (mJobs) {
 			// add job by URL
-			BitmapDownloader downloader = mJobs.get(URL);
-			if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "add loader:"+loadHandler+" to downloader:"+downloader);
-			final boolean targetAdded = downloader!=null && downloader.addTarget(loadHandler, transforms, concuHandler, key, itemDate, lifeSpan);
+			BitmapDownloader downloader = mJobs.get(job.mURL);
+			if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "add loader:"+job.mDisplayHandler+" to downloader:"+downloader);
+			final boolean targetAdded = downloader!=null && downloader.addTarget(job.mDisplayHandler, job.mTransformHandler, job.mConcurrencyHandler, key, job.mFreshDate, job.mLifeSpan);
 			if (!targetAdded) {
-				if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "add new downloader for "+URL+" key:"+key+" loader:"+loadHandler+" jobs:"+mJobs);
+				if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "add new downloader for "+job.mURL+" key:"+key+" loader:"+job.mDisplayHandler+" jobs:"+mJobs);
 				// create a fresh new one if an old one is not ready to accept our loadHandler
-				downloader = new BitmapDownloader(URL, networkLoader, cookie, cache, this);
-				downloader.addTarget(loadHandler, transforms, concuHandler, key, itemDate, lifeSpan);
+				downloader = new BitmapDownloader(job.mURL, job.networkLoader, job.mCookie, cache, this);
+				downloader.addTarget(job.mDisplayHandler, job.mTransformHandler, job.mConcurrencyHandler, key, job.mFreshDate, job.mLifeSpan);
 				try {
 					threadPool.execute(downloader);
-					mJobs.put(URL, downloader);
+					mJobs.put(job.mURL, downloader);
 				} catch (RejectedExecutionException e) {
 					LogManager.getLogger().w(PictureCache.LOG_TAG, "can't execute "+downloader, e);
 				}
 			}
 			if (DEBUG_DOWNLOADER) {
-				downloader = mJobs.get(URL);
-				LogManager.getLogger().e(PictureCache.LOG_TAG, "downloader for "+URL+" = "+downloader+" loader added:"+targetAdded);
+				downloader = mJobs.get(job.mURL);
+				LogManager.getLogger().e(PictureCache.LOG_TAG, "downloader for "+job.mURL+" = "+downloader+" loader added:"+targetAdded);
 			}
 		}
 	}
