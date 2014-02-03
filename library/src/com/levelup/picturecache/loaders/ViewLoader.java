@@ -98,7 +98,7 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 	 * To override the drawable display, use {@link #displayLoadedDrawable(Drawable)}
 	 */
 	@Override
-	public final void drawBitmap(Drawable bmp, String url, Object cookie, BitmapLruCache drawableCache, boolean immediate) {
+	public final void drawBitmap(Drawable bmp, String url, Object drawCookie, BitmapLruCache drawableCache, boolean immediate) {
 		if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" drawBitmap "+view+" with "+bmp);
 		showDrawable(drawableCache, bmp, url, DrawType.LOADED_DRAWABLE, immediate);
 	}

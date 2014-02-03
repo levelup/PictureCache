@@ -38,7 +38,7 @@ import com.levelup.picturecache.loaders.ViewLoader;
 import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
 import com.levelup.picturecache.transforms.storage.StorageTransform;
 
-public class BitmapDownloader implements Runnable {
+public class PictureJobList implements Runnable {
 
 	private static final boolean DEBUG_BITMAP_DOWNLOADER = false;
 
@@ -94,7 +94,7 @@ public class BitmapDownloader implements Runnable {
 
 	private static final int CONNECT_TIMEOUT_DL = 10000; // 10s
 
-	BitmapDownloader(PictureJob job, PictureCache cache, DownloadManager monitor) {
+	PictureJobList(PictureJob job, PictureCache cache, DownloadManager monitor) {
 		if (job.url==null) throw new NullPointerException("How are we supposed to download a null URL?");
 		this.mURL = job.url;
 		this.networkLoader = job.networkLoader;
@@ -285,9 +285,9 @@ public class BitmapDownloader implements Runnable {
 	/**
 	 * Add a handler for when the URL is downloaded and start the download+processing if it wasn't started
 	 * @param job
-	 * @return
+	 * @return {@code false} is the job was not added to this target (if the download is aborting)
 	 */
-	boolean addTarget(PictureJob job) {
+	boolean addJob(PictureJob job) {
 		if (BuildConfig.DEBUG && !job.url.equals(mURL)) throw new InvalidParameterException(this+" wrong job URL "+job);
 		
 		DownloadTarget newTarget = new DownloadTarget(job);
@@ -319,23 +319,23 @@ public class BitmapDownloader implements Runnable {
 		return true;
 	}
 
-	boolean removeTarget(IPictureLoaderRender target) {
+	boolean removeJob(PictureJob job) {
 		synchronized (mTargets) {
 
 			boolean deleted = false;
-			if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" removeTarget "+target);
+			if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" removeTarget "+job);
 			for (int i=0;i<mTargets.size();++i) {
-				if (mTargets.get(i).job.mDisplayHandler.equals(target)) {
+				if (mTargets.get(i).job.mDisplayHandler.equals(job.mDisplayHandler)) {
 					deleted = mTargets.remove(i)!=null;
 					break;
 				}
 			}
 
-			if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" removeTarget "+target+" = "+deleted+" remains:"+mTargets.size());
+			if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" removeTarget "+job+" = "+deleted+" remains:"+mTargets.size());
 			if (deleted) {
 				//LogManager.getLogger().v(" deleted job view:"+target+" for "+mURL);
 				//target.setLoadingURL(mCache, mURL);
-				target.drawDefaultPicture(mURL, mCache.getBitmapCache());
+				job.mDisplayHandler.drawDefaultPicture(mURL, mCache.getBitmapCache());
 			}
 			//else LogManager.getLogger().i(PictureCache.TAG, " keep downloading URL:" + mURL + " remaining views:" + reqViews.size() + " like view:"+reqViews.get(0));
 			return deleted;

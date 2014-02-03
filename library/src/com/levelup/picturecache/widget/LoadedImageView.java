@@ -86,7 +86,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 			return;
 		}
 
-		drawInView(DrawType.DEFAULT, url, drawableCache, null, null, true, currentJob.mDisplayHandler);
+		drawInView(DrawType.DEFAULT, url, drawableCache, null, true, currentJob.mDisplayHandler, null);
 	}
 
 	@Override
@@ -107,11 +107,11 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 			return;
 		}
 
-		drawInView(DrawType.ERROR, url, drawableCache, null, null, true, currentJob.mDisplayHandler);
+		drawInView(DrawType.ERROR, url, drawableCache, null, true, currentJob.mDisplayHandler, null);
 	}
 
 	@Override
-	public void drawBitmap(final Drawable drawable, final String url, final Object cookie, final BitmapLruCache drawableCache, final boolean immediate) {
+	public void drawBitmap(final Drawable drawable, final String url, final Object drawCookie, final BitmapLruCache drawableCache, final boolean immediate) {
 		UIHandler.assertUIThread();
 		if (!url.equals(currentURL)) {
 			// we don't care about this anymore
@@ -122,13 +122,13 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 			post(new Runnable() {
 				@Override
 				public void run() {
-					drawBitmap(drawable, url, cookie, drawableCache, immediate);
+					drawBitmap(drawable, url, drawCookie, drawableCache, immediate);
 				}
 			});
 			return;
 		}
 
-		drawInView(DrawType.LOADED_DRAWABLE, url, drawableCache, drawable, cookie, immediate, currentJob.mDisplayHandler);
+		drawInView(DrawType.LOADED_DRAWABLE, url, drawableCache, drawable, immediate, currentJob.mDisplayHandler, drawCookie);
 	}
 
 	private static boolean drawsEnqueued;
@@ -144,7 +144,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 		}
 	};
 
-	private void drawInView(final DrawType type, final String url, final BitmapLruCache drawableCache, final Drawable drawable, final Object cookie, boolean immediate, final IPictureLoaderRender renderer) {
+	private void drawInView(final DrawType type, final String url, final BitmapLruCache drawableCache, final Drawable drawable, boolean immediate, final IPictureLoaderRender renderer, final Object drawCookie) {
 		pendingDraws.put(this, new Runnable() {
 			@Override
 			public void run() {
@@ -167,7 +167,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 				}
 
 				else if (type==DrawType.LOADED_DRAWABLE) {
-					renderer.drawBitmap(drawable, url, cookie, drawableCache, true);
+					renderer.drawBitmap(drawable, url, drawCookie, drawableCache, true);
 					currentDrawType = DrawType.LOADED_DRAWABLE;
 				}
 			}
@@ -245,8 +245,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 		}
 
 		if (null!=currentJob) {
-			// TODO should cancel using the currentJob 
-			cache.cancelPictureLoader(currentJob.mDisplayHandler, currentURL);
+			currentJob.stopLoading(currentCache, false);
 			currentURL = null; // TODO should be done for every cancel or better handled with setLoadingURL()
 		}
 
@@ -258,16 +257,8 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 	public void resetImageURL(boolean resetToDefault) {
 		UIHandler.assertUIThread();
 		pendingDraws.remove(this);
-		if (null!=currentCache) {
-			if (null!=currentJob) {
-				currentJob.stopLoading(currentCache, resetToDefault);
-			}
-			currentCache = null;
-		} else {
-			if (resetToDefault) {
-				if (null!=currentJob.mDisplayHandler)
-					drawInView(DrawType.DEFAULT, currentURL, null, null, null, true, currentJob.mDisplayHandler);
-			}
+		if (null!=currentJob) {
+			currentJob.stopLoading(currentCache, resetToDefault);
 		}
 		if (currentDrawType!=DrawType.LOADED_DRAWABLE)
 			currentURL = null;

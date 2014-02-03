@@ -30,7 +30,7 @@ import android.text.TextUtils;
 
 import com.levelup.FileUtils;
 import com.levelup.picturecache.internal.ApiLevel8;
-import com.levelup.picturecache.internal.BitmapDownloader;
+import com.levelup.picturecache.internal.PictureJobList;
 import com.levelup.picturecache.internal.CacheItem;
 import com.levelup.picturecache.internal.CacheKey;
 import com.levelup.picturecache.internal.CacheVariant;
@@ -464,30 +464,30 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "getting picture "+job.url+" into "+job.mDisplayHandler+" key:"+job.key);
 			CacheItem v = getMap().get(job.key);
 
-			if (TextUtils.isEmpty(job.url)) {
-				// get the URL matching the UUID if we don't have a forced one
-				if (v!=null) {
-					job = job.cloneBuilder().setURL(v.URL).build();
-				}
+			if (TextUtils.isEmpty(job.url) && null!=v) {
+				// get the URL matching the UUID if we don't have one set
+				job = job.cloneBuilder().setURL(v.URL).build();
 				//LogManager.logger.i("no URL specified for "+key+" using "+URL);
 			}
+			
+			//LogManager.logger.v(TAG, "load "+URL+" in "+target+" key:"+key);
+			String wasPreviouslyLoading = job.mConcurrencyHandler.setLoadingURL(job.url, mBitmapCache); 
+			if (null!=job.url && job.url.equals(wasPreviouslyLoading)) {
+				if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, job.mDisplayHandler+" no need to draw anything");
+				// TODO if the old job is different than the new one, we need to go ahead and do the new one
+				return; // no need to do anything the image is the same or downloading for it
+			}
+
 			if (TextUtils.isEmpty(job.url)) {
 				LogManager.logger.i(LOG_TAG, "no URL specified/known for "+job.key+" using default");
-				removePictureLoader(job.mDisplayHandler, job.mConcurrencyHandler, null);
+				cancelPictureJob(job);
 				job.mDisplayHandler.drawDefaultPicture(null, mBitmapCache);
 				return;
 			}
 
-			//LogManager.logger.v(TAG, "load "+URL+" in "+target+" key:"+key);
-			String wasPreviouslyLoading = job.mConcurrencyHandler.setLoadingURL(job.url, mBitmapCache); 
-			if (job.url.equals(wasPreviouslyLoading)) {
-				if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, job.mDisplayHandler+" no need to draw anything");
-				return; // no need to do anything the image is the same or downloading for it
-			}
-
 			if (wasPreviouslyLoading!=null) {
 				// cancel the loading of the previous URL for this loader
-				mJobManager.cancelDownloadForLoader(job.mDisplayHandler, wasPreviouslyLoading);
+				mJobManager.removeDownloadTarget(job, wasPreviouslyLoading);
 			}
 
 			/*if (URL.startsWith("android.resource://")) {
@@ -538,7 +538,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			}
 			//else LogManager.logger.i(key.toString()+" not found in "+mData.size()+" cache elements");
 
-			final String bitmapCacheKey = mBitmapCache!=null ? BitmapDownloader.keyToBitmapCacheKey(job.key, job.url, job.mTransformHandler) : null;
+			final String bitmapCacheKey = mBitmapCache!=null ? PictureJobList.keyToBitmapCacheKey(job.key, job.url, job.mTransformHandler) : null;
 			if (mBitmapCache!=null) {
 				BitmapDrawable cachedBmp = mBitmapCache.get(bitmapCacheKey);
 				if (cachedBmp!=null) {
@@ -662,26 +662,12 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	}
 
 	/**
-	 * stop loading for that {@link loader} target, keep the target marked for the previously loading URL
-	 * @param loader
-	 * @param oldURL
+	 * Stop loading for that {@link PictureJob} target, keep the target marked for the previously loading URL
+	 * @param job
 	 */
-	public void cancelPictureLoader(IPictureLoaderRender loader, String oldURL) {
-		if (loader != null)
-			mJobManager.cancelDownloadForLoader(loader, oldURL);
-	}
-
-	/**
-	 * stop loading for that {@link loader} target, reset loading URL marked on that target
-	 * @param loader
-	 * @param oldURL
-	 */
-	public void removePictureLoader(IPictureLoaderRender loader, IPictureLoadConcurrency concuHandler, String oldURL) {
-		if (loader != null) {
-			if (DEBUG_CACHE) LogManager.logger.i(LOG_TAG, "removePictureLoader "+loader+" with old URL "+oldURL);
-			concuHandler.setLoadingURL(null, mBitmapCache);
-			mJobManager.cancelDownloadForLoader(loader, oldURL);
-		}
+	public void cancelPictureJob(PictureJob job) {
+		if (job != null)
+			mJobManager.removeDownloadTarget(job, job.url);
 	}
 
 	public boolean saveInGallery(String URL, String UUID, int width, boolean widthBased, boolean Rounded, StorageType extensionMode) {

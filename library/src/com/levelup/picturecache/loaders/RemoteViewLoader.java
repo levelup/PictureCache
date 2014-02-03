@@ -41,7 +41,7 @@ public class RemoteViewLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	public void drawBitmap(Drawable bmp, String url, Object cookie, BitmapLruCache drawableCache, boolean immediate) {
+	public void drawBitmap(Drawable bmp, String url, Object drawCookie, BitmapLruCache drawableCache, boolean immediate) {
 		remoteViews.setImageViewBitmap(viewId, ViewLoader.drawableToBitmap(bmp));
 	}
 

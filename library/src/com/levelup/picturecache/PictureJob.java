@@ -165,7 +165,7 @@ public class PictureJob {
 	}
 
 	public void stopLoading(PictureCache cache, boolean resetToDefault) {
-		cache.cancelPictureLoader(mDisplayHandler, url);
+		cache.cancelPictureJob(this);
 		if (resetToDefault)
 			mDisplayHandler.drawDefaultPicture(url, cache.getBitmapCache());
 	}
