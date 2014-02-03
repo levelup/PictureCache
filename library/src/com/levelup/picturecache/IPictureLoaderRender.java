@@ -15,7 +15,7 @@ param cookie Data associated with the loaded URL, see {@link PictureJob.Builder#
 	 * @param drawableCache The bitmap memory cache in case you need to do things with the Drawable
 	 * @param immediate {@code true} if the drawable should be displayed as soon as possible in the UI thread
 	 */
-	void drawBitmap(Drawable drawable, String url, Object cookie, BitmapLruCache drawableCache, boolean immediate);
+	void drawBitmap(Drawable drawable, String url, Object drawCookie, BitmapLruCache drawableCache, boolean immediate);
 
 	/**
 	 * Called when the default drawable should be displayed, while the bitmap is loading

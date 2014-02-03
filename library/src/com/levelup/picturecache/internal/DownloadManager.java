@@ -48,18 +48,18 @@ public class DownloadManager {
 		this.mCache = pictureCache;
 	}
 
-	public void addDownloadTarget(PictureCache cache, PictureJob job, CacheKey key) {
+	public void addDownloadTarget(PictureCache cache, PictureJob job) {
 		// find out if that URL is already loading, if so add the view to the recipient
 		synchronized (mJobs) {
 			// add job by URL
 			BitmapDownloader downloader = mJobs.get(job.mURL);
 			if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "add loader:"+job.mDisplayHandler+" to downloader:"+downloader);
-			final boolean targetAdded = downloader!=null && downloader.addTarget(job.mDisplayHandler, job.mTransformHandler, job.mConcurrencyHandler, key, job.mFreshDate, job.mLifeSpan);
+			final boolean targetAdded = downloader!=null && downloader.addTarget(job);
 			if (!targetAdded) {
-				if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "add new downloader for "+job.mURL+" key:"+key+" loader:"+job.mDisplayHandler+" jobs:"+mJobs);
+				if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "add new downloader for "+job.mURL+" key:"+job.key+" loader:"+job.mDisplayHandler+" jobs:"+mJobs);
 				// create a fresh new one if an old one is not ready to accept our loadHandler
 				downloader = new BitmapDownloader(job.mURL, job.networkLoader, job.mCookie, cache, this);
-				downloader.addTarget(job.mDisplayHandler, job.mTransformHandler, job.mConcurrencyHandler, key, job.mFreshDate, job.mLifeSpan);
+				downloader.addTarget(job);
 				try {
 					threadPool.execute(downloader);
 					mJobs.put(job.mURL, downloader);

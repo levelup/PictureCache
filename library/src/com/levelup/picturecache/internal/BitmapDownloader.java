@@ -24,13 +24,13 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.util.FloatMath;
 
-import com.levelup.picturecache.IPictureLoadConcurrency;
 import com.levelup.picturecache.IPictureLoaderRender;
 import com.levelup.picturecache.IPictureLoaderTransforms;
 import com.levelup.picturecache.LifeSpan;
 import com.levelup.picturecache.LogManager;
 import com.levelup.picturecache.NetworkLoader;
 import com.levelup.picturecache.PictureCache;
+import com.levelup.picturecache.PictureJob;
 import com.levelup.picturecache.UIHandler;
 import com.levelup.picturecache.loaders.ViewLoader;
 import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
@@ -288,18 +288,14 @@ public class BitmapDownloader implements Runnable {
 	}
 
 	/**
-	 * add a handler for when the URL is downloaded and start the download+processing if it wasn't started
-	 * @param loadHandler
-	 * @param key
-	 * @param itemDate
-	 * @param lifeSpan
+	 * Add a handler for when the URL is downloaded and start the download+processing if it wasn't started
+	 * @param job
 	 * @return
 	 */
-	boolean addTarget(IPictureLoaderRender loadHandler, IPictureLoaderTransforms transforms, IPictureLoadConcurrency concuHandler, CacheKey key, long itemDate, LifeSpan lifeSpan)
-	{
-		DownloadTarget newTarget = new DownloadTarget(loadHandler, transforms, key);
+	boolean addTarget(PictureJob job) {
+		DownloadTarget newTarget = new DownloadTarget(job.mDisplayHandler, job.mTransformHandler, job.key);
 		//LogManager.getLogger().i(PictureCache.TAG, "add recipient view "+view+" for " + mURL);
-		if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" addTarget "+loadHandler+" key:"+key);
+		if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" addTarget "+job.mDisplayHandler+" key:"+job.key);
 		synchronized (mTargets) {
 			if (mAborting) {
 				if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().w(PictureCache.LOG_TAG, this+ " is aborting");
@@ -313,15 +309,15 @@ public class BitmapDownloader implements Runnable {
 			}
 			mTargets.add(newTarget);
 
-			mCanDownload |= concuHandler.isDownloadAllowed();
+			mCanDownload |= job.mConcurrencyHandler.isDownloadAllowed();
 
-			if (mItemDate < itemDate)
-				mItemDate = itemDate;
+			if (mItemDate < job.mFreshDate)
+				mItemDate = job.mFreshDate;
 
 			if (mLifeSpan==null)
-				mLifeSpan = lifeSpan;
-			else if (mLifeSpan.compare(lifeSpan)<0)
-				mLifeSpan = lifeSpan;
+				mLifeSpan = job.mLifeSpan;
+			else if (mLifeSpan.compare(job.mLifeSpan)<0)
+				mLifeSpan = job.mLifeSpan;
 		}
 		return true;
 	}

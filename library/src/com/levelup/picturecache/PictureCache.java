@@ -606,7 +606,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			job.mDisplayHandler.drawDefaultPicture(job.mURL, mBitmapCache);
 
 			// we could not read from the cache, load the URL
-			mJobManager.addDownloadTarget(this, job, job.key);
+			mJobManager.addDownloadTarget(this, job);
 		} finally {
 			mDataLock.unlock();
 		}
