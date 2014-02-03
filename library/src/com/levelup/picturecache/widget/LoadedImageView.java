@@ -218,13 +218,16 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 		}, null);
 	}
 	 */
-	public void loadImageURL(PictureCache cache, String url, String UUID, NetworkLoader networkLoader, IPictureLoaderRender drawHandler, long urlFreshness, LifeSpan cacheLifespan, int maxWidth, int maxHeight, IPictureLoaderTransforms transforms, Object cookie) {
+	public void loadImageURL(PictureCache cache, String url, String UUID, NetworkLoader networkLoader, IPictureLoaderRender drawHandler, long urlFreshness, LifeSpan cacheLifespan, int maxWidth, int maxHeight, IPictureLoaderTransforms transforms, Object drawCookie) {
 		UIHandler.assertUIThread();
+		if (null==url && null==UUID) {
+			throw new IllegalArgumentException("We need either a url or a uuid to display, did you mean resetImageURL()?");
+		}
 
 		PictureJob.Builder newJobBuilder = new PictureJob.Builder(this, transforms, this);
 		newJobBuilder.setURL(url)
 		.setUUID(UUID)
-		.setDrawCookie(cookie)
+		.setDrawCookie(drawCookie)
 		.setLifeType(cacheLifespan)
 		//.setFreshDate(urlFreshness)
 		.setNetworkLoader(networkLoader);
