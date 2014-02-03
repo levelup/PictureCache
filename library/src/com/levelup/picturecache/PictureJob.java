@@ -161,6 +161,12 @@ public class PictureJob {
 	 * @param cache
 	 */
 	public void startLoading(PictureCache cache) {
-		cache.getPicture(this);
+		cache.doPictureJob(this);
+	}
+
+	public void stopLoading(PictureCache cache, boolean resetToDefault) {
+		cache.cancelPictureLoader(mDisplayHandler, url);
+		if (resetToDefault)
+			mDisplayHandler.drawDefaultPicture(url, cache.getBitmapCache());
 	}
 }

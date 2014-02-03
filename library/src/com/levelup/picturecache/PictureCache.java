@@ -458,7 +458,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @param lifeSpan see {@link LifeSpan}
 	 * @param networkLoader TODO
 	 */
-	void getPicture(PictureJob job) {
+	void doPictureJob(PictureJob job) {
 		mDataLock.lock();
 		try {
 			if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "getting picture "+job.url+" into "+job.mDisplayHandler+" key:"+job.key);
