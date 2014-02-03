@@ -298,13 +298,6 @@ public class PictureJobList implements Runnable {
 				return false;
 			}
 
-			if (mTargetJobs.contains(newTarget)) {
-				// TODO: update the rounded/rotation status
-				if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" target "+newTarget+" already pending");
-				return true;
-			}
-			mTargetJobs.add(newTarget);
-
 			mCanDownload |= job.mConcurrencyHandler.isDownloadAllowed();
 
 			if (mItemDate < job.mFreshDate)
@@ -314,6 +307,13 @@ public class PictureJobList implements Runnable {
 				mLifeSpan = job.mLifeSpan;
 			else if (mLifeSpan.compare(job.mLifeSpan)<0)
 				mLifeSpan = job.mLifeSpan;
+
+			if (mTargetJobs.contains(newTarget)) {
+				// TODO: update the rounded/rotation status
+				if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" target "+newTarget+" already pending");
+				return true;
+			}
+			mTargetJobs.add(newTarget);
 		}
 		return true;
 	}
