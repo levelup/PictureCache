@@ -223,6 +223,9 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 		if (null==url && null==UUID) {
 			throw new IllegalArgumentException("We need either a url or a uuid to display, did you mean resetImageURL()?");
 		}
+		if (null==drawHandler) {
+			throw new IllegalArgumentException("We need a drawHandler to draw");
+		}
 
 		PictureJob.Builder newJobBuilder = new PictureJob.Builder(this, transforms, this);
 		newJobBuilder.setURL(url)
@@ -254,9 +257,14 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 		currentJob.startLoading(currentCache);
 	}
 
-	public void resetImageURL() {
+	public void resetImageURL(boolean resetToDefault) {
 		UIHandler.assertUIThread();
 		pendingDraws.remove(this);
+		if (resetToDefault) {
+			IPictureLoaderRender renderer = null!=currentRender ? currentRender : (null!=currentJob ? currentJob.mDisplayHandler : null);
+			if (null!=renderer)
+				drawInView(DrawType.DEFAULT, currentURL, null, null, null, true, renderer);
+		}
 		if (null!=currentCache) {
 			currentCache.cancelPictureLoader(currentRender, currentURL);
 			currentCache = null;
@@ -281,7 +289,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 	@Override
 	protected void onDetachedFromWindow() {
 		super.onDetachedFromWindow();
-		resetImageURL();
+		resetImageURL(false);
 		super.setImageDrawable(null);
 		currentDrawType = null;
 	}
@@ -292,7 +300,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 	 */
 	public void loadImageResource(int resId) {
 		currentDrawType = null;
-		resetImageURL();
+		resetImageURL(false);
 		super.setImageResource(resId);
 	}
 
@@ -302,7 +310,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 	 */
 	public void loadImageDrawable(Drawable drawable) {
 		currentDrawType = null;
-		resetImageURL();
+		resetImageURL(false);
 		super.setImageDrawable(drawable);
 	}
 
@@ -312,7 +320,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 	 */
 	public void loadImageBitmap(Bitmap bm) {
 		currentDrawType = null;
-		resetImageURL();
+		resetImageURL(false);
 		super.setImageBitmap(bm);
 	}
 
