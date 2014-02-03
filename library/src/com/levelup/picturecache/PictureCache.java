@@ -461,17 +461,17 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	void getPicture(PictureJob job) {
 		mDataLock.lock();
 		try {
-			if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "getting picture "+job.mURL+" into "+job.mDisplayHandler+" key:"+job.key);
+			if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "getting picture "+job.url+" into "+job.mDisplayHandler+" key:"+job.key);
 			CacheItem v = getMap().get(job.key);
 
-			if (TextUtils.isEmpty(job.mURL)) {
+			if (TextUtils.isEmpty(job.url)) {
 				// get the URL matching the UUID if we don't have a forced one
 				if (v!=null) {
 					job = job.cloneBuilder().setURL(v.URL).build();
 				}
 				//LogManager.logger.i("no URL specified for "+key+" using "+URL);
 			}
-			if (TextUtils.isEmpty(job.mURL)) {
+			if (TextUtils.isEmpty(job.url)) {
 				LogManager.logger.i(LOG_TAG, "no URL specified/known for "+job.key+" using default");
 				removePictureLoader(job.mDisplayHandler, job.mConcurrencyHandler, null);
 				job.mDisplayHandler.drawDefaultPicture(null, mBitmapCache);
@@ -479,8 +479,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			}
 
 			//LogManager.logger.v(TAG, "load "+URL+" in "+target+" key:"+key);
-			String wasPreviouslyLoading = job.mConcurrencyHandler.setLoadingURL(job.mURL, mBitmapCache); 
-			if (job.mURL.equals(wasPreviouslyLoading)) {
+			String wasPreviouslyLoading = job.mConcurrencyHandler.setLoadingURL(job.url, mBitmapCache); 
+			if (job.url.equals(wasPreviouslyLoading)) {
 				if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, job.mDisplayHandler+" no need to draw anything");
 				return; // no need to do anything the image is the same or downloading for it
 			}
@@ -499,11 +499,11 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 			//if (URL!=null && !URL.contains("/profile_images/"))
 			if (v != null) {
-				if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, job.key+" found cache item "+v+" URL:"+job.mURL);
+				if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, job.key+" found cache item "+v+" URL:"+job.url);
 				try {
-					if (job.mURL != null && !job.mURL.equals(v.URL)) {
+					if (job.url != null && !job.url.equals(v.URL)) {
 						// the URL for the cached item changed
-						if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, job.key+" changed from "+v.URL+" to "+job.mURL+" remoteDate:"+v.remoteDate+" was "+job.mFreshDate);
+						if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, job.key+" changed from "+v.URL+" to "+job.url+" remoteDate:"+v.remoteDate+" was "+job.mFreshDate);
 						if (v.remoteDate <= job.mFreshDate) { // '=' favor the newer url when dates are 0
 							// the item in the Cache is older than this request, the image changed for a newer one
 							// we need to mark the old one as short term with a UUID that has the picture ID inside
@@ -518,12 +518,12 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 							if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, job.key+" moved to "+oldVersionKey);
 						} else {
 							// use the old image from the cache with that URL
-							String dstUUID = getOldPicUUID(job.key.UUID, job.mURL);
+							String dstUUID = getOldPicUUID(job.key.UUID, job.url);
 							final CacheKey newKey;
 							if (!TextUtils.isEmpty(dstUUID)) {
 								newKey = job.key.copyWithNewUuid(dstUUID);
 							} else {
-								newKey = job.key.copyWithNewUrl(job.mURL);
+								newKey = job.key.copyWithNewUrl(job.url);
 							}
 							job = job.cloneBuilder().forceCacheKey(newKey).build();
 							if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, job.key+" will be used for that old version");
@@ -532,13 +532,13 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				} catch (SecurityException e) {
 					LogManager.logger.e(LOG_TAG, "getPicture exception:" + e.getMessage(), e);
 				} catch (OutOfMemoryError e) {
-					LogManager.logger.w(LOG_TAG, "Could not decode image " + job.mURL, e);
+					LogManager.logger.w(LOG_TAG, "Could not decode image " + job.url, e);
 					ooHandler.onOutOfMemoryError(e);
 				}
 			}
 			//else LogManager.logger.i(key.toString()+" not found in "+mData.size()+" cache elements");
 
-			final String bitmapCacheKey = mBitmapCache!=null ? BitmapDownloader.keyToBitmapCacheKey(job.key, job.mURL, job.mTransformHandler) : null;
+			final String bitmapCacheKey = mBitmapCache!=null ? BitmapDownloader.keyToBitmapCacheKey(job.key, job.url, job.mTransformHandler) : null;
 			if (mBitmapCache!=null) {
 				BitmapDrawable cachedBmp = mBitmapCache.get(bitmapCacheKey);
 				if (cachedBmp!=null) {
@@ -549,11 +549,11 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 							if (newBmp!=bmp)
 								cachedBmp = new BitmapDrawable(mContext.getResources(), bmp);
 						}
-						if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using cached bitmap for URL "+job.mURL+" key:"+bitmapCacheKey);
-						job.mDisplayHandler.drawBitmap(cachedBmp, job.mURL, job.mCookie, mBitmapCache, true);
+						if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using cached bitmap for URL "+job.url+" key:"+bitmapCacheKey);
+						job.mDisplayHandler.drawBitmap(cachedBmp, job.url, job.drawCookie, mBitmapCache, true);
 						return;
 					}
-					LogManager.logger.w(LOG_TAG, "try to draw bitmap "+job.key+" already recycled in "+job.mDisplayHandler+" URL:"+job.mURL);
+					LogManager.logger.w(LOG_TAG, "try to draw bitmap "+job.key+" already recycled in "+job.mDisplayHandler+" URL:"+job.url);
 				}
 			}
 
@@ -576,8 +576,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 											if (newBmp!=bmp)
 												cachedBmp = new BitmapDrawable(mContext.getResources(), newBmp);
 										}
-										if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using direct file for URL "+job.mURL+" file:"+file);
-										job.mDisplayHandler.drawBitmap(cachedBmp, job.mURL, job.mCookie, mBitmapCache, true);
+										if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using direct file for URL "+job.url+" file:"+file);
+										job.mDisplayHandler.drawBitmap(cachedBmp, job.url, job.drawCookie, mBitmapCache, true);
 										return;
 									}
 								}
@@ -589,13 +589,13 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 									bmp = job.mTransformHandler.getDisplayTransform().transformBitmap(bmp);
 
 								BitmapDrawable cachedBmp = new BitmapDrawable(mContext.getResources(), bmp);
-								if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using direct file for URL "+job.mURL+" file:"+file);
-								job.mDisplayHandler.drawBitmap(cachedBmp, job.mURL, job.mCookie, mBitmapCache, true);
+								if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using direct file for URL "+job.url+" file:"+file);
+								job.mDisplayHandler.drawBitmap(cachedBmp, job.url, job.drawCookie, mBitmapCache, true);
 								return;
 							}
 						}
 					} catch (OutOfMemoryError e) {
-						job.mDisplayHandler.drawDefaultPicture(job.mURL, mBitmapCache);
+						job.mDisplayHandler.drawDefaultPicture(job.url, mBitmapCache);
 						LogManager.logger.w(LOG_TAG, "can't decode "+file,e);
 						ooHandler.onOutOfMemoryError(e);
 						return;
@@ -603,7 +603,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				}
 			}
 
-			job.mDisplayHandler.drawDefaultPicture(job.mURL, mBitmapCache);
+			job.mDisplayHandler.drawDefaultPicture(job.url, mBitmapCache);
 
 			// we could not read from the cache, load the URL
 			mJobManager.addDownloadTarget(this, job);
@@ -630,7 +630,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		.setLifeType(lifeSpan)
 		.setExtensionMode(extensionMode)
 		.setDimension(height, false)
-		.setCookie(cookie)
+		.setDrawCookie(cookie)
 		.build();
 
 		pictureJob.startLoading(this);
@@ -655,7 +655,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		.setLifeType(lifeSpan)
 		.setExtensionMode(extensionMode)
 		.setDimension(width, true)
-		.setCookie(cookie)
+		.setDrawCookie(cookie)
 		.build();
 
 		pictureJob.startLoading(this);

@@ -52,24 +52,24 @@ public class DownloadManager {
 		// find out if that URL is already loading, if so add the view to the recipient
 		synchronized (mJobs) {
 			// add job by URL
-			BitmapDownloader downloader = mJobs.get(job.mURL);
+			BitmapDownloader downloader = mJobs.get(job.url);
 			if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "add loader:"+job.mDisplayHandler+" to downloader:"+downloader);
 			final boolean targetAdded = downloader!=null && downloader.addTarget(job);
 			if (!targetAdded) {
-				if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "add new downloader for "+job.mURL+" key:"+job.key+" loader:"+job.mDisplayHandler+" jobs:"+mJobs);
+				if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "add new downloader for "+job.url+" key:"+job.key+" loader:"+job.mDisplayHandler+" jobs:"+mJobs);
 				// create a fresh new one if an old one is not ready to accept our loadHandler
-				downloader = new BitmapDownloader(job.mURL, job.networkLoader, job.mCookie, cache, this);
+				downloader = new BitmapDownloader(job, cache, this);
 				downloader.addTarget(job);
 				try {
 					threadPool.execute(downloader);
-					mJobs.put(job.mURL, downloader);
+					mJobs.put(job.url, downloader);
 				} catch (RejectedExecutionException e) {
 					LogManager.getLogger().w(PictureCache.LOG_TAG, "can't execute "+downloader, e);
 				}
 			}
 			if (DEBUG_DOWNLOADER) {
-				downloader = mJobs.get(job.mURL);
-				LogManager.getLogger().e(PictureCache.LOG_TAG, "downloader for "+job.mURL+" = "+downloader+" loader added:"+targetAdded);
+				downloader = mJobs.get(job.url);
+				LogManager.getLogger().e(PictureCache.LOG_TAG, "downloader for "+job.url+" = "+downloader+" loader added:"+targetAdded);
 			}
 		}
 	}

@@ -8,9 +8,9 @@ import com.levelup.picturecache.internal.CacheKey;
 
 public class PictureJob {
 
-	public final String mURL;
+	public final String url;
 	public final String mUUID;
-	public final Object mCookie;
+	public final Object drawCookie;
 	public final long mFreshDate;
 	public final LifeSpan mLifeSpan;
 	public final int mDimension;
@@ -29,7 +29,7 @@ public class PictureJob {
 		protected final IPictureLoadConcurrency mConcurrencyHandler;
 		private String mURL;
 		private String mUUID;
-		private Object mCookie;
+		private Object drawCookie;
 		private long mFreshDate;
 		private LifeSpan mLifeSpan = LifeSpan.LONGTERM;
 		private int mDimension;
@@ -80,8 +80,8 @@ public class PictureJob {
 			return this;
 		}
 
-		public Builder setCookie(Object cookie) {
-			mCookie = cookie;
+		public Builder setDrawCookie(Object cookie) {
+			drawCookie = cookie;
 			return this;
 		}
 
@@ -109,9 +109,9 @@ public class PictureJob {
 		this.mDisplayHandler = builder.mDisplayHandler;
 		this.mTransformHandler = builder.mTransformHandler;
 		this.mConcurrencyHandler = builder.mConcurrencyHandler;
-		this.mURL = builder.mURL;
+		this.url = builder.mURL;
 		this.mUUID = builder.mUUID;
-		this.mCookie = builder.mCookie;
+		this.drawCookie = builder.drawCookie;
 		this.mFreshDate = builder.mFreshDate;
 		this.mLifeSpan = builder.mLifeSpan;
 		this.mDimension = builder.mDimension;
@@ -127,9 +127,9 @@ public class PictureJob {
 	
 	public Builder cloneBuilder() {
 		Builder builder = new Builder(mDisplayHandler, mTransformHandler, mConcurrencyHandler);
-		builder.mURL = this.mURL;
+		builder.mURL = this.url;
 		builder.mUUID = this.mUUID;
-		builder.mCookie = this.mCookie;
+		builder.drawCookie = this.drawCookie;
 		builder.mFreshDate = this.mFreshDate;
 		builder.mLifeSpan = this.mLifeSpan;
 		builder.mDimension = this.mDimension;

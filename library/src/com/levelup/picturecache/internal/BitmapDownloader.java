@@ -13,6 +13,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.UnknownHostException;
+import java.security.InvalidParameterException;
 import java.util.HashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -24,6 +25,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.util.FloatMath;
 
+import com.levelup.picturecache.BuildConfig;
 import com.levelup.picturecache.IPictureLoaderRender;
 import com.levelup.picturecache.IPictureLoaderTransforms;
 import com.levelup.picturecache.LifeSpan;
@@ -41,14 +43,10 @@ public class BitmapDownloader implements Runnable {
 	private static final boolean DEBUG_BITMAP_DOWNLOADER = false;
 
 	private static class DownloadTarget implements IPictureLoaderTransforms {
-		final IPictureLoaderRender loadHandler;
-		private final IPictureLoaderTransforms transformHandler;
-		final CacheKey mKey;
+		final PictureJob job;
 		File fileInCache;
-		DownloadTarget(IPictureLoaderRender loader, IPictureLoaderTransforms transforms, CacheKey key) {
-			this.loadHandler = loader;
-			this.transformHandler = transforms;
-			this.mKey = key;
+		DownloadTarget(PictureJob job) {
+			this.job = job;
 		}
 
 		@Override
@@ -56,33 +54,32 @@ public class BitmapDownloader implements Runnable {
 			if (this==o) return true;
 			if (!(o instanceof DownloadTarget)) return false;
 			DownloadTarget d = (DownloadTarget) o;
-			return mKey.equals(d.mKey) && loadHandler.equals(d.loadHandler);
+			return job.key.equals(d.job.key) && job.mDisplayHandler.equals(d.job.mDisplayHandler);
 		}
 
 		@Override
 		public int hashCode() {
-			return (mKey.hashCode() * 31 + loadHandler.hashCode()) * 31 + (null==transformHandler ? 0 : transformHandler.hashCode());
+			return (job.key.hashCode() * 31 + job.mDisplayHandler.hashCode()) * 31 + (null==job.mTransformHandler ? 0 : job.mTransformHandler.hashCode());
 		}
 
 		@Override
 		public String toString() {
-			return "DownloadTarget:"+loadHandler+':'+transformHandler;
+			return "DownloadTarget:"+job.mDisplayHandler+':'+job.mTransformHandler;
 		}
 
 		@Override
 		public StorageTransform getStorageTransform() {
-			return null==transformHandler ? null : transformHandler.getStorageTransform();
+			return null==job.mTransformHandler ? null : job.mTransformHandler.getStorageTransform();
 		}
 
 		@Override
 		public BitmapTransform getDisplayTransform() {
-			return null==transformHandler ? null : transformHandler.getDisplayTransform();
+			return null==job.mTransformHandler ? null : job.mTransformHandler.getDisplayTransform();
 		}
 	}
 
 	final String mURL;
 	final NetworkLoader networkLoader;
-	final Object mCookie;
 	final PictureCache mCache;
 	final CopyOnWriteArrayList<DownloadTarget> mTargets = new CopyOnWriteArrayList<DownloadTarget>();
 	final DownloadManager mMonitor;
@@ -97,11 +94,10 @@ public class BitmapDownloader implements Runnable {
 
 	private static final int CONNECT_TIMEOUT_DL = 10000; // 10s
 
-	BitmapDownloader(String URL, NetworkLoader loader, Object cookie, PictureCache cache, DownloadManager monitor) {
-		if (URL==null) throw new NullPointerException("How are we supposed to download a null URL?");
-		this.mURL = URL;
-		this.networkLoader = loader;
-		this.mCookie = cookie;
+	BitmapDownloader(PictureJob job, PictureCache cache, DownloadManager monitor) {
+		if (job.url==null) throw new NullPointerException("How are we supposed to download a null URL?");
+		this.mURL = job.url;
+		this.networkLoader = job.networkLoader;
 		this.mCache = cache;
 		this.mMonitor = monitor;
 	}
@@ -132,18 +128,18 @@ public class BitmapDownloader implements Runnable {
 				DownloadTarget target = mTargets.get(i);
 				checkAbort();
 
-				target.fileInCache = mCache.getCachedFile(target.mKey);
+				target.fileInCache = mCache.getCachedFile(target.job.key);
 				boolean bitmapWasInCache = target.fileInCache!=null;
 				if (!bitmapWasInCache) {
 					// we can't use the older version, download the file and create the stored file again
 					if (target.fileInCache!=null)
 						target.fileInCache.delete();
-					target.fileInCache = mCache.getCachedFilepath(target.mKey);
+					target.fileInCache = mCache.getCachedFilepath(target.job.key);
 					if (downloadToFile==null && mCanDownload) {
 						if (target.getStorageTransform()==null)
 							downloadToFile = target.fileInCache;
 						else
-							downloadToFile = new File(mCache.getAvailaibleTempDir(), "tmp_"+target.mKey.getFilename());
+							downloadToFile = new File(mCache.getAvailaibleTempDir(), "tmp_"+target.job.key.getFilename());
 					}
 				}
 
@@ -152,14 +148,14 @@ public class BitmapDownloader implements Runnable {
 					if (!bitmapWasInCache) {
 						displayDrawable = null;
 					} else if (mCache.getBitmapCache()!=null) {
-						displayDrawable = mCache.getBitmapCache().put(keyToBitmapCacheKey(target.mKey, mURL, target), target.fileInCache, getOutputOptions(tmpFileOptions.outWidth, tmpFileOptions.outHeight, target.mKey));
+						displayDrawable = mCache.getBitmapCache().put(keyToBitmapCacheKey(target.job.key, mURL, target), target.fileInCache, getOutputOptions(tmpFileOptions.outWidth, tmpFileOptions.outHeight, target.job.key));
 					} else {
 						displayDrawable = new BitmapDrawable(mCache.getContext().getResources(), target.fileInCache.getAbsolutePath());
 					}
 
 					if (displayDrawable==null) {
 						// we don't have that final file yet, use the download file to generate it
-						displayDrawable = targetBitmaps.get(target.mKey);
+						displayDrawable = targetBitmaps.get(target.job.key);
 						if (displayDrawable==null) {
 							displayDrawable = loadResourceDrawable(mURL);
 
@@ -189,13 +185,13 @@ public class BitmapDownloader implements Runnable {
 						if (downloaded) {
 							Bitmap bitmap;
 							if (mCache.getBitmapCache()!=null) {
-								CacheableBitmapDrawable cachedDrawable = mCache.getBitmapCache().put(keyToBitmapCacheKey(target.mKey, mURL, target), downloadToFile, getOutputOptions(tmpFileOptions.outWidth, tmpFileOptions.outHeight, target.mKey));
+								CacheableBitmapDrawable cachedDrawable = mCache.getBitmapCache().put(keyToBitmapCacheKey(target.job.key, mURL, target), downloadToFile, getOutputOptions(tmpFileOptions.outWidth, tmpFileOptions.outHeight, target.job.key));
 								bitmap = cachedDrawable.getBitmap();
 							} else {
-								bitmap = BitmapFactory.decodeFile(downloadToFile.getAbsolutePath(), getOutputOptions(tmpFileOptions.outWidth, tmpFileOptions.outHeight, target.mKey));
+								bitmap = BitmapFactory.decodeFile(downloadToFile.getAbsolutePath(), getOutputOptions(tmpFileOptions.outWidth, tmpFileOptions.outHeight, target.job.key));
 							}
 							if (bitmap!=null) {
-								int finalHeight = target.mKey.getBitmapHeight(bitmap.getWidth(), bitmap.getHeight());
+								int finalHeight = target.job.key.getBitmapHeight(bitmap.getWidth(), bitmap.getHeight());
 								if (finalHeight!=0 && finalHeight != bitmap.getHeight()) {
 									//LogManager.getLogger().v(" source size:"+bmp.getWidth()+"x"+bmp.getHeight());
 									Bitmap newBmp = Bitmap.createScaledBitmap(bitmap, (bitmap.getWidth() * finalHeight) / bitmap.getHeight(), finalHeight, true);
@@ -213,18 +209,18 @@ public class BitmapDownloader implements Runnable {
 					}
 
 					if (displayDrawable!=null) {
-						targetBitmaps.put(target.mKey, displayDrawable);
+						targetBitmaps.put(target.job.key, displayDrawable);
 						if (!bitmapWasInCache) {
-							CacheVariant variant = new CacheVariant(target.fileInCache, target.mKey);
+							CacheVariant variant = new CacheVariant(target.fileInCache, target.job.key);
 							targetNewBitmaps.put(variant, displayDrawable);
 						}
 					} else {
 						if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" failed to get a bitmap for:"+target);
-						targetBitmaps.remove(target.mKey);
+						targetBitmaps.remove(target.job.key);
 					}
 				}
 
-				if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, this+" target:"+target+" fileInCache:"+target.fileInCache+" bitmap:"+targetBitmaps.get(target.mKey));
+				if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, this+" target:"+target+" fileInCache:"+target.fileInCache+" bitmap:"+targetBitmaps.get(target.job.key));
 			}
 
 			downloadToFile = null;
@@ -254,10 +250,9 @@ public class BitmapDownloader implements Runnable {
 					synchronized (mTargets) {
 						for (DownloadTarget target : mTargets) {
 							//LogManager.getLogger().i(PictureCache.TAG, false, "ViewUpdate "+mURL);
-							IPictureLoaderRender k = target.loadHandler;
-							Drawable drawable = targetBitmaps.get(target.mKey);
+							Drawable drawable = targetBitmaps.get(target.job.key);
 
-							if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, this+" display "+drawable+" in "+target.loadHandler+" file:"+target.fileInCache+" key:"+target.mKey);
+							if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, this+" display "+drawable+" in "+target.job.mDisplayHandler+" file:"+target.fileInCache+" key:"+target.job.key);
 							if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().v(PictureCache.LOG_TAG, this+"  targets:"+mTargets+" bitmaps:"+targetBitmaps);
 							//LogManager.getLogger().i(PictureCache.TAG, "display "+mURL+" in "+j+" abort:"+abortRequested);
 							if (drawable!=null) {
@@ -270,9 +265,9 @@ public class BitmapDownloader implements Runnable {
 									cacheableBmp = drawable;
 								else
 									cacheableBmp = new BitmapDrawable(mCache.getContext().getResources(), bitmap);
-								k.drawBitmap(cacheableBmp, mURL, mCookie, mCache.getBitmapCache(), false);
+								target.job.mDisplayHandler.drawBitmap(cacheableBmp, mURL, target.job.drawCookie, mCache.getBitmapCache(), false);
 							} else
-								k.drawErrorPicture(mURL, mCache.getBitmapCache());
+								target.job.mDisplayHandler.drawErrorPicture(mURL, mCache.getBitmapCache());
 						}
 						mTargets.clear();
 					}
@@ -293,7 +288,9 @@ public class BitmapDownloader implements Runnable {
 	 * @return
 	 */
 	boolean addTarget(PictureJob job) {
-		DownloadTarget newTarget = new DownloadTarget(job.mDisplayHandler, job.mTransformHandler, job.key);
+		if (BuildConfig.DEBUG && !job.url.equals(mURL)) throw new InvalidParameterException(this+" wrong job URL "+job);
+		
+		DownloadTarget newTarget = new DownloadTarget(job);
 		//LogManager.getLogger().i(PictureCache.TAG, "add recipient view "+view+" for " + mURL);
 		if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" addTarget "+job.mDisplayHandler+" key:"+job.key);
 		synchronized (mTargets) {
@@ -328,7 +325,7 @@ public class BitmapDownloader implements Runnable {
 			boolean deleted = false;
 			if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" removeTarget "+target);
 			for (int i=0;i<mTargets.size();++i) {
-				if (mTargets.get(i).loadHandler.equals(target)) {
+				if (mTargets.get(i).job.mDisplayHandler.equals(target)) {
 					deleted = mTargets.remove(i)!=null;
 					break;
 				}

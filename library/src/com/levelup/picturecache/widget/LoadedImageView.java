@@ -224,7 +224,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 		PictureJob.Builder newJobBuilder = new PictureJob.Builder(this, transforms, this);
 		newJobBuilder.setURL(url)
 		.setUUID(UUID)
-		.setCookie(cookie)
+		.setDrawCookie(cookie)
 		.setLifeType(cacheLifespan)
 		//.setFreshDate(urlFreshness)
 		.setNetworkLoader(networkLoader);
