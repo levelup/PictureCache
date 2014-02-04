@@ -156,6 +156,16 @@ public class PictureJob {
 		return null;
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (o==this) return true;
+		if (!(o instanceof PictureJob)) return false;
+		PictureJob p = (PictureJob) o;
+		return key.equals(p.key) && ((mDisplayHandler==null && p.mDisplayHandler==null) || (mDisplayHandler!=null && mDisplayHandler.equals(p.mDisplayHandler)))
+				&& ((mTransformHandler==null && p.mTransformHandler==null) || (mTransformHandler!=null && mTransformHandler.equals(p.mTransformHandler)))
+				&& (mConcurrencyHandler.equals(p.mConcurrencyHandler));
+	}
+
 	/**
 	 * Retrieve picture into cache
 	 * 
