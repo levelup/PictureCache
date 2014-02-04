@@ -298,26 +298,25 @@ public class PictureJobList implements Runnable {
 
 		DownloadTarget newTarget = new DownloadTarget(job);
 		//LogManager.getLogger().i(PictureCache.TAG, "add recipient view "+view+" for " + mURL);
-		if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" addTarget "+job.mDisplayHandler+" key:"+job.key);
+		if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" addJob "+job+" key:"+job.key);
 
-		synchronized (mTargetJobs) {
-			mCanDownload |= job.mConcurrencyHandler.isDownloadAllowed();
+		mCanDownload |= job.mConcurrencyHandler.isDownloadAllowed();
 
-			if (mItemDate < job.mFreshDate)
-				mItemDate = job.mFreshDate;
+		if (mItemDate < job.mFreshDate)
+			mItemDate = job.mFreshDate;
 
-			if (mLifeSpan==null)
-				mLifeSpan = job.mLifeSpan;
-			else if (mLifeSpan.compare(job.mLifeSpan)<0)
-				mLifeSpan = job.mLifeSpan;
+		if (mLifeSpan==null)
+			mLifeSpan = job.mLifeSpan;
+		else if (mLifeSpan.compare(job.mLifeSpan)<0)
+			mLifeSpan = job.mLifeSpan;
 
-			if (mTargetJobs.contains(newTarget)) {
-				// TODO: update the rounded/rotation status
-				if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" target "+newTarget+" already pending");
-				return true;
-			}
-			mTargetJobs.add(newTarget);
+		if (mTargetJobs.contains(newTarget)) {
+			// TODO: update the rounded/rotation status
+			if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" job "+newTarget.job+" already pending");
+			return true;
 		}
+		mTargetJobs.add(newTarget);
+
 		return true;
 	}
 
@@ -325,7 +324,7 @@ public class PictureJobList implements Runnable {
 		boolean deleted = false;
 
 		DownloadTarget testTarget = new DownloadTarget(job);
-		if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" removeTarget "+job);
+		if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" removeJob "+job);
 		deleted = mTargetJobs.remove(testTarget);
 		/*for (int i=0;i<mTargetJobs.size();++i) {
 				if (mTargetJobs.get(i).job.mDisplayHandler.equals(job.mDisplayHandler)) {
@@ -333,8 +332,8 @@ public class PictureJobList implements Runnable {
 					break;
 				}
 			}*/
-
-		if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" removeTarget "+job+" = "+deleted+" remains:"+mTargetJobs.size());
+		
+		if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" removeJob "+job+" = "+deleted+" remains:"+mTargetJobs.size());
 		/*if (deleted) {
 			//LogManager.getLogger().v(" deleted job view:"+target+" for "+mURL);
 			//target.setLoadingURL(mCache, mURL);

@@ -55,11 +55,11 @@ public class DownloadManager {
 		synchronized (mDownloadJobs) {
 			// add job by URL
 			jobList = mDownloadJobs.get(job.url);
-			isNewJobList = null!=jobList && jobList.isEmpty();
+			isNewJobList = null==jobList || !jobList.isRunning();
 			if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "add job:"+job+" to downloader:"+jobList+" need restart:"+isNewJobList);
-			final boolean jobAdded = jobList!=null && jobList.addJob(job);
+			final boolean jobAdded = !isNewJobList && jobList.addJob(job);
 			if (!jobAdded) {
-				if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "add new downloader for "+job.url+" key:"+job.key+" job:"+job+" jobs:"+mDownloadJobs);
+				if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "add new downloader for "+job.url+" key:"+job.key+" job:"+job+" downloads:"+mDownloadJobs);
 				// create a fresh new one if an old one is not ready to accept our loadHandler
 				jobList = new PictureJobList(job, mCache, this);
 				jobList.addJob(job);
@@ -94,9 +94,9 @@ public class DownloadManager {
 				if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, " cancelDownloadForLoader job:"+job+" found:"+downloader);
 				if (downloader!=null) {
 					//LogManager.getLogger().d(PictureCache.TAG, "cancelDownloadForTarget for URL " + URL+" for "+loader);
-					downloader.removeJob(job);
-					if (downloader.isEmpty())
-						threadPool.remove(downloader);
+					Boolean shouldFinish = downloader.removeJob(job);
+					/*if (shouldFinish==Boolean.TRUE)
+						threadPool.remove(downloader);*/
 				}
 				return;
 			}
@@ -106,10 +106,11 @@ public class DownloadManager {
 			Enumeration<PictureJobList> downloaders = mDownloadJobs.elements();
 			while (downloaders.hasMoreElements()) {
 				PictureJobList downloader = downloaders.nextElement();
-				if (downloader.removeJob(job)) {
+				Boolean shouldFinish = downloader.removeJob(job);
+				if (null!=shouldFinish) {
 					if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, " cancelDownloadForLoader loadHandler:"+job+" deleted on:"+downloader/*+" url:"+url*/);
-					if (downloader.isEmpty())
-						threadPool.remove(downloader);
+					/*if (shouldFinish)
+						threadPool.remove(downloader);*/
 					return;
 				}
 			}
