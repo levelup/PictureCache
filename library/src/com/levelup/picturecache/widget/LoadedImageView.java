@@ -1,6 +1,7 @@
 package com.levelup.picturecache.widget;
 
 import java.io.File;
+import java.security.InvalidParameterException;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -12,6 +13,7 @@ import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.widget.ImageView;
 
+import com.levelup.picturecache.BuildConfig;
 import com.levelup.picturecache.IPictureLoadConcurrency;
 import com.levelup.picturecache.IPictureLoaderRender;
 import com.levelup.picturecache.IPictureLoaderTransforms;
@@ -254,11 +256,18 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 		currentJob.startLoading(currentCache);
 	}
 
-	public void resetImageURL(boolean resetToDefault) {
+	public void resetImageURL(IPictureLoaderRender defaultDrawHandler) {
 		UIHandler.assertUIThread();
 		pendingDraws.remove(this);
 		if (null!=currentJob) {
-			currentJob.stopLoading(currentCache, resetToDefault);
+			currentJob.stopLoading(currentCache, false);
+		}
+		if (null!=defaultDrawHandler) {
+			if (currentJob.mDisplayHandler != defaultDrawHandler) {
+				// TODO rebuild a PictureJob with this default handler
+				if (BuildConfig.DEBUG) throw new InvalidParameterException("can't change the default drawer yet");
+			}
+			defaultDrawHandler.drawDefaultPicture(currentURL, null!=currentCache ? currentCache.getBitmapCache() : null);
 		}
 		if (currentDrawType!=DrawType.LOADED_DRAWABLE)
 			currentURL = null;
@@ -280,7 +289,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 	@Override
 	protected void onDetachedFromWindow() {
 		super.onDetachedFromWindow();
-		resetImageURL(false);
+		resetImageURL(null);
 		super.setImageDrawable(null);
 		currentDrawType = null;
 	}
@@ -290,9 +299,9 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 	 * @param resId the resource identifier of the drawable
 	 */
 	public void loadImageResource(int resId) {
-		currentDrawType = null;
-		resetImageURL(false);
+		resetImageURL(null);
 		super.setImageResource(resId);
+		currentDrawType = null;
 	}
 
 	/**
@@ -300,9 +309,9 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 	 * @param drawable The drawable to set
 	 */
 	public void loadImageDrawable(Drawable drawable) {
-		currentDrawType = null;
-		resetImageURL(false);
+		resetImageURL(null);
 		super.setImageDrawable(drawable);
+		currentDrawType = null;
 	}
 
 	/**
@@ -310,9 +319,9 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 	 * @param bm The bitmap to set
 	 */
 	public void loadImageBitmap(Bitmap bm) {
-		currentDrawType = null;
-		resetImageURL(false);
+		resetImageURL(null);
 		super.setImageBitmap(bm);
+		currentDrawType = null;
 	}
 
 	/**
