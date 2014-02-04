@@ -97,12 +97,12 @@ public class DownloadManager {
 	 * @param URL TODO
 	 */
 	public void removeDownloadTarget(PictureJob job, String URL) {
-		if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "cancelDownloadForLoader for "+URL+" job:"+job);
+		if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "removeDownloadTarget for "+URL+" job:"+job);
 
 		synchronized (mDownloadJobs) {
 			if (!TextUtils.isEmpty(URL)) {
 				PictureJobList downloader = mDownloadJobs.get(URL);
-				if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, " cancelDownloadForLoader job:"+job+" found:"+downloader);
+				if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, " removeDownloadTarget job:"+job+" found:"+downloader);
 				if (downloader!=null) {
 					//LogManager.getLogger().d(PictureCache.TAG, "cancelDownloadForTarget for URL " + URL+" for "+loader);
 					downloader.removeJob(job);
@@ -116,7 +116,7 @@ public class DownloadManager {
 			while (downloaders.hasMoreElements()) {
 				PictureJobList downloader = downloaders.nextElement();
 				if (downloader.removeJob(job)) {
-					if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, " cancelDownloadForLoader loadHandler:"+job+" deleted on:"+downloader/*+" url:"+url*/);
+					if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, " removeDownloadTarget loadHandler:"+job+" deleted on:"+downloader/*+" url:"+url*/);
 					/*if (shouldFinish)
 						threadPool.remove(downloader);*/
 					return;
@@ -124,7 +124,7 @@ public class DownloadManager {
 			}
 		}
 
-		if (DEBUG_DOWNLOADER) LogManager.getLogger().w(PictureCache.LOG_TAG, "cancelDownloadForLoader do nothing for loadHandler:"+job);
+		if (DEBUG_DOWNLOADER) LogManager.getLogger().w(PictureCache.LOG_TAG, "removeDownloadTarget do nothing for loadHandler:"+job);
 	}
 
 	void onJobFinishedWithNewBitmaps(PictureJobList downloader, HashMap<CacheVariant,Drawable> newBitmaps) {

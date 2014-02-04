@@ -15,7 +15,8 @@ import java.net.URLConnection;
 import java.net.UnknownHostException;
 import java.security.InvalidParameterException;
 import java.util.HashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import uk.co.senab.bitmapcache.CacheableBitmapDrawable;
@@ -81,7 +82,7 @@ public class PictureJobList implements Runnable {
 	final String url;
 	private final NetworkLoader networkLoader;
 	private final PictureCache mCache;
-	private final CopyOnWriteArrayList<DownloadTarget> mTargetJobs = new CopyOnWriteArrayList<DownloadTarget>();
+	private final Map<DownloadTarget,Boolean> mTargetJobs = new HashMap<DownloadTarget,Boolean>();
 	private final DownloadManager mMonitor;
 
 	/**
@@ -128,9 +129,17 @@ public class PictureJobList implements Runnable {
 			BitmapFactory.Options tmpFileOptions = new BitmapFactory.Options();
 			tmpFileOptions.inJustDecodeBounds = false;
 
-			for (int i=0;i<mTargetJobs.size();++i) {
-				DownloadTarget target = mTargetJobs.get(i);
-				checkAbort();
+			for (;;) {
+				DownloadTarget target = null;
+				synchronized (this) {
+					for (Entry<DownloadTarget, Boolean> targetEntry : mTargetJobs.entrySet()) {
+						if (targetEntry.getValue()==null) { // this job has not been processed yet
+							target = targetEntry.getKey();
+						}
+					}
+				}
+				if (null==target)
+					break;
 
 				File fileInCache = mCache.getCachedFile(target.job.key);
 				boolean bitmapWasInCache = fileInCache!=null;
@@ -225,6 +234,7 @@ public class PictureJobList implements Runnable {
 				}
 
 				if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, this+" target:"+target+" fileInCache:"+fileInCache+" bitmap:"+targetBitmaps.get(target.job.key));
+				mTargetJobs.put(target, Boolean.TRUE); // this job is finished
 			}
 
 			downloadedToFile = null;
@@ -248,24 +258,27 @@ public class PictureJobList implements Runnable {
 					//LogManager.getLogger().i(PictureCache.TAG, "finished download thread for " + mURL + " bmp:"+bmp + " rbmp:"+rbmp);
 					//LogManager.getLogger().i(PictureCache.TAG, "send display bitmap "+mURL+" aborted:"+abortRequested.get()+" size:"+reqTargets.size());
 					//LogManager.getLogger().i(PictureCache.TAG, "ViewUpdate loop "+mURL+" aborted:"+abortRequested.get()+" size:"+reqTargets.size()+" bmp:"+bmp+" rbmp:"+rbmp);
-					for (DownloadTarget target : mTargetJobs) {
-						//LogManager.getLogger().i(PictureCache.TAG, false, "ViewUpdate "+mURL);
-						Drawable drawable = targetBitmaps.get(target.job.key);
+					for (Entry<DownloadTarget, Boolean> targetEntry : mTargetJobs.entrySet()) {
+						if (targetEntry.getValue()==Boolean.TRUE) {
+							DownloadTarget target = targetEntry.getKey();
+							//LogManager.getLogger().i(PictureCache.TAG, false, "ViewUpdate "+mURL);
+							Drawable drawable = targetBitmaps.get(target.job.key);
 
-						if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, this+" display "+drawable+" in "+target.job.mDisplayHandler+" key:"+target.job.key);
-						if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().v(PictureCache.LOG_TAG, this+"  targets:"+mTargetJobs+" bitmaps:"+targetBitmaps);
-						//LogManager.getLogger().i(PictureCache.TAG, "display "+mURL+" in "+j+" abort:"+abortRequested);
-						if (drawable!=null) {
-							if (target.getDisplayTransform()!=null) {
-								Bitmap bitmap = ViewLoader.drawableToBitmap(drawable);
-								Bitmap transformedBitmap = target.getDisplayTransform().transformBitmap(bitmap);
-								if (transformedBitmap!=bitmap)
-									drawable = new BitmapDrawable(mCache.getContext().getResources(), transformedBitmap);
-							}
+							if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, this+" display "+drawable+" in "+target.job.mDisplayHandler+" key:"+target.job.key);
+							if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().v(PictureCache.LOG_TAG, this+"  targets:"+mTargetJobs+" bitmaps:"+targetBitmaps);
+							//LogManager.getLogger().i(PictureCache.TAG, "display "+mURL+" in "+j+" abort:"+abortRequested);
+							if (drawable!=null) {
+								if (target.getDisplayTransform()!=null) {
+									Bitmap bitmap = ViewLoader.drawableToBitmap(drawable);
+									Bitmap transformedBitmap = target.getDisplayTransform().transformBitmap(bitmap);
+									if (transformedBitmap!=bitmap)
+										drawable = new BitmapDrawable(mCache.getContext().getResources(), transformedBitmap);
+								}
 
-							target.job.mDisplayHandler.drawBitmap(drawable, url, target.job.drawCookie, mCache.getBitmapCache(), false);
-						} else
-							target.job.mDisplayHandler.drawErrorPicture(url, mCache.getBitmapCache());
+								target.job.mDisplayHandler.drawBitmap(drawable, url, target.job.drawCookie, mCache.getBitmapCache(), false);
+							} else
+								target.job.mDisplayHandler.drawErrorPicture(url, mCache.getBitmapCache());
+						}
 					}
 					mTargetJobs.clear();
 					targetBitmaps.clear();
@@ -283,9 +296,9 @@ public class PictureJobList implements Runnable {
 	/**
 	 * Add a handler for when the URL is downloaded and start the download+processing if it wasn't started
 	 * @param job
-	 * @return {@code false} is the job was not added to this target (if the download is aborting)
+	 * @return {@code false} if the job was not added to this target (if the download is aborting)
 	 */
-	boolean addJob(PictureJob job) {
+	synchronized boolean addJob(PictureJob job) {
 		if (BuildConfig.DEBUG && !job.url.equals(url)) throw new InvalidParameterException(this+" wrong job URL "+job);
 
 		if (mAborting.get()) {
@@ -307,12 +320,12 @@ public class PictureJobList implements Runnable {
 		else if (mLifeSpan.compare(job.mLifeSpan)<0)
 			mLifeSpan = job.mLifeSpan;
 
-		if (mTargetJobs.contains(newTarget)) {
-			// TODO: update the rounded/rotation status
+		Boolean runningState = mTargetJobs.get(newTarget);
+		if (runningState!=Boolean.TRUE) {
+			mTargetJobs.put(newTarget, null); // mark as pending for processing
+		} else {
 			if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" job "+newTarget.job+" already pending");
-			return true;
 		}
-		mTargetJobs.add(newTarget);
 
 		return true;
 	}
@@ -322,12 +335,15 @@ public class PictureJobList implements Runnable {
 	 * @param job
 	 * @return {@code null} if the job was not handled here, {@code Boolean.TRUE} if the download is going to be aborted
 	 */
-	boolean removeJob(PictureJob job) {
+	synchronized boolean removeJob(PictureJob job) {
 		boolean deleted = false;
 
 		DownloadTarget testTarget = new DownloadTarget(job);
 		if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" removeJob "+job);
-		deleted = mTargetJobs.remove(testTarget);
+		if (mTargetJobs.containsKey(testTarget)) {
+			mTargetJobs.put(testTarget, Boolean.FALSE); // mark as invalid
+			deleted = true;
+		}
 		/*for (int i=0;i<mTargetJobs.size();++i) {
 				if (mTargetJobs.get(i).job.mDisplayHandler.equals(job.mDisplayHandler)) {
 					deleted = mTargetJobs.remove(i)!=null;
@@ -372,11 +388,15 @@ public class PictureJobList implements Runnable {
 	 * @throws AbortDownload if we should not download or decode any further
 	 */
 	private synchronized void checkAbort() throws AbortDownload {
-		if (mTargetJobs.isEmpty()) {
-			if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, this+ " no more targets, aborting");
-			mAborting.set(true);
-			throw new AbortDownload();
+		for (Entry<DownloadTarget, Boolean> targetEntry : mTargetJobs.entrySet()) {
+			if (targetEntry.getValue()!=Boolean.FALSE) {
+				// there's still a valid job pending to be processed or rendered
+				return;
+			}
 		}
+		if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, this+ " no more targets, aborting");
+		mAborting.set(true);
+		throw new AbortDownload();
 	}
 
 	private void downloadInTempFile(File tmpFile) throws DownloadFailureException {
