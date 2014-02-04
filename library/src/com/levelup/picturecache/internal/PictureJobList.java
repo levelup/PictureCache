@@ -84,15 +84,12 @@ public class PictureJobList implements Runnable {
 	private final CopyOnWriteArrayList<DownloadTarget> mTargetJobs = new CopyOnWriteArrayList<DownloadTarget>();
 	private final DownloadManager mMonitor;
 
-	// locked by mTargets
 	/**
 	 * Longest item (URL+key) {@link LifeSpan} 
-	 * <p>Under lock from {@code synchronized(mTargetJobs)}</p>
 	 */
 	private LifeSpan mLifeSpan;
 	/**
 	 * Most recent item (URL+key) date
-	 * <p>Under lock from {@code synchronized(mTargetJobs)}</p>
 	 */
 	private long mItemDate;
 
@@ -188,11 +185,13 @@ public class PictureJobList implements Runnable {
 						}
 
 						if (downloaded) {
-							Bitmap bitmap;
+							Bitmap bitmap = null;
 							if (mCache.getBitmapCache()!=null) {
 								CacheableBitmapDrawable cachedDrawable = mCache.getBitmapCache().put(keyToBitmapCacheKey(target.job.key, url, target), downloadedToFile, getOutputOptions(tmpFileOptions.outWidth, tmpFileOptions.outHeight, target.job.key));
-								bitmap = cachedDrawable.getBitmap();
-							} else {
+								if (null!=cachedDrawable)
+									bitmap = cachedDrawable.getBitmap();
+							}
+							if (null==bitmap) {
 								bitmap = BitmapFactory.decodeFile(downloadedToFile.getAbsolutePath(), getOutputOptions(tmpFileOptions.outWidth, tmpFileOptions.outHeight, target.job.key));
 							}
 							if (bitmap!=null) {
@@ -249,7 +248,6 @@ public class PictureJobList implements Runnable {
 					//LogManager.getLogger().i(PictureCache.TAG, "finished download thread for " + mURL + " bmp:"+bmp + " rbmp:"+rbmp);
 					//LogManager.getLogger().i(PictureCache.TAG, "send display bitmap "+mURL+" aborted:"+abortRequested.get()+" size:"+reqTargets.size());
 					//LogManager.getLogger().i(PictureCache.TAG, "ViewUpdate loop "+mURL+" aborted:"+abortRequested.get()+" size:"+reqTargets.size()+" bmp:"+bmp+" rbmp:"+rbmp);
-					// no need at this point, the list will not change anymore synchronized (mTargetJobs) {
 					for (DownloadTarget target : mTargetJobs) {
 						//LogManager.getLogger().i(PictureCache.TAG, false, "ViewUpdate "+mURL);
 						Drawable drawable = targetBitmaps.get(target.job.key);
@@ -271,7 +269,6 @@ public class PictureJobList implements Runnable {
 					}
 					mTargetJobs.clear();
 					targetBitmaps.clear();
-					//}
 				}
 			});
 
@@ -320,7 +317,12 @@ public class PictureJobList implements Runnable {
 		return true;
 	}
 
-	boolean removeJob(PictureJob job) {
+	/**
+	 * Remove a render job from the list of targets
+	 * @param job
+	 * @return {@code null} if the job was not handled here, {@code Boolean.TRUE} if the download is going to be aborted
+	 */
+	Boolean removeJob(PictureJob job) {
 		boolean deleted = false;
 
 		DownloadTarget testTarget = new DownloadTarget(job);
@@ -332,7 +334,7 @@ public class PictureJobList implements Runnable {
 					break;
 				}
 			}*/
-		
+
 		if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" removeJob "+job+" = "+deleted+" remains:"+mTargetJobs.size());
 		/*if (deleted) {
 			//LogManager.getLogger().v(" deleted job view:"+target+" for "+mURL);
@@ -340,7 +342,14 @@ public class PictureJobList implements Runnable {
 			job.mDisplayHandler.drawDefaultPicture(url, mCache.getBitmapCache());
 		}*/
 		//else LogManager.getLogger().i(PictureCache.TAG, " keep downloading URL:" + mURL + " remaining views:" + reqViews.size() + " like view:"+reqViews.get(0));
-		return deleted;
+		if (!deleted)
+			return null;
+
+		if (mTargetJobs.isEmpty()) {
+			//mAborting.set(true);
+			return Boolean.TRUE;
+		}
+		return Boolean.FALSE;
 	}
 
 	private BitmapFactory.Options getOutputOptions(int srcWidth, int srcHeight, CacheKey key) {
@@ -377,8 +386,8 @@ public class PictureJobList implements Runnable {
 		}
 	}
 
-	boolean isEmpty() {
-		return mTargetJobs.isEmpty();
+	boolean isRunning() {
+		return !mAborting.get();
 	}
 
 	private void downloadInTempFile(File tmpFile) throws DownloadFailureException {
