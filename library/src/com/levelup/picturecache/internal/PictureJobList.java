@@ -40,7 +40,7 @@ import com.levelup.picturecache.transforms.storage.StorageTransform;
 
 public class PictureJobList implements Runnable {
 
-	private static final boolean DEBUG_BITMAP_DOWNLOADER = true;
+	private static final boolean DEBUG_BITMAP_DOWNLOADER = false;
 
 	private static class DownloadTarget implements IPictureLoaderTransforms {
 		final PictureJob job;
@@ -238,8 +238,8 @@ public class PictureJobList implements Runnable {
 		} catch (Throwable e) {
 			LogManager.getLogger().e(PictureCache.LOG_TAG, "exception on "+url, e);
 		} finally {
-			if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" finished loading targets:"+mTargetJobs+" bitmaps:"+targetBitmaps);
 			mAborting.set(true); // after this point new targets are not OK for this job
+			if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" finished loading targets:"+mTargetJobs+" bitmaps:"+targetBitmaps);
 
 			UIHandler.instance.runOnUiThread(new Runnable() {
 				@Override
@@ -322,7 +322,7 @@ public class PictureJobList implements Runnable {
 	 * @param job
 	 * @return {@code null} if the job was not handled here, {@code Boolean.TRUE} if the download is going to be aborted
 	 */
-	Boolean removeJob(PictureJob job) {
+	boolean removeJob(PictureJob job) {
 		boolean deleted = false;
 
 		DownloadTarget testTarget = new DownloadTarget(job);
@@ -342,14 +342,7 @@ public class PictureJobList implements Runnable {
 			job.mDisplayHandler.drawDefaultPicture(url, mCache.getBitmapCache());
 		}*/
 		//else LogManager.getLogger().i(PictureCache.TAG, " keep downloading URL:" + mURL + " remaining views:" + reqViews.size() + " like view:"+reqViews.get(0));
-		if (!deleted)
-			return null;
-
-		if (mTargetJobs.isEmpty()) {
-			//mAborting.set(true);
-			return Boolean.TRUE;
-		}
-		return Boolean.FALSE;
+		return deleted;
 	}
 
 	private BitmapFactory.Options getOutputOptions(int srcWidth, int srcHeight, CacheKey key) {
@@ -378,16 +371,12 @@ public class PictureJobList implements Runnable {
 	/**
 	 * @throws AbortDownload if we should not download or decode any further
 	 */
-	private void checkAbort() throws AbortDownload {
+	private synchronized void checkAbort() throws AbortDownload {
 		if (mTargetJobs.isEmpty()) {
 			if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, this+ " no more targets, aborting");
 			mAborting.set(true);
 			throw new AbortDownload();
 		}
-	}
-
-	boolean isRunning() {
-		return !mAborting.get();
 	}
 
 	private void downloadInTempFile(File tmpFile) throws DownloadFailureException {
