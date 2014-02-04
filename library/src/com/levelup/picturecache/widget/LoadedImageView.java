@@ -289,9 +289,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 	@Override
 	protected void onDetachedFromWindow() {
 		super.onDetachedFromWindow();
-		resetImageURL(null);
-		super.setImageDrawable(null);
-		currentDrawType = null;
+		loadImageDrawable(null);
 	}
 
 	/**
