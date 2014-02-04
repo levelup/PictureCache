@@ -253,20 +253,19 @@ public class PictureJobList implements Runnable {
 							if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().v(PictureCache.LOG_TAG, this+"  targets:"+mTargetJobs+" bitmaps:"+targetBitmaps);
 							//LogManager.getLogger().i(PictureCache.TAG, "display "+mURL+" in "+j+" abort:"+abortRequested);
 							if (drawable!=null) {
-								Bitmap bitmap = ViewLoader.drawableToBitmap(drawable);
-								if (target.getDisplayTransform()!=null)
-									bitmap = target.getDisplayTransform().transformBitmap(bitmap);
+								if (target.getDisplayTransform()!=null) {
+									Bitmap bitmap = ViewLoader.drawableToBitmap(drawable);
+									Bitmap transformedBitmap = target.getDisplayTransform().transformBitmap(bitmap);
+									if (transformedBitmap!=bitmap)
+										drawable = new BitmapDrawable(mCache.getContext().getResources(), transformedBitmap);
+								}
 
-								Drawable cacheableBmp;
-								if (drawable instanceof BitmapDrawable && ((BitmapDrawable) drawable).getBitmap()==bitmap)
-									cacheableBmp = drawable;
-								else
-									cacheableBmp = new BitmapDrawable(mCache.getContext().getResources(), bitmap);
-								target.job.mDisplayHandler.drawBitmap(cacheableBmp, url, target.job.drawCookie, mCache.getBitmapCache(), false);
+								target.job.mDisplayHandler.drawBitmap(drawable, url, target.job.drawCookie, mCache.getBitmapCache(), false);
 							} else
 								target.job.mDisplayHandler.drawErrorPicture(url, mCache.getBitmapCache());
 						}
 						mTargetJobs.clear();
+						targetBitmaps.clear();
 					}
 				}
 			});
