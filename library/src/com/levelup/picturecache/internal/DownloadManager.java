@@ -55,7 +55,8 @@ public class DownloadManager {
 		synchronized (mDownloadJobs) {
 			// add job by URL
 			jobList = mDownloadJobs.get(job.url);
-			if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "add job:"+job+" to downloader:"+jobList);
+			isNewJobList = null!=jobList && jobList.isEmpty();
+			if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "add job:"+job+" to downloader:"+jobList+" need restart:"+isNewJobList);
 			final boolean jobAdded = jobList!=null && jobList.addJob(job);
 			if (!jobAdded) {
 				if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "add new downloader for "+job.url+" key:"+job.key+" job:"+job+" jobs:"+mDownloadJobs);
@@ -96,8 +97,8 @@ public class DownloadManager {
 					downloader.removeJob(job);
 					if (downloader.isEmpty())
 						threadPool.remove(downloader);
-					return;
 				}
+				return;
 			}
 
 			// find the target by view
@@ -109,11 +110,11 @@ public class DownloadManager {
 					if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, " cancelDownloadForLoader loadHandler:"+job+" deleted on:"+downloader/*+" url:"+url*/);
 					if (downloader.isEmpty())
 						threadPool.remove(downloader);
-					break;
+					return;
 				}
 			}
 		}
-		
+
 		if (DEBUG_DOWNLOADER) LogManager.getLogger().w(PictureCache.LOG_TAG, "cancelDownloadForLoader do nothing for loadHandler:"+job);
 	}
 
