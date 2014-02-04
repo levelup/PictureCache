@@ -39,6 +39,7 @@ public class PictureJob {
 		private CacheKey key;
 
 		public Builder(IPictureLoaderRender draw, IPictureLoaderTransforms transforms, IPictureLoadConcurrency concurrencyHandler) {
+			if (null==concurrencyHandler) throw new IllegalArgumentException("missing a IPictureLoadConcurrency");
 			this.mDisplayHandler = draw;
 			this.mTransformHandler = transforms;
 			this.mConcurrencyHandler = concurrencyHandler;
@@ -89,7 +90,7 @@ public class PictureJob {
 			this.networkLoader = networkLoader;
 			return this;
 		}
-		
+
 		Builder forceCacheKey(CacheKey key) {
 			this.key = key;
 			return this;
@@ -98,7 +99,7 @@ public class PictureJob {
 		public PictureJob build() {
 			return new PictureJob(this);
 		}
-		
+
 		@Override
 		public String toString() {
 			return "{PictureJob.Builder "+mUUID+" / "+mURL+'}';
@@ -124,7 +125,7 @@ public class PictureJob {
 			this.key = buildKey(builder);
 		if (null==this.key) throw new IllegalStateException("failed to create a CacheKey with "+builder);
 	}
-	
+
 	public Builder cloneBuilder() {
 		Builder builder = new Builder(mDisplayHandler, mTransformHandler, mConcurrencyHandler);
 		builder.mURL = this.url;
