@@ -26,6 +26,11 @@ import com.levelup.picturecache.UIHandler;
 import com.levelup.picturecache.loaders.ViewLoader;
 import com.levelup.picturecache.loaders.internal.DrawType;
 
+/**
+ * {@code ImageView} subclass that allow loading pictures from a URL
+ * @see {@link #loadImageURL(PictureCache, String)}
+ * @see {@link #loadImageURL(PictureCache, String, String, LoadedImageViewRender, int, int, PictureJobTransforms, long, LifeSpan, NetworkLoader)}
+ */
 public class LoadedImageView extends CacheableImageView implements PictureJobConcurrency, PictureJobRenderer {
 	private final static boolean DEBUG_STATE = BuildConfig.DEBUG && false;
 	
@@ -42,11 +47,11 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 		void renderDrawable(LoadedImageView view, Drawable drawable);
 
 		/**
-		 * Called when the default view should be displayed, while the bitmap is loading
+		 * Called when the loading state should be displayed, while the bitmap is loading
 		 * 
 		 * @param view The {@link LoadedImageView} in which to display the default display 
 		 */
-		void renderDefault(LoadedImageView view);
+		void renderLoading(LoadedImageView view);
 
 		/**
 		 * Called when the download failed and an error should be displayed
@@ -63,13 +68,13 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 		}
 
 		@Override
-		public void renderDefault(LoadedImageView view) {
-			// do nothing by default
+		public void renderLoading(LoadedImageView view) {
+			view.setImageDrawable(null);
 		}
 
 		@Override
 		public void renderError(LoadedImageView view) {
-			renderDefault(view);
+			renderLoading(view);
 		}
 	}
 
@@ -84,6 +89,9 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 		return true;
 	}
 
+	/**
+	 * DO NOT CALL, internal code
+	 */
 	@Override
 	public String setLoadingURL(String url, BitmapLruCache mBitmapCache) {
 		String oldURL = currentURL;
@@ -96,12 +104,15 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 		return false;
 	}
 
-	// IPictureLoaderRender
+	// PictureJobRenderer
 	private boolean isInLayout;
 	private DrawType currentDrawType; // TODO should be reset if the default/error displaying is different between the calls
 
+	/**
+	 * DO NOT CALL, internal code
+	 */
 	@Override
-	public void drawDefaultPicture(final String url, final BitmapLruCache drawableCache) {
+	public final void drawDefaultPicture(final String url, final BitmapLruCache drawableCache) {
 		UIHandler.assertUIThread();
 		if (!url.equals(currentURL)) {
 			// we don't care about this anymore
@@ -121,8 +132,11 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 		drawInView(DrawType.DEFAULT, url, drawableCache, null, true, currentDrawer);
 	}
 
+	/**
+	 * DO NOT CALL, internal code
+	 */
 	@Override
-	public void drawErrorPicture(final String url, final BitmapLruCache drawableCache) {
+	public final void drawErrorPicture(final String url, final BitmapLruCache drawableCache) {
 		UIHandler.assertUIThread();
 		if (!url.equals(currentURL)) {
 			// we don't care about this anymore
@@ -142,8 +156,11 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 		drawInView(DrawType.ERROR, url, drawableCache, null, true, currentDrawer);
 	}
 
+	/**
+	 * DO NOT CALL, internal code
+	 */
 	@Override
-	public void drawBitmap(final Drawable drawable, final String url, final Object drawCookie, final BitmapLruCache drawableCache, final boolean immediate) {
+	public final void drawBitmap(final Drawable drawable, final String url, final Object drawCookie, final BitmapLruCache drawableCache, final boolean immediate) {
 		UIHandler.assertUIThread();
 		if (!url.equals(currentURL)) {
 			// we don't care about this anymore
@@ -182,7 +199,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 			public void run() {
 				if (type==DrawType.DEFAULT) {
 					if (currentDrawType!=DrawType.DEFAULT) {
-						renderer.renderDefault(LoadedImageView.this);
+						renderer.renderLoading(LoadedImageView.this);
 						currentDrawType = DrawType.DEFAULT;
 					} else {
 						if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" saved default display");
@@ -232,16 +249,42 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 		super(context, attrs, defStyle);
 	}
 	
+	/**
+	 * Load the given URL from the network using the provided cache
+	 * <p>An empty drawable is displayed while the picture is loading</p>
+	 * 
+	 * @param cache The {@link PictureCache} to use to download/store the picture stream
+	 * @param url The URL of the picture stream to display
+	 * 
+	 * @see #loadImageURL(PictureCache, String, String, LoadedImageViewRender, int, int, PictureJobTransforms, long, LifeSpan, NetworkLoader) full loadImageURL() call
+	 * @see #resetImageURL(LoadedImageViewRender)
+	 */
 	public void loadImageURL(PictureCache cache, String url) {
-		loadImageURL(cache, url, null, null, DefaultRenderer, 0, null, 0, 0, null);
+		loadImageURL(cache, url, null, DefaultRenderer, 0, 0, null, 0, null, null);
 	}
 	
-	public void loadImageURL(PictureCache cache, String url, String UUID, NetworkLoader networkLoader, LoadedImageViewRender drawHandler, long urlFreshness, LifeSpan cacheLifespan, int maxWidth, int maxHeight, PictureJobTransforms transforms) {
+	/**
+	 * Load the given URL from the network using the provided cache
+	 * 
+	 * @param cache The {@link PictureCache} to use to download/store the picture stream
+	 * @param url The URL of the picture stream to display, can be {@code null} if UUID is not {@code null}
+	 * @param UUID A unique identifier for this URL/transform combination, useful to retrieve pictures from the cache without knowing the URL, can be {@code null}
+	 * @param renderer The interface used to display the downloaded bitmap, the loading view or the download error
+	 * @param maxWidth The max width of the resulting bitmap, may be 0
+	 * @param maxHeight The max height of the resulting bitmap, may be 0
+	 * @param transforms {@link PictureJobTransforms Transformations} that may be applied to the downloaded bitmap before displaying it
+	 * @param urlFreshness Date of the URL in case the same UUID has different URLs, may be 0
+	 * @param cacheLifespan The {@link LifeSpan} of the item if the item should be stored {@link LifeSpan#SHORTTERM shortly}, {@link LifeSpan#ETERNAL eternally} or {@link LifeSpan#LONGTERM normally}
+	 * @param networkLoader {@link NetworkLoader} for special network load handling, can be {@code null}
+	 * @see #loadImageURL(PictureCache, String, String, LoadedImageViewRender, int, int, PictureJobTransforms, long, LifeSpan, NetworkLoader) simplified loadImageURL() call
+	 * @see #resetImageURL(LoadedImageViewRender)
+	 */
+	public void loadImageURL(PictureCache cache, String url, String UUID, LoadedImageViewRender renderer, int maxWidth, int maxHeight, PictureJobTransforms transforms, long urlFreshness, LifeSpan cacheLifespan, NetworkLoader networkLoader) {
 		UIHandler.assertUIThread();
 		if (null==url && null==UUID) {
 			throw new IllegalArgumentException("We need either a url or a uuid to display, did you mean resetImageURL()?");
 		}
-		if (null==drawHandler) {
+		if (null==renderer) {
 			throw new IllegalArgumentException("We need a drawHandler to draw");
 		}
 
@@ -259,7 +302,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 			newJobBuilder.setDimension(maxHeight, false);
 
 		PictureJob newJob = newJobBuilder.build();
-		if (null!=currentJob && currentJob.equals(newJob) && drawHandler.equals(currentDrawer)) {
+		if (null!=currentJob && currentJob.equals(newJob) && renderer.equals(currentDrawer)) {
 			// nothing to do, we're already on it
 			if (DEBUG_STATE) LogManager.getLogger().i(VIEW_LOG_TAG, this+" same job, do nothing");
 			return;
@@ -270,12 +313,17 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 			currentURL = null; // TODO should be done for every cancel or better handled with setLoadingURL()
 		}
 
-		currentDrawer = drawHandler;
+		currentDrawer = renderer;
 		currentJob = newJob;
 		currentCache = cache;
 		currentJob.startLoading(currentCache);
 	}
 
+	/**
+	 * Stop the currently loading URL job and do not display it. If a {@code viewRenderer} is provided, it will be used to reset the display to the default view
+	 * 
+	 * @param viewRenderer The renderer to use to reset bring back the display to the loading view, can be {@code null}
+	 */
 	public void resetImageURL(LoadedImageViewRender viewRenderer) {
 		UIHandler.assertUIThread();
 		if (DEBUG_STATE) LogManager.getLogger().d(VIEW_LOG_TAG, this+" resetImageURL");
@@ -318,6 +366,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 
 	/**
 	 * Load a resource as an image in the View, similar to {@link ImageView#setImageResource(int) setImageResource(int)} but canceling the previous network load if there was any
+	 * 
 	 * @param resId the resource identifier of the drawable
 	 */
 	public void loadImageResource(int resId) {
@@ -328,6 +377,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 
 	/**
 	 * Load a Drawable as an image in the View, similar to {@link ImageView#setImageDrawable(Drawable) setImageDrawable(Drawable)} but canceling the previous network load if there was any
+	 * 
 	 * @param drawable The drawable to set
 	 */
 	public void loadImageDrawable(Drawable drawable) {
@@ -338,6 +388,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 
 	/**
 	 * Load a Bitmap as an image in the View, similar to {@link ImageView#setImageBitmap(Bitmap) setImageBitmap(Bitmap)} but canceling the previous network load if there was any
+	 * 
 	 * @param bm The bitmap to set
 	 */
 	public void loadImageBitmap(Bitmap bm) {
