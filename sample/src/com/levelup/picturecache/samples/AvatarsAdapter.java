@@ -30,9 +30,10 @@ class AvatarsAdapter extends ArrayAdapter<SampleSource.Sample> {
 		ImageViewLoaderDefaultResource loader = new ImageViewLoaderDefaultResource((ImageView) view.findViewById(R.id.avatar), R.drawable.picholder, null, null);
 
 		// prepare a basic picture job to load the avatar URL with a specific UUID
-		PictureJob avatarJob = new PictureJob.Builder(loader, loader, loader)
+		PictureJob avatarJob = new PictureJob.Builder(loader, loader)
 		.setURL(getItem(position).picURL)
 		.setUUID("avatar_" + getItem(position).name)
+		.setTransforms(loader)
 		.build();
 
 		// run the job in the picture cache

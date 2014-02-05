@@ -544,8 +544,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				if (cachedBmp!=null) {
 					Bitmap bmp = cachedBmp.getBitmap();
 					if (bmp!=null) {
-						if (null!=job.mTransformHandler && null != job.mTransformHandler.getDisplayTransform()) {
-							Bitmap newBmp = job.mTransformHandler.getDisplayTransform().transformBitmap(bmp);
+						if (null!=job.getDisplayTransform()) {
+							Bitmap newBmp = job.getDisplayTransform().transformBitmap(bmp);
 							if (newBmp!=bmp)
 								cachedBmp = new BitmapDrawable(mContext.getResources(), bmp);
 						}
@@ -571,8 +571,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 								if (cachedBmp!=null) {
 									Bitmap bmp = cachedBmp.getBitmap();
 									if (bmp!=null) {
-										if (null!=job.mTransformHandler && null != job.mTransformHandler.getDisplayTransform()) {
-											Bitmap newBmp = job.mTransformHandler.getDisplayTransform().transformBitmap(bmp);
+										if (null!=job.getDisplayTransform()) {
+											Bitmap newBmp = job.getDisplayTransform().transformBitmap(bmp);
 											if (newBmp!=bmp)
 												cachedBmp = new BitmapDrawable(mContext.getResources(), newBmp);
 										}
@@ -585,8 +585,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 						} else {
 							Bitmap bmp = BitmapFactory.decodeFile(file.getAbsolutePath());
 							if (bmp!=null) {
-								if (null!=job.mTransformHandler && null != job.mTransformHandler.getDisplayTransform())
-									bmp = job.mTransformHandler.getDisplayTransform().transformBitmap(bmp);
+								if (null!=job.getDisplayTransform())
+									bmp = job.getDisplayTransform().transformBitmap(bmp);
 
 								BitmapDrawable cachedBmp = new BitmapDrawable(mContext.getResources(), bmp);
 								if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using direct file for URL "+job.url+" file:"+file);
@@ -624,8 +624,9 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @param extensionMode The kind of file type we are loading, can be {@link StorageType#AUTO}, {@link StorageType#PNG} or {@link StorageType#JPEG}
 	 */
 	public void loadPictureWithFixedHeight(PictureLoaderHandler loader, String URL, String UUID, Object cookie, long itemDate, LifeSpan lifeSpan, int height, StorageType extensionMode) {
-		PictureJob pictureJob = new PictureJob.Builder(loader, loader, loader)
+		PictureJob pictureJob = new PictureJob.Builder(loader, loader)
 		.setURL(URL).setUUID(UUID)
+		.setTransforms(loader)
 		.setFreshDate(itemDate)
 		.setLifeType(lifeSpan)
 		.setExtensionMode(extensionMode)
@@ -648,7 +649,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @param extensionMode The kind of file type we are loading, can be {@link StorageType#AUTO}, {@link StorageType#PNG} or {@link StorageType#JPEG}
 	 */
 	public void loadPictureWithMaxWidth(PictureLoaderHandler loader, String URL, String UUID, Object cookie, long itemDate, LifeSpan lifeSpan, int width, StorageType extensionMode) {
-		PictureJob pictureJob = new PictureJob.Builder(loader, loader, loader)
+		PictureJob pictureJob = new PictureJob.Builder(loader, loader)
+		.setTransforms(loader)
 		.setURL(URL)
 		.setUUID(UUID)
 		.setFreshDate(itemDate)

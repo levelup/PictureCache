@@ -27,7 +27,7 @@ public class PictureJob implements PictureJobTransforms {
 	public static class Builder {
 
 		protected final PictureJobRenderer mDisplayHandler;
-		protected final PictureJobTransforms mTransformHandler;
+		protected PictureJobTransforms mTransformHandler;
 		protected final PictureJobConcurrency mConcurrencyHandler;
 		private String mURL;
 		private String mUUID;
@@ -40,10 +40,9 @@ public class PictureJob implements PictureJobTransforms {
 		private NetworkLoader networkLoader;
 		private CacheKey key;
 
-		public Builder(PictureJobRenderer draw, PictureJobTransforms transforms, PictureJobConcurrency concurrencyHandler) {
+		public Builder(PictureJobRenderer draw, PictureJobConcurrency concurrencyHandler) {
 			if (null==concurrencyHandler) throw new IllegalArgumentException("missing a IPictureLoadConcurrency");
 			this.mDisplayHandler = draw;
-			this.mTransformHandler = transforms;
 			this.mConcurrencyHandler = concurrencyHandler;
 		}
 
@@ -54,6 +53,11 @@ public class PictureJob implements PictureJobTransforms {
 
 		public Builder setUUID(String UUID) {
 			mUUID = UUID;
+			return this;
+		}
+
+		public Builder setTransforms(PictureJobTransforms transforms) {
+			mTransformHandler = transforms;
 			return this;
 		}
 
@@ -129,9 +133,10 @@ public class PictureJob implements PictureJobTransforms {
 	}
 
 	public Builder cloneBuilder() {
-		Builder builder = new Builder(mDisplayHandler, mTransformHandler, mConcurrencyHandler);
+		Builder builder = new Builder(mDisplayHandler, mConcurrencyHandler);
 		builder.mURL = this.url;
 		builder.mUUID = this.mUUID;
+		builder.mTransformHandler = this.mTransformHandler;
 		builder.drawCookie = this.drawCookie;
 		builder.mFreshDate = this.mFreshDate;
 		builder.mLifeSpan = this.mLifeSpan;

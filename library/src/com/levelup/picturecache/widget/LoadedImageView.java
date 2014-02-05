@@ -231,8 +231,9 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 		}
 
 		if (DEBUG_STATE) LogManager.getLogger().d(VIEW_LOG_TAG, this+" loadImageURL "+url);
-		PictureJob.Builder newJobBuilder = new PictureJob.Builder(drawHandler, transforms, this);
+		PictureJob.Builder newJobBuilder = new PictureJob.Builder(drawHandler, this);
 		newJobBuilder.setURL(url)
+		.setTransforms(transforms)
 		.setUUID(UUID)
 		.setDrawCookie(drawCookie)
 		.setLifeType(cacheLifespan)

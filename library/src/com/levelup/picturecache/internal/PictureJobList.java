@@ -434,12 +434,10 @@ public class PictureJobList implements Runnable {
 	public static String keyToBitmapCacheKey(PictureJob job, String url) {
 		final StringBuilder bitmapKey = new StringBuilder(job.key.toString());
 		bitmapKey.append(url);
-		if (job.mTransformHandler != null) {
-			if (job.mTransformHandler.getStorageTransform() != null)
-				bitmapKey.append(job.mTransformHandler.getStorageTransform().getVariantPostfix());
-			if (job.mTransformHandler.getDisplayTransform() != null)
-				bitmapKey.append(job.mTransformHandler.getDisplayTransform().getVariant());
-		}
+		if (job.getStorageTransform() != null)
+			bitmapKey.append(job.getStorageTransform().getVariantPostfix());
+		if (job.getDisplayTransform() != null)
+			bitmapKey.append(job.getDisplayTransform().getVariant());
 		return bitmapKey.toString();
 	}
 
