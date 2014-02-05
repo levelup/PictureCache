@@ -121,7 +121,7 @@ public class PictureJobList implements Runnable {
 					if (!bitmapWasInCache) {
 						displayDrawable = null;
 					} else if (mCache.getBitmapCache()!=null) {
-						displayDrawable = mCache.getBitmapCache().put(keyToBitmapCacheKey(target.key, url, target.mTransformHandler), fileInCache, getOutputOptions(tmpFileOptions.outWidth, tmpFileOptions.outHeight, target.key));
+						displayDrawable = mCache.getBitmapCache().put(keyToBitmapCacheKey(target, url), fileInCache, getOutputOptions(tmpFileOptions.outWidth, tmpFileOptions.outHeight, target.key));
 					} else {
 						displayDrawable = new BitmapDrawable(mCache.getContext().getResources(), fileInCache.getAbsolutePath());
 					}
@@ -158,7 +158,7 @@ public class PictureJobList implements Runnable {
 						if (downloaded) {
 							Bitmap bitmap = null;
 							if (mCache.getBitmapCache()!=null) {
-								CacheableBitmapDrawable cachedDrawable = mCache.getBitmapCache().put(keyToBitmapCacheKey(target.key, url, target.mTransformHandler), downloadedToFile, getOutputOptions(tmpFileOptions.outWidth, tmpFileOptions.outHeight, target.key));
+								CacheableBitmapDrawable cachedDrawable = mCache.getBitmapCache().put(keyToBitmapCacheKey(target, url), downloadedToFile, getOutputOptions(tmpFileOptions.outWidth, tmpFileOptions.outHeight, target.key));
 								if (null!=cachedDrawable)
 									bitmap = cachedDrawable.getBitmap();
 							}
@@ -431,14 +431,14 @@ public class PictureJobList implements Runnable {
 		}
 	}
 
-	public static String keyToBitmapCacheKey(CacheKey key, String url, PictureJobTransforms transforms) {
-		final StringBuilder bitmapKey = new StringBuilder(key.toString());
+	public static String keyToBitmapCacheKey(PictureJob job, String url) {
+		final StringBuilder bitmapKey = new StringBuilder(job.key.toString());
 		bitmapKey.append(url);
-		if (transforms != null) {
-			if (transforms.getStorageTransform() != null)
-				bitmapKey.append(transforms.getStorageTransform().getVariantPostfix());
-			if (transforms.getDisplayTransform() != null)
-				bitmapKey.append(transforms.getDisplayTransform().getVariant());
+		if (job.mTransformHandler != null) {
+			if (job.mTransformHandler.getStorageTransform() != null)
+				bitmapKey.append(job.mTransformHandler.getStorageTransform().getVariantPostfix());
+			if (job.mTransformHandler.getDisplayTransform() != null)
+				bitmapKey.append(job.mTransformHandler.getDisplayTransform().getVariant());
 		}
 		return bitmapKey.toString();
 	}

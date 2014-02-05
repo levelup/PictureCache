@@ -538,7 +538,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			}
 			//else LogManager.logger.i(key.toString()+" not found in "+mData.size()+" cache elements");
 
-			final String bitmapCacheKey = mBitmapCache!=null ? PictureJobList.keyToBitmapCacheKey(job.key, job.url, job.mTransformHandler) : null;
+			final String bitmapCacheKey = mBitmapCache!=null ? PictureJobList.keyToBitmapCacheKey(job, job.url) : null;
 			if (mBitmapCache!=null) {
 				BitmapDrawable cachedBmp = mBitmapCache.get(bitmapCacheKey);
 				if (cachedBmp!=null) {
