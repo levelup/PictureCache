@@ -8,11 +8,8 @@ import android.media.MediaScannerConnection.MediaScannerConnectionClient;
 import android.net.Uri;
 
 public class GalleryScanner implements MediaScannerConnectionClient {
-	/**
-	 * 
-	 */
-	MediaScannerConnection mScanner;
-	File mDst;
+	final private MediaScannerConnection mScanner;
+	private File mDst;
 	//CountDownLatch mLock;
 	
 	public GalleryScanner(Context context) {

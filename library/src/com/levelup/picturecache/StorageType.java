@@ -2,13 +2,13 @@ package com.levelup.picturecache;
 
 /** indicate which format to use when storage the image in the cache */
 public enum StorageType {
-	/** select the storage format automatically based on the source file */
+	/** Select the storage format automatically based on the source file */
 	AUTO(0),
 
-	/** store the image in the cache as a JPEG */
+	/** Store the image in the cache as a JPEG */
 	JPEG(1),
 
-	/** store the image in the cache as a PNG */
+	/** Store the image in the cache as a PNG, preserving transparency */
 	PNG(2);
 
 	private StorageType(int storageValue) {
