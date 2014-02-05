@@ -33,7 +33,6 @@ import com.levelup.picturecache.LogManager;
 import com.levelup.picturecache.NetworkLoader;
 import com.levelup.picturecache.PictureCache;
 import com.levelup.picturecache.PictureJob;
-import com.levelup.picturecache.PictureJobTransforms;
 import com.levelup.picturecache.UIHandler;
 import com.levelup.picturecache.loaders.ViewLoader;
 
@@ -370,8 +369,7 @@ public class PictureJobList implements Runnable {
 				//LogManager.getLogger().d(PictureCache.TAG, false, "cache error trying ContentResolver on "+mURL);
 				if (null!=networkLoader)
 					is = networkLoader.loadURL(url);
-
-				if (null==is) {
+				else {
 					URL url = new URL(this.url);
 					URLConnection conn = url.openConnection();
 					conn.setConnectTimeout(CONNECT_TIMEOUT_DL);
