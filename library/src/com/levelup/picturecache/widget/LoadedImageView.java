@@ -276,6 +276,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 		}
 		if (currentDrawType!=DrawType.LOADED_DRAWABLE)
 			currentURL = null;
+		currentJob = null;
 	}
 
 	@Override
