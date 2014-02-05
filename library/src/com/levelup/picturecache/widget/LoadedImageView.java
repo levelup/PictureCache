@@ -90,7 +90,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 			return;
 		}
 
-		drawInView(DrawType.DEFAULT, url, drawableCache, null, true, currentJob.mDisplayHandler, null);
+		drawInView(DrawType.DEFAULT, url, drawableCache, null, true, currentDrawer, null);
 	}
 
 	@Override
@@ -111,7 +111,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 			return;
 		}
 
-		drawInView(DrawType.ERROR, url, drawableCache, null, true, currentJob.mDisplayHandler, null);
+		drawInView(DrawType.ERROR, url, drawableCache, null, true, currentDrawer, null);
 	}
 
 	@Override
@@ -132,7 +132,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 			return;
 		}
 
-		drawInView(DrawType.LOADED_DRAWABLE, url, drawableCache, drawable, immediate, currentJob.mDisplayHandler, drawCookie);
+		drawInView(DrawType.LOADED_DRAWABLE, url, drawableCache, drawable, immediate, currentDrawer, drawCookie);
 	}
 
 	private static boolean drawsEnqueued;
@@ -189,6 +189,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 
 
 	private PictureJob currentJob;
+	private PictureJobRenderer currentDrawer;
 	private PictureCache currentCache;
 
 	public LoadedImageView(Context context) {
@@ -231,7 +232,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 		}
 
 		if (DEBUG_STATE) LogManager.getLogger().d(VIEW_LOG_TAG, this+" loadImageURL "+url);
-		PictureJob.Builder newJobBuilder = new PictureJob.Builder(drawHandler, this);
+		PictureJob.Builder newJobBuilder = new PictureJob.Builder(this, this);
 		newJobBuilder.setURL(url)
 		.setTransforms(transforms)
 		.setUUID(UUID)
@@ -245,7 +246,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 			newJobBuilder.setDimension(maxHeight, false);
 
 		PictureJob newJob = newJobBuilder.build();
-		if (null!=currentJob && currentJob.equals(newJob)) {
+		if (null!=currentJob && currentJob.equals(newJob) && drawHandler.equals(currentDrawer)) {
 			// nothing to do, we're already on it
 			if (DEBUG_STATE) LogManager.getLogger().i(VIEW_LOG_TAG, this+" same job, do nothing");
 			return;
@@ -256,6 +257,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 			currentURL = null; // TODO should be done for every cancel or better handled with setLoadingURL()
 		}
 
+		currentDrawer = drawHandler;
 		currentJob = newJob;
 		currentCache = cache;
 		currentJob.startLoading(currentCache);
@@ -269,15 +271,17 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 			currentJob.stopLoading(currentCache, false);
 		}
 		if (null!=defaultDrawHandler) {
-			if (null!=currentJob && !defaultDrawHandler.equals(currentJob.mDisplayHandler)) {
+			if (null!=currentDrawer && !defaultDrawHandler.equals(currentDrawer)) {
 				// TODO rebuild a PictureJob with this default handler
 				if (BuildConfig.DEBUG) throw new InvalidParameterException("can't change the default drawer yet");
 			}
-			defaultDrawHandler.drawDefaultPicture(currentURL, null!=currentCache ? currentCache.getBitmapCache() : null);
+			currentDrawer = defaultDrawHandler;
+			drawDefaultPicture(currentURL, null!=currentCache ? currentCache.getBitmapCache() : null);
 		}
 		if (currentDrawType!=DrawType.LOADED_DRAWABLE)
 			currentURL = null;
 		currentJob = null;
+		// not safe for now currentDrawer = null;
 	}
 
 	@Override
