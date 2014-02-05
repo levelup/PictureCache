@@ -60,7 +60,8 @@ public class PictureJobList implements Runnable {
 
 		@Override
 		public int hashCode() {
-			return (job.key.hashCode() * 31 + job.mDisplayHandler.hashCode()) * 31 + (null==job.mTransformHandler ? 0 : job.mTransformHandler.hashCode());
+			return job.hashCode();
+			//return (job.key.hashCode() * 31 + job.mDisplayHandler.hashCode()) * 31 + (null==job.mTransformHandler ? 0 : job.mTransformHandler.hashCode());
 		}
 
 		@Override

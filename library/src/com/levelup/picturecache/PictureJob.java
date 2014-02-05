@@ -165,7 +165,17 @@ public class PictureJob {
 				&& ((mTransformHandler==null && p.mTransformHandler==null) || (mTransformHandler!=null && mTransformHandler.equals(p.mTransformHandler)))
 				&& (mConcurrencyHandler.equals(p.mConcurrencyHandler));
 	}
-
+	
+	@Override
+	public int hashCode() {
+		int result = 17;
+		result = result * 31 + (mDisplayHandler == null ? 0 : mDisplayHandler.hashCode());
+		result = result * 31 + (mConcurrencyHandler == null ? 0 : mConcurrencyHandler.hashCode());
+		result = result * 31 + (mTransformHandler == null ? 0 : mTransformHandler.hashCode());
+		result = result * 31 + key.hashCode();
+		return result;
+	}
+	
 	/**
 	 * Retrieve picture into cache
 	 * 
