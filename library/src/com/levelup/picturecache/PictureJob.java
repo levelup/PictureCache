@@ -5,8 +5,10 @@ import java.security.NoSuchAlgorithmException;
 import android.text.TextUtils;
 
 import com.levelup.picturecache.internal.CacheKey;
+import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
+import com.levelup.picturecache.transforms.storage.StorageTransform;
 
-public class PictureJob {
+public class PictureJob implements PictureJobTransforms {
 
 	public final String url;
 	public final String mUUID;
@@ -189,5 +191,15 @@ public class PictureJob {
 		cache.cancelPictureJob(this);
 		if (resetToDefault)
 			mDisplayHandler.drawDefaultPicture(url, cache.getBitmapCache());
+	}
+
+	@Override
+	public StorageTransform getStorageTransform() {
+		return null==mTransformHandler ? null : mTransformHandler.getStorageTransform();
+	}
+
+	@Override
+	public BitmapTransform getDisplayTransform() {
+		return null==mTransformHandler ? null : mTransformHandler.getDisplayTransform();
 	}
 }
