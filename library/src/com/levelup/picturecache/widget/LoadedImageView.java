@@ -56,25 +56,26 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 		void renderError(LoadedImageView view);
 	}
 	
-	/*
-	public class BaseImageViewDrawHandler implements LoadedImageViewRender {
+	public static class BaseLoadedImageViewRender implements LoadedImageViewRender {
 		@Override
-		public void drawBitmap(Drawable drawable, String url, Object cookie, BitmapLruCache drawableCache, boolean immediate) {
-			setImageDrawable(drawable);
+		public void renderDrawable(LoadedImageView view, Drawable drawable) {
+			view.setImageDrawable(drawable);
 		}
 
 		@Override
-		public void drawDefaultPicture(String url, BitmapLruCache drawableCache) {
+		public void renderDefault(LoadedImageView view) {
 			// do nothing by default
 		}
 
 		@Override
-		public void drawErrorPicture(String url, BitmapLruCache drawableCache) {
-			// do nothing by default
+		public void renderError(LoadedImageView view) {
+			renderDefault(view);
 		}
 	}
-	 */
-	// IPictureLoadConcurrency
+
+	public static final LoadedImageViewRender DefaultRenderer = new BaseLoadedImageViewRender();
+	
+	// PictureJobConcurrency
 	private String currentURL;
 
 	@Override
@@ -230,25 +231,11 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 	public LoadedImageView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 	}
-	/*
+	
 	public void loadImageURL(PictureCache cache, String url) {
-		loadImageURL(cache, url, null, null, 0, 0, null, null, null);
+		loadImageURL(cache, url, null, null, DefaultRenderer, 0, null, 0, 0, null);
 	}
-/*
-	public void loadImageURL(PictureCache cache, String url, String UUID, LifeSpan cacheLifespan, int maxWidth, int maxHeight, final StorageTransform bitmapStorageTransform, final BitmapTransform bitmapTransform, Object cookie) {
-		loadImageURL(cache, url, UUID, new BaseImageViewDrawHandler(), null, maxWidth, maxHeight, new IPictureLoaderTransforms() {
-			@Override
-			public StorageTransform getStorageTransform() {
-				return bitmapStorageTransform;
-			}
-
-			@Override
-			public BitmapTransform getDisplayTransform() {
-				return bitmapTransform;
-			}
-		}, null);
-	}
-	 */
+	
 	public void loadImageURL(PictureCache cache, String url, String UUID, NetworkLoader networkLoader, LoadedImageViewRender drawHandler, long urlFreshness, LifeSpan cacheLifespan, int maxWidth, int maxHeight, PictureJobTransforms transforms) {
 		UIHandler.assertUIThread();
 		if (null==url && null==UUID) {
@@ -289,19 +276,19 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 		currentJob.startLoading(currentCache);
 	}
 
-	public void resetImageURL(LoadedImageViewRender defaultDrawHandler) {
+	public void resetImageURL(LoadedImageViewRender viewRenderer) {
 		UIHandler.assertUIThread();
 		if (DEBUG_STATE) LogManager.getLogger().d(VIEW_LOG_TAG, this+" resetImageURL");
 		pendingDraws.remove(this);
 		if (null!=currentJob) {
 			currentJob.stopLoading(currentCache, false);
 		}
-		if (null!=defaultDrawHandler) {
-			if (null!=currentDrawer && !defaultDrawHandler.equals(currentDrawer)) {
+		if (null!=viewRenderer) {
+			if (null!=currentDrawer && !viewRenderer.equals(currentDrawer)) {
 				// TODO rebuild a PictureJob with this default handler
 				if (BuildConfig.DEBUG) throw new InvalidParameterException("can't change the default drawer yet");
 			}
-			currentDrawer = defaultDrawHandler;
+			currentDrawer = viewRenderer;
 			drawDefaultPicture(currentURL, null!=currentCache ? currentCache.getBitmapCache() : null);
 		}
 		if (currentDrawType!=DrawType.LOADED_DRAWABLE)
