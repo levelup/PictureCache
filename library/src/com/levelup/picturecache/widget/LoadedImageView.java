@@ -27,6 +27,8 @@ import com.levelup.picturecache.loaders.ViewLoader;
 import com.levelup.picturecache.loaders.internal.DrawType;
 
 public class LoadedImageView extends CacheableImageView implements PictureJobConcurrency, PictureJobRenderer {
+	private final static boolean DEBUG_STATE = BuildConfig.DEBUG && false;
+	
 	/*
 	public class BaseImageViewDrawHandler implements IPictureLoaderRender {
 		@Override
@@ -228,6 +230,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 			throw new IllegalArgumentException("We need a drawHandler to draw");
 		}
 
+		if (DEBUG_STATE) LogManager.getLogger().d(VIEW_LOG_TAG, this+" loadImageURL "+url);
 		PictureJob.Builder newJobBuilder = new PictureJob.Builder(drawHandler, transforms, this);
 		newJobBuilder.setURL(url)
 		.setUUID(UUID)
@@ -243,6 +246,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 		PictureJob newJob = newJobBuilder.build();
 		if (null!=currentJob && currentJob.equals(newJob)) {
 			// nothing to do, we're already on it
+			if (DEBUG_STATE) LogManager.getLogger().i(VIEW_LOG_TAG, this+" same job, do nothing");
 			return;
 		}
 
@@ -258,6 +262,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 
 	public void resetImageURL(PictureJobRenderer defaultDrawHandler) {
 		UIHandler.assertUIThread();
+		if (DEBUG_STATE) LogManager.getLogger().d(VIEW_LOG_TAG, this+" resetImageURL");
 		pendingDraws.remove(this);
 		if (null!=currentJob) {
 			currentJob.stopLoading(currentCache, false);
