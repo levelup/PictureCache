@@ -323,7 +323,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 	}
 
 	/**
-	 * @deprecated use {@link #loadImageResource(int)}
+	 * @deprecated use {@link #loadImageResource(int)} to load a resource and cancel a possible URL loading
 	 */
 	@Deprecated
 	@Override
@@ -343,7 +343,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 	}
 
 	/**
-	 * @deprecated use {@link #loadImageDrawable(Drawable)}
+	 * @deprecated use {@link #loadImageDrawable(Drawable)} to load a drawable and cancel a possible URL loading
 	 */
 	@Deprecated
 	@Override
@@ -363,7 +363,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 	}
 
 	/**
-	 * @deprecated use {@link #loadImageBitmap(Bitmap)}
+	 * @deprecated use {@link #loadImageBitmap(Bitmap)} to load a bitmap and cancel a possible URL loading
 	 */
 	@Deprecated
 	@Override
