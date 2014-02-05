@@ -29,8 +29,35 @@ import com.levelup.picturecache.loaders.internal.DrawType;
 public class LoadedImageView extends CacheableImageView implements PictureJobConcurrency, PictureJobRenderer {
 	private final static boolean DEBUG_STATE = BuildConfig.DEBUG && false;
 	
+	/**
+	 * Callback for custom {@link LoadedImageView} rendering  
+	 */
+	public interface LoadedImageViewRender {
+		/**
+		 * Called when the downloaded {@link Drawable} should be displayed 
+		 *
+		 * @param view The {@link LoadedImageView} in which to display the drawable 
+		 * @param drawable Drawable to display
+		 */
+		void renderDrawable(LoadedImageView view, Drawable drawable);
+
+		/**
+		 * Called when the default view should be displayed, while the bitmap is loading
+		 * 
+		 * @param view The {@link LoadedImageView} in which to display the default display 
+		 */
+		void renderDefault(LoadedImageView view);
+
+		/**
+		 * Called when the download failed and an error should be displayed
+		 * 
+		 * @param view The {@link LoadedImageView} in which to display the error 
+		 */
+		void renderError(LoadedImageView view);
+	}
+	
 	/*
-	public class BaseImageViewDrawHandler implements IPictureLoaderRender {
+	public class BaseImageViewDrawHandler implements LoadedImageViewRender {
 		@Override
 		public void drawBitmap(Drawable drawable, String url, Object cookie, BitmapLruCache drawableCache, boolean immediate) {
 			setImageDrawable(drawable);
@@ -90,7 +117,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 			return;
 		}
 
-		drawInView(DrawType.DEFAULT, url, drawableCache, null, true, currentDrawer, null);
+		drawInView(DrawType.DEFAULT, url, drawableCache, null, true, currentDrawer);
 	}
 
 	@Override
@@ -111,7 +138,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 			return;
 		}
 
-		drawInView(DrawType.ERROR, url, drawableCache, null, true, currentDrawer, null);
+		drawInView(DrawType.ERROR, url, drawableCache, null, true, currentDrawer);
 	}
 
 	@Override
@@ -132,7 +159,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 			return;
 		}
 
-		drawInView(DrawType.LOADED_DRAWABLE, url, drawableCache, drawable, immediate, currentDrawer, drawCookie);
+		drawInView(DrawType.LOADED_DRAWABLE, url, drawableCache, drawable, immediate, currentDrawer);
 	}
 
 	private static boolean drawsEnqueued;
@@ -148,13 +175,13 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 		}
 	};
 
-	private void drawInView(final DrawType type, final String url, final BitmapLruCache drawableCache, final Drawable drawable, boolean immediate, final PictureJobRenderer renderer, final Object drawCookie) {
+	private void drawInView(final DrawType type, final String url, final BitmapLruCache drawableCache, final Drawable drawable, boolean immediate, final LoadedImageViewRender renderer) {
 		pendingDraws.put(this, new Runnable() {
 			@Override
 			public void run() {
 				if (type==DrawType.DEFAULT) {
 					if (currentDrawType!=DrawType.DEFAULT) {
-						renderer.drawDefaultPicture(url, drawableCache);
+						renderer.renderDefault(LoadedImageView.this);
 						currentDrawType = DrawType.DEFAULT;
 					} else {
 						if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" saved default display");
@@ -163,7 +190,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 
 				else if (type==DrawType.ERROR) {
 					if (currentDrawType!=DrawType.ERROR) {
-						renderer.drawErrorPicture(url, drawableCache);
+						renderer.renderError(LoadedImageView.this);
 						currentDrawType = DrawType.ERROR;
 					} else {
 						if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" saved error display");
@@ -171,7 +198,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 				}
 
 				else if (type==DrawType.LOADED_DRAWABLE) {
-					renderer.drawBitmap(drawable, url, drawCookie, drawableCache, true);
+					renderer.renderDrawable(LoadedImageView.this, drawable);
 					currentDrawType = DrawType.LOADED_DRAWABLE;
 				}
 			}
@@ -189,7 +216,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 
 
 	private PictureJob currentJob;
-	private PictureJobRenderer currentDrawer;
+	private LoadedImageViewRender currentDrawer;
 	private PictureCache currentCache;
 
 	public LoadedImageView(Context context) {
@@ -222,7 +249,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 		}, null);
 	}
 	 */
-	public void loadImageURL(PictureCache cache, String url, String UUID, NetworkLoader networkLoader, PictureJobRenderer drawHandler, long urlFreshness, LifeSpan cacheLifespan, int maxWidth, int maxHeight, PictureJobTransforms transforms, Object drawCookie) {
+	public void loadImageURL(PictureCache cache, String url, String UUID, NetworkLoader networkLoader, LoadedImageViewRender drawHandler, long urlFreshness, LifeSpan cacheLifespan, int maxWidth, int maxHeight, PictureJobTransforms transforms) {
 		UIHandler.assertUIThread();
 		if (null==url && null==UUID) {
 			throw new IllegalArgumentException("We need either a url or a uuid to display, did you mean resetImageURL()?");
@@ -236,7 +263,6 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 		newJobBuilder.setURL(url)
 		.setTransforms(transforms)
 		.setUUID(UUID)
-		.setDrawCookie(drawCookie)
 		.setLifeType(cacheLifespan)
 		.setFreshDate(urlFreshness)
 		.setNetworkLoader(networkLoader);
@@ -263,7 +289,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 		currentJob.startLoading(currentCache);
 	}
 
-	public void resetImageURL(PictureJobRenderer defaultDrawHandler) {
+	public void resetImageURL(LoadedImageViewRender defaultDrawHandler) {
 		UIHandler.assertUIThread();
 		if (DEBUG_STATE) LogManager.getLogger().d(VIEW_LOG_TAG, this+" resetImageURL");
 		pendingDraws.remove(this);
