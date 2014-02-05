@@ -263,7 +263,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 			currentJob.stopLoading(currentCache, false);
 		}
 		if (null!=defaultDrawHandler) {
-			if (null!=currentJob && currentJob.mDisplayHandler != defaultDrawHandler) {
+			if (null!=currentJob && !defaultDrawHandler.equals(currentJob.mDisplayHandler)) {
 				// TODO rebuild a PictureJob with this default handler
 				if (BuildConfig.DEBUG) throw new InvalidParameterException("can't change the default drawer yet");
 			}
