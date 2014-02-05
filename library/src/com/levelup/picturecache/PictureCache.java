@@ -30,11 +30,11 @@ import android.text.TextUtils;
 
 import com.levelup.FileUtils;
 import com.levelup.picturecache.internal.ApiLevel8;
-import com.levelup.picturecache.internal.PictureJobList;
 import com.levelup.picturecache.internal.CacheItem;
 import com.levelup.picturecache.internal.CacheKey;
 import com.levelup.picturecache.internal.CacheVariant;
 import com.levelup.picturecache.internal.DownloadManager;
+import com.levelup.picturecache.internal.PictureJobList;
 import com.levelup.picturecache.internal.RemoveExpired;
 import com.levelup.picturecache.loaders.PrecacheImageLoader;
 import com.levelup.picturecache.loaders.RemoteViewLoader;

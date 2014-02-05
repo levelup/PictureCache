@@ -14,7 +14,7 @@ import com.levelup.picturecache.transforms.storage.StorageTransform;
  * <p>
  * @see {@link ViewLoader}, {@link RemoteViewLoader} or {@link PrecacheImageLoader}
  */
-public abstract class PictureLoaderHandler implements IPictureLoaderRender, IPictureLoaderTransforms, IPictureLoadConcurrency {
+public abstract class PictureLoaderHandler implements PictureJobRenderer, PictureJobTransforms, PictureJobConcurrency {
 	
 	protected PictureLoaderHandler(StorageTransform bitmapStorageTransform, BitmapTransform bitmapTransform) {
 		this.mStorageTransform = bitmapStorageTransform;

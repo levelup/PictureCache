@@ -14,19 +14,19 @@ import android.util.AttributeSet;
 import android.widget.ImageView;
 
 import com.levelup.picturecache.BuildConfig;
-import com.levelup.picturecache.IPictureLoadConcurrency;
-import com.levelup.picturecache.IPictureLoaderRender;
-import com.levelup.picturecache.IPictureLoaderTransforms;
 import com.levelup.picturecache.LifeSpan;
 import com.levelup.picturecache.LogManager;
 import com.levelup.picturecache.NetworkLoader;
 import com.levelup.picturecache.PictureCache;
 import com.levelup.picturecache.PictureJob;
+import com.levelup.picturecache.PictureJobConcurrency;
+import com.levelup.picturecache.PictureJobRenderer;
+import com.levelup.picturecache.PictureJobTransforms;
 import com.levelup.picturecache.UIHandler;
 import com.levelup.picturecache.loaders.ViewLoader;
 import com.levelup.picturecache.loaders.internal.DrawType;
 
-public class LoadedImageView extends CacheableImageView implements IPictureLoadConcurrency, IPictureLoaderRender {
+public class LoadedImageView extends CacheableImageView implements PictureJobConcurrency, PictureJobRenderer {
 	/*
 	public class BaseImageViewDrawHandler implements IPictureLoaderRender {
 		@Override
@@ -146,7 +146,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 		}
 	};
 
-	private void drawInView(final DrawType type, final String url, final BitmapLruCache drawableCache, final Drawable drawable, boolean immediate, final IPictureLoaderRender renderer, final Object drawCookie) {
+	private void drawInView(final DrawType type, final String url, final BitmapLruCache drawableCache, final Drawable drawable, boolean immediate, final PictureJobRenderer renderer, final Object drawCookie) {
 		pendingDraws.put(this, new Runnable() {
 			@Override
 			public void run() {
@@ -219,7 +219,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 		}, null);
 	}
 	 */
-	public void loadImageURL(PictureCache cache, String url, String UUID, NetworkLoader networkLoader, IPictureLoaderRender drawHandler, long urlFreshness, LifeSpan cacheLifespan, int maxWidth, int maxHeight, IPictureLoaderTransforms transforms, Object drawCookie) {
+	public void loadImageURL(PictureCache cache, String url, String UUID, NetworkLoader networkLoader, PictureJobRenderer drawHandler, long urlFreshness, LifeSpan cacheLifespan, int maxWidth, int maxHeight, PictureJobTransforms transforms, Object drawCookie) {
 		UIHandler.assertUIThread();
 		if (null==url && null==UUID) {
 			throw new IllegalArgumentException("We need either a url or a uuid to display, did you mean resetImageURL()?");
@@ -256,7 +256,7 @@ public class LoadedImageView extends CacheableImageView implements IPictureLoadC
 		currentJob.startLoading(currentCache);
 	}
 
-	public void resetImageURL(IPictureLoaderRender defaultDrawHandler) {
+	public void resetImageURL(PictureJobRenderer defaultDrawHandler) {
 		UIHandler.assertUIThread();
 		pendingDraws.remove(this);
 		if (null!=currentJob) {

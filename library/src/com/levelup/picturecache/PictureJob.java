@@ -16,17 +16,17 @@ public class PictureJob {
 	public final int mDimension;
 	public final boolean mWidthBased;
 	public final StorageType mExtensionMode;
-	public final IPictureLoaderRender mDisplayHandler;
-	public final IPictureLoaderTransforms mTransformHandler;
-	public final IPictureLoadConcurrency mConcurrencyHandler;
+	public final PictureJobRenderer mDisplayHandler;
+	public final PictureJobTransforms mTransformHandler;
+	public final PictureJobConcurrency mConcurrencyHandler;
 	public final NetworkLoader networkLoader;
 	public final CacheKey key;
 
 	public static class Builder {
 
-		protected final IPictureLoaderRender mDisplayHandler;
-		protected final IPictureLoaderTransforms mTransformHandler;
-		protected final IPictureLoadConcurrency mConcurrencyHandler;
+		protected final PictureJobRenderer mDisplayHandler;
+		protected final PictureJobTransforms mTransformHandler;
+		protected final PictureJobConcurrency mConcurrencyHandler;
 		private String mURL;
 		private String mUUID;
 		private Object drawCookie;
@@ -38,7 +38,7 @@ public class PictureJob {
 		private NetworkLoader networkLoader;
 		private CacheKey key;
 
-		public Builder(IPictureLoaderRender draw, IPictureLoaderTransforms transforms, IPictureLoadConcurrency concurrencyHandler) {
+		public Builder(PictureJobRenderer draw, PictureJobTransforms transforms, PictureJobConcurrency concurrencyHandler) {
 			if (null==concurrencyHandler) throw new IllegalArgumentException("missing a IPictureLoadConcurrency");
 			this.mDisplayHandler = draw;
 			this.mTransformHandler = transforms;

@@ -28,12 +28,12 @@ import android.net.Uri;
 import android.util.FloatMath;
 
 import com.levelup.picturecache.BuildConfig;
-import com.levelup.picturecache.IPictureLoaderTransforms;
 import com.levelup.picturecache.LifeSpan;
 import com.levelup.picturecache.LogManager;
 import com.levelup.picturecache.NetworkLoader;
 import com.levelup.picturecache.PictureCache;
 import com.levelup.picturecache.PictureJob;
+import com.levelup.picturecache.PictureJobTransforms;
 import com.levelup.picturecache.UIHandler;
 import com.levelup.picturecache.loaders.ViewLoader;
 import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
@@ -43,7 +43,7 @@ public class PictureJobList implements Runnable {
 
 	private static final boolean DEBUG_BITMAP_DOWNLOADER = false;
 
-	private static class DownloadTarget implements IPictureLoaderTransforms {
+	private static class DownloadTarget implements PictureJobTransforms {
 		final PictureJob job;
 
 		DownloadTarget(PictureJob job) {
@@ -471,7 +471,7 @@ public class PictureJobList implements Runnable {
 		}
 	}
 
-	public static String keyToBitmapCacheKey(CacheKey key, String url, IPictureLoaderTransforms transforms) {
+	public static String keyToBitmapCacheKey(CacheKey key, String url, PictureJobTransforms transforms) {
 		final StringBuilder bitmapKey = new StringBuilder(key.toString());
 		bitmapKey.append(url);
 		if (transforms != null) {

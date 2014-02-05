@@ -4,7 +4,7 @@ import java.io.File;
 
 import uk.co.senab.bitmapcache.BitmapLruCache;
 
-public interface IPictureLoadConcurrency {
+public interface PictureJobConcurrency {
 
 	boolean isDownloadAllowed();
 

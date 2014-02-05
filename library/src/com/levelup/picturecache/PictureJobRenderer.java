@@ -4,7 +4,7 @@ import uk.co.senab.bitmapcache.BitmapLruCache;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 
-public interface IPictureLoaderRender {
+public interface PictureJobRenderer {
 
 	/**
 	 * Called when the downloaded {@link Bitmap} should be displayed 
