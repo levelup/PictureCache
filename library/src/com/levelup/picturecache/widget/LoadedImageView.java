@@ -130,7 +130,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 			return;
 		}
 
-		drawInView(DrawType.DEFAULT, url, drawableCache, null, true, currentDrawer);
+		drawInView(DrawType.LOADING, url, drawableCache, null, true, currentDrawer);
 	}
 
 	/**
@@ -198,12 +198,12 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 		pendingDraws.put(this, new Runnable() {
 			@Override
 			public void run() {
-				if (type==DrawType.DEFAULT) {
-					if (currentDrawType!=DrawType.DEFAULT) {
+				if (type==DrawType.LOADING) {
+					if (currentDrawType!=DrawType.LOADING) {
 						renderer.renderLoading(LoadedImageView.this);
-						currentDrawType = DrawType.DEFAULT;
+						currentDrawType = DrawType.LOADING;
 					} else {
-						if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" saved default display");
+						if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" saved loading display");
 					}
 				}
 

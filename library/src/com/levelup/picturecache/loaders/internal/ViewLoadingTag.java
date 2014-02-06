@@ -129,7 +129,7 @@ public class ViewLoadingTag {
 					}
 				};
 
-				if (immediate || drawnType==DrawType.LOADED_DRAWABLE || drawnType==DrawType.ERROR || mPendingDrawType==DrawType.DEFAULT) {
+				if (immediate || drawnType==DrawType.LOADED_DRAWABLE || drawnType==DrawType.ERROR || mPendingDrawType==DrawType.LOADING) {
 					if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, "draw the batch ASAP");
 					UIHandler.instance.removeCallbacks(batchDisplay);
 					UIHandler.instance.runOnUiThread(batchDisplay);

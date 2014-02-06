@@ -82,7 +82,7 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 	@Override
 	public final void drawDefaultPicture(String url, BitmapLruCache drawableCache) {
 		if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" drawDefaultPicture");
-		showDrawable(drawableCache, null, url, DrawType.DEFAULT, false);
+		showDrawable(drawableCache, null, url, DrawType.LOADING, false);
 	}
 
 	/**
