@@ -10,6 +10,7 @@ import uk.co.senab.bitmapcache.CacheableImageView;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
+import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.widget.ImageView;
 
@@ -114,7 +115,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 	@Override
 	public final void drawDefaultPicture(final String url, final BitmapLruCache drawableCache) {
 		UIHandler.assertUIThread();
-		if (!url.equals(currentURL)) {
+		if (!TextUtils.equals(url, currentURL)) {
 			// we don't care about this anymore
 			return;
 		}
@@ -138,7 +139,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 	@Override
 	public final void drawErrorPicture(final String url, final BitmapLruCache drawableCache) {
 		UIHandler.assertUIThread();
-		if (!url.equals(currentURL)) {
+		if (!TextUtils.equals(url, currentURL)) {
 			// we don't care about this anymore
 			return;
 		}
@@ -162,7 +163,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 	@Override
 	public final void drawBitmap(final Drawable drawable, final String url, final Object drawCookie, final BitmapLruCache drawableCache, final boolean immediate) {
 		UIHandler.assertUIThread();
-		if (!url.equals(currentURL)) {
+		if (!TextUtils.equals(url, currentURL)) {
 			// we don't care about this anymore
 			return;
 		}
