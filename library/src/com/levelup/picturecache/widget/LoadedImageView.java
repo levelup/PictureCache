@@ -335,7 +335,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 		if (null!=viewRenderer) {
 			if (null!=currentDrawer && !viewRenderer.equals(currentDrawer)) {
 				// TODO rebuild a PictureJob with this default handler
-				if (BuildConfig.DEBUG) throw new InvalidParameterException("can't change the default drawer yet");
+				if (BuildConfig.DEBUG) throw new InvalidParameterException("can't change the default drawer yet "+currentDrawer+" vs "+viewRenderer);
 			}
 			currentDrawer = viewRenderer;
 			drawDefaultPicture(currentURL, null!=currentCache ? currentCache.getBitmapCache() : null);
