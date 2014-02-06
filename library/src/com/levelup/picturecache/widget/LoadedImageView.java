@@ -289,7 +289,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 			throw new IllegalArgumentException("We need a drawHandler to draw");
 		}
 
-		if (DEBUG_STATE) LogManager.getLogger().d(VIEW_LOG_TAG, this+" loadImageURL "+url);
+		if (DEBUG_STATE) LogManager.getLogger().d(VIEW_LOG_TAG, this+" loadImageURL "+url+" drawType:"+currentDrawType);
 		PictureJob.Builder newJobBuilder = new PictureJob.Builder(this, this);
 		newJobBuilder.setURL(url)
 		.setTransforms(transforms)
@@ -327,7 +327,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 	 */
 	public void resetImageURL(LoadedImageViewRender viewRenderer) {
 		UIHandler.assertUIThread();
-		if (DEBUG_STATE) LogManager.getLogger().d(VIEW_LOG_TAG, this+" resetImageURL");
+		if (DEBUG_STATE) LogManager.getLogger().d(VIEW_LOG_TAG, this+" resetImageURL renderer:"+viewRenderer+" drawType:"+currentDrawType);
 		pendingDraws.remove(this);
 		if (null!=currentJob) {
 			currentJob.stopLoading(currentCache, false);
@@ -340,8 +340,11 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 			currentDrawer = viewRenderer;
 			drawDefaultPicture(currentURL, null!=currentCache ? currentCache.getBitmapCache() : null);
 		}
-		if (currentDrawType!=DrawType.LOADED_DRAWABLE)
+			if (DEBUG_STATE) LogManager.getLogger().d(VIEW_LOG_TAG, this+" reset URL");
+		} else if (currentDrawType!=DrawType.LOADED_DRAWABLE) {
 			currentURL = null;
+			if (DEBUG_STATE) LogManager.getLogger().d(VIEW_LOG_TAG, this+" reset URL");
+		}
 		currentJob = null;
 		// not safe for now currentDrawer = null;
 	}
