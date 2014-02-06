@@ -303,7 +303,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 			newJobBuilder.setDimension(maxHeight, false);
 
 		PictureJob newJob = newJobBuilder.build();
-		if (null!=currentJob && currentJob.equals(newJob) && renderer.equals(currentDrawer)) {
+		if (currentDrawType==DrawType.LOADED_DRAWABLE && null!=currentJob && currentJob.equals(newJob) && renderer.equals(currentDrawer)) {
 			// nothing to do, we're already on it
 			if (DEBUG_STATE) LogManager.getLogger().i(VIEW_LOG_TAG, this+" same job, do nothing");
 			return;
@@ -339,7 +339,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 			}
 			currentDrawer = viewRenderer;
 			drawDefaultPicture(currentURL, null!=currentCache ? currentCache.getBitmapCache() : null);
-		}
+			currentURL = null;
 			if (DEBUG_STATE) LogManager.getLogger().d(VIEW_LOG_TAG, this+" reset URL");
 		} else if (currentDrawType!=DrawType.LOADED_DRAWABLE) {
 			currentURL = null;
@@ -377,6 +377,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 		resetImageURL(null);
 		super.setImageResource(resId);
 		currentDrawType = null;
+		currentURL = null;
 	}
 
 	/**
@@ -388,6 +389,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 		resetImageURL(null);
 		super.setImageDrawable(drawable);
 		currentDrawType = null;
+		currentURL = null;
 	}
 
 	/**
@@ -399,6 +401,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 		resetImageURL(null);
 		super.setImageBitmap(bm);
 		currentDrawType = null;
+		currentURL = null;
 	}
 
 	/**
