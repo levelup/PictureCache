@@ -201,13 +201,13 @@ public class PictureJobList implements Runnable {
 			downloadedToFile = null;
 		} catch (OutOfMemoryError e) {
 			mCache.getOutOfMemoryHandler().onOutOfMemoryError(e);
-			LogManager.getLogger().e(PictureCache.LOG_TAG, "Failed to load " + url, e);
+			LogManager.getLogger().w(PictureCache.LOG_TAG, "Failed to load " + url, e);
 			/*} catch (InterruptedException e) {
 			LogManager.getLogger().e(PictureCache.TAG, "Interrupted while loading " + mURL, e);*/
 		} catch (DownloadFailureException e) {
 			// do nothing
 		} catch (Throwable e) {
-			LogManager.getLogger().e(PictureCache.LOG_TAG, "exception on "+url, e);
+			LogManager.getLogger().w(PictureCache.LOG_TAG, "exception on "+url, e);
 		} finally {
 			mAborting.set(true); // after this point new targets are not OK for this job
 			if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().e(PictureCache.LOG_TAG, this+" finished loading targets:"+mTargetJobs+" bitmaps:"+targetBitmaps);
