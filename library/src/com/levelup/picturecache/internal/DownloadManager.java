@@ -23,11 +23,11 @@ public class DownloadManager {
 
 	private static final boolean DEBUG_DOWNLOADER = false;
 
-	private final static int THREAD_POOL_SIZE = 2;
+	private final static int THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors();
 
 	private static final BlockingQueue<Runnable> sPoolWorkQueue = new LinkedBlockingQueue<Runnable>(20);
 
-	private final ThreadPoolExecutor threadPool = new ThreadPoolExecutor(THREAD_POOL_SIZE, THREAD_POOL_SIZE, 1, TimeUnit.SECONDS, sPoolWorkQueue) {
+	private final ThreadPoolExecutor threadPool = new ThreadPoolExecutor(THREAD_POOL_SIZE, 2*THREAD_POOL_SIZE, 10, TimeUnit.SECONDS, sPoolWorkQueue) {
 		@Override
 		protected void beforeExecute(Thread t, Runnable r) {
 			super.beforeExecute(t, r);
