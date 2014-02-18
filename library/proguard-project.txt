@@ -18,3 +18,15 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+
+-keepnames class com.levelup.picturecache.** { *; }
+-keepnames interface com.levelup.picturecache.** { *; }
+
+-keepnames class st.gaw.db.** { *; }
+-keepnames interface st.gaw.db.** { *; }
+
+-keepnames class uk.co.senab.bitmapcache.** { *; }
+-keepnames interface uk.co.senab.bitmapcache.** { *; }
+
+-keepnames class com.jakewharton.disklrucache.** { *; }
+-keepnames interface com.jakewharton.disklrucache.** { *; }
