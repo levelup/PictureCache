@@ -28,7 +28,6 @@ import android.graphics.drawable.Drawable;
 import android.os.Environment;
 import android.text.TextUtils;
 
-import com.levelup.FileUtils;
 import com.levelup.picturecache.internal.ApiLevel8;
 import com.levelup.picturecache.internal.CacheItem;
 import com.levelup.picturecache.internal.CacheKey;
@@ -39,6 +38,7 @@ import com.levelup.picturecache.internal.RemoveExpired;
 import com.levelup.picturecache.loaders.PrecacheImageLoader;
 import com.levelup.picturecache.loaders.RemoteViewLoader;
 import com.levelup.picturecache.loaders.ViewLoader;
+import com.levelup.picturecache.utils.FileUtils;
 
 /**
  * base class to use the picture cache to load images and keep a persistent cache 
