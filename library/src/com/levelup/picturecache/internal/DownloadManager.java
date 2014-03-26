@@ -100,26 +100,34 @@ public class DownloadManager {
 		if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "removeDownloadTarget for "+URL+" job:"+job);
 
 		synchronized (mDownloadJobs) {
-			if (!TextUtils.isEmpty(URL)) {
-				PictureJobList downloader = mDownloadJobs.get(URL);
-				if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, " removeDownloadTarget job:"+job+" found:"+downloader);
-				if (downloader!=null) {
-					//LogManager.getLogger().d(PictureCache.TAG, "cancelDownloadForTarget for URL " + URL+" for "+loader);
-					downloader.removeJob(job);
-				}
-				return;
-			}
-
-			// find the target by view
-			//LogManager.getLogger().w(PictureCache.TAG, "cancelDownloadForTarget by key " + loader);
-			Enumeration<PictureJobList> downloaders = mDownloadJobs.elements();
-			while (downloaders.hasMoreElements()) {
-				PictureJobList downloader = downloaders.nextElement();
-				if (downloader.removeJob(job)) {
-					if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, " removeDownloadTarget loadHandler:"+job+" deleted on:"+downloader/*+" url:"+url*/);
-					/*if (shouldFinish)
-						threadPool.remove(downloader);*/
+			PictureJobList downloader = null;
+			try {
+				if (!TextUtils.isEmpty(URL)) {
+					downloader = mDownloadJobs.get(URL);
+					if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, " removeDownloadTarget job:"+job+" found:"+downloader);
+					if (downloader!=null) {
+						//LogManager.getLogger().d(PictureCache.TAG, "cancelDownloadForTarget for URL " + URL+" for "+loader);
+						downloader.removeJob(job);
+					}
 					return;
+				}
+
+				// find the target by view
+				//LogManager.getLogger().w(PictureCache.TAG, "cancelDownloadForTarget by key " + loader);
+				Enumeration<PictureJobList> downloaders = mDownloadJobs.elements();
+				while (downloaders.hasMoreElements()) {
+					downloader = downloaders.nextElement();
+					if (downloader.removeJob(job)) {
+						if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, " removeDownloadTarget loadHandler:"+job+" deleted on:"+downloader/*+" url:"+url*/);
+						return;
+					}
+				}
+				downloader = null;
+			} finally {
+				if (null!=downloader && !downloader.hasTargets()) {
+					if (DEBUG_DOWNLOADER) LogManager.getLogger().v(PictureCache.LOG_TAG, "last target removed, delete task:"+downloader);
+					threadPool.remove(downloader);
+					mDownloadJobs.remove(downloader.url);
 				}
 			}
 		}
@@ -134,7 +142,7 @@ public class DownloadManager {
 			if (null != mDownloadJobs.remove(downloader.url)) {
 				if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "Job Finishing for "+downloader.url + " remaining:"+mDownloadJobs);
 			} else {
-				LogManager.getLogger().w(PictureCache.LOG_TAG, "Unknown job finishing for "+downloader.url + " remaining:"+mDownloadJobs);
+				LogManager.getLogger().i(PictureCache.LOG_TAG, "Unknown job finishing for "+downloader.url + " remaining:"+mDownloadJobs);
 			}
 		}
 	}

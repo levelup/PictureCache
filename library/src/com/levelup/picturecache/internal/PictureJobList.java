@@ -293,7 +293,7 @@ public class PictureJobList implements Runnable {
 	/**
 	 * Remove a render job from the list of targets
 	 * @param job
-	 * @return {@code null} if the job was not handled here, {@code Boolean.TRUE} if the download is going to be aborted
+	 * @return {@code true} if the download is going to be aborted
 	 */
 	synchronized boolean removeJob(PictureJob job) {
 		boolean deleted = false;
@@ -318,6 +318,14 @@ public class PictureJobList implements Runnable {
 		}*/
 		//else LogManager.getLogger().i(PictureCache.TAG, " keep downloading URL:" + mURL + " remaining views:" + reqViews.size() + " like view:"+reqViews.get(0));
 		return deleted;
+	}
+	
+	synchronized boolean hasTargets() {
+		for (Entry<PictureJob, Boolean> target : mTargetJobs.entrySet()) {
+			if (target.getValue()!=Boolean.FALSE)
+				return true;
+		}
+		return false;
 	}
 
 	private BitmapFactory.Options getOutputOptions(int srcWidth, int srcHeight, CacheKey key) {
