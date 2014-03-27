@@ -306,6 +306,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				newdir = ApiLevel8.getPrivatePictureDir(cookie.context);
 			} catch (VerifyError e) {
 			} catch (NoSuchFieldError e) {
+			} catch (NullPointerException e) {
 			} finally {
 				if (newdir == null)
 					newdir = olddir;
@@ -314,7 +315,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			}
 			mCacheFolder = newdir;
 		}
-		if (null==mCacheFolder) throw new NullPointerException("We need a cache folder");
+		if (null==mCacheFolder) throw new IllegalStateException("We need a cache folder");
 	}
 
 	@Override
