@@ -176,7 +176,12 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 			return null; // already done manually
 		} else {
-			final CacheKey key = CacheKey.unserialize(c.getString(indexUUID));
+			final String serializedKey = c.getString(indexUUID);
+			if (TextUtils.isEmpty(serializedKey)) {
+				LogManager.logger.w(LOG_TAG, "trying to load an empty cache key for "+url);
+				return null;
+			}
+			final CacheKey key = CacheKey.unserialize(serializedKey);
 			final String path = c.getString(indexPath);
 			if (TextUtils.isEmpty(path)) {
 				LogManager.logger.w(LOG_TAG, "trying to load an empty cache item for "+url);
