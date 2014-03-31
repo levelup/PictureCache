@@ -571,6 +571,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				}
 				else if (job.mConcurrencyHandler.canDirectLoad(file)) {
 					try {
+						mDataLock.unlock();
 						if (mBitmapCache!=null) {
 							if (!UIHandler.isUIThread()) {
 								BitmapDrawable cachedBmp = mBitmapCache.put(bitmapCacheKey, file);
@@ -605,6 +606,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 						LogManager.logger.w(LOG_TAG, "can't decode "+file,e);
 						ooHandler.onOutOfMemoryError(e);
 						return;
+					} finally {
+						mDataLock.lock();
 					}
 				}
 			}
