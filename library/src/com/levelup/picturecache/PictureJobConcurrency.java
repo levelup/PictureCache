@@ -14,7 +14,7 @@ public interface PictureJobConcurrency {
 	String setLoadingURL(String url);
 
 	/**
-	 * Allow downloading pictures in the calling thread (usually the UI thread), not recommended, won't happen in the UI thread in the memory cache
+	 * Allow downloading pictures in the calling thread, won't happen in the UI thread
 	 * @param file File that we are trying to decode in the calling thread
 	 * @return {@code true} if the file can be decoded
 	 */

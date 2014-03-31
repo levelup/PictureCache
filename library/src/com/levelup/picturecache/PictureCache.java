@@ -466,6 +466,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	 * @param networkLoader TODO
 	 */
 	void doPictureJob(PictureJob job) {
+		File file;
 		mDataLock.lock();
 		try {
 			if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "getting picture "+job.url+" into "+job.mDisplayHandler+" key:"+job.key);
@@ -476,7 +477,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				job = job.cloneBuilder().setURL(v.URL).build();
 				//LogManager.logger.i("no URL specified for "+key+" using "+URL);
 			}
-			
+
 			//LogManager.logger.v(TAG, "load "+URL+" in "+target+" key:"+key);
 			String wasPreviouslyLoading = job.mConcurrencyHandler.setLoadingURL(job.url); 
 			if (null!=job.url && job.url.equals(wasPreviouslyLoading)) {
@@ -545,81 +546,78 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			}
 			//else LogManager.logger.i(key.toString()+" not found in "+mData.size()+" cache elements");
 
-			final String bitmapCacheKey = mBitmapCache!=null ? PictureJobList.keyToBitmapCacheKey(job, job.url) : null;
-			if (mBitmapCache!=null) {
-				BitmapDrawable cachedBmp = mBitmapCache.get(bitmapCacheKey);
-				if (cachedBmp!=null) {
-					Bitmap bmp = cachedBmp.getBitmap();
-					if (bmp!=null) {
-						if (null!=job.getDisplayTransform()) {
-							Bitmap newBmp = job.getDisplayTransform().transformBitmap(bmp);
-							if (newBmp!=bmp)
-								cachedBmp = new BitmapDrawable(mContext.getResources(), bmp);
-						}
-						if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using cached bitmap for URL "+job.url+" key:"+bitmapCacheKey);
-						job.mDisplayHandler.drawBitmap(cachedBmp, job.url, job.drawCookie, true);
-						return;
-					}
-					LogManager.logger.w(LOG_TAG, "try to draw bitmap "+job.key+" already recycled in "+job.mDisplayHandler+" URL:"+job.url);
-				}
-			}
-
-			File file = getCachedFile(job.key);
+			file = getCachedFile(job.key);
 			if (file!=null) {
 				if (!file.exists() || !file.isFile()) {
 					LogManager.logger.w(LOG_TAG, "File "+file+" disappeared for "+job.key);
 					remove(job.key);
-				}
-				else if (!UIHandler.isUIThread() || job.mConcurrencyHandler.canDirectLoad(file)) {
-					try {
-						mDataLock.unlock();
-						if (mBitmapCache!=null) {
-							if (!UIHandler.isUIThread()) {
-								BitmapDrawable cachedBmp = mBitmapCache.put(bitmapCacheKey, file);
-								if (cachedBmp!=null) {
-									Bitmap bmp = cachedBmp.getBitmap();
-									if (bmp!=null) {
-										if (null!=job.getDisplayTransform()) {
-											Bitmap newBmp = job.getDisplayTransform().transformBitmap(bmp);
-											if (newBmp!=bmp)
-												cachedBmp = new BitmapDrawable(mContext.getResources(), newBmp);
-										}
-										if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using direct file for URL "+job.url+" file:"+file);
-										job.mDisplayHandler.drawBitmap(cachedBmp, job.url, job.drawCookie, true);
-										return;
-									}
-								}
-							}
-						} else {
-							Bitmap bmp = BitmapFactory.decodeFile(file.getAbsolutePath());
-							if (bmp!=null) {
-								if (null!=job.getDisplayTransform())
-									bmp = job.getDisplayTransform().transformBitmap(bmp);
-
-								BitmapDrawable cachedBmp = new BitmapDrawable(mContext.getResources(), bmp);
-								if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using direct file for URL "+job.url+" file:"+file);
-								job.mDisplayHandler.drawBitmap(cachedBmp, job.url, job.drawCookie, true);
-								return;
-							}
-						}
-					} catch (OutOfMemoryError e) {
-						job.mDisplayHandler.drawDefaultPicture(job.url);
-						LogManager.logger.w(LOG_TAG, "can't decode "+file,e);
-						ooHandler.onOutOfMemoryError(e);
-						return;
-					} finally {
-						mDataLock.lock();
-					}
+					file = null;
 				}
 			}
-
-			job.mDisplayHandler.drawDefaultPicture(job.url);
-
-			// we could not read from the cache, load the URL
-			mJobManager.addDownloadTarget(job);
 		} finally {
 			mDataLock.unlock();
 		}
+
+		final String bitmapCacheKey = mBitmapCache!=null ? PictureJobList.keyToBitmapCacheKey(job, job.url) : null;
+		if (mBitmapCache!=null) {
+			BitmapDrawable cachedBmp = mBitmapCache.get(bitmapCacheKey);
+			if (cachedBmp!=null) {
+				Bitmap bmp = cachedBmp.getBitmap();
+				if (bmp!=null) {
+					if (null!=job.getDisplayTransform()) {
+						Bitmap newBmp = job.getDisplayTransform().transformBitmap(bmp);
+						if (newBmp!=bmp)
+							cachedBmp = new BitmapDrawable(mContext.getResources(), bmp);
+					}
+					if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using cached bitmap for URL "+job.url+" key:"+bitmapCacheKey);
+					job.mDisplayHandler.drawBitmap(cachedBmp, job.url, job.drawCookie, true);
+					return;
+				}
+				LogManager.logger.w(LOG_TAG, "try to draw bitmap "+job.key+" already recycled in "+job.mDisplayHandler+" URL:"+job.url);
+			}
+		}
+
+		if (null!=file && !UIHandler.isUIThread() && job.mConcurrencyHandler.canDirectLoad(file)) {
+			try {
+				if (mBitmapCache!=null) {
+					BitmapDrawable cachedBmp = mBitmapCache.put(bitmapCacheKey, file);
+					if (cachedBmp!=null) {
+						Bitmap bmp = cachedBmp.getBitmap();
+						if (bmp!=null) {
+							if (null!=job.getDisplayTransform()) {
+								Bitmap newBmp = job.getDisplayTransform().transformBitmap(bmp);
+								if (newBmp!=bmp)
+									cachedBmp = new BitmapDrawable(mContext.getResources(), newBmp);
+							}
+							if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using direct file for URL "+job.url+" file:"+file);
+							job.mDisplayHandler.drawBitmap(cachedBmp, job.url, job.drawCookie, true);
+							return;
+						}
+					}
+				} else {
+					Bitmap bmp = BitmapFactory.decodeFile(file.getAbsolutePath());
+					if (bmp!=null) {
+						if (null!=job.getDisplayTransform())
+							bmp = job.getDisplayTransform().transformBitmap(bmp);
+
+						BitmapDrawable cachedBmp = new BitmapDrawable(mContext.getResources(), bmp);
+						if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using direct file for URL "+job.url+" file:"+file);
+						job.mDisplayHandler.drawBitmap(cachedBmp, job.url, job.drawCookie, true);
+						return;
+					}
+				}
+			} catch (OutOfMemoryError e) {
+				job.mDisplayHandler.drawDefaultPicture(job.url);
+				LogManager.logger.w(LOG_TAG, "can't decode "+file,e);
+				ooHandler.onOutOfMemoryError(e);
+				return;
+			}
+		}
+
+		job.mDisplayHandler.drawDefaultPicture(job.url);
+
+		// we could not read from the cache, load the URL
+		mJobManager.addDownloadTarget(job);
 	}
 
 	/**
