@@ -102,7 +102,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	private final DownloadManager mJobManager;
 	private final Context mContext;
 
-	private final BitmapLruCache mBitmapCache;
+	private final ThreadSafeBitmapLruCache mBitmapCache;
 
 	private File mCacheFolder;
 
@@ -286,7 +286,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				builder.setMemoryCacheMaxSizeUsingHeapSize();
 			else
 				builder.setMemoryCacheMaxSize(bitmapCacheSize);
-			this.mBitmapCache = builder.build();
+			this.mBitmapCache = new ThreadSafeBitmapLruCache(builder.build());
 		}
 
 		mJobManager = new DownloadManager(this);

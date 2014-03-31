@@ -2,8 +2,6 @@ package com.levelup.picturecache;
 
 import java.io.File;
 
-import uk.co.senab.bitmapcache.BitmapLruCache;
-
 public interface PictureJobConcurrency {
 
 	boolean isDownloadAllowed();
@@ -14,7 +12,7 @@ public interface PictureJobConcurrency {
 	 * @param bitmapCache TODO
 	 * @return the URL that was previously loading, null if there wasn't any
 	 */
-	String setLoadingURL(String url, BitmapLruCache bitmapCache);
+	String setLoadingURL(String url, ThreadSafeBitmapLruCache bitmapCache);
 
 	/**
 	 * Allow downloading pictures in the calling thread (usually the UI thread), not recommended, won't happen in the UI thread in the memory cache

@@ -3,7 +3,6 @@ package com.levelup.picturecache.loaders;
 import java.io.File;
 import java.security.InvalidParameterException;
 
-import uk.co.senab.bitmapcache.BitmapLruCache;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
@@ -17,6 +16,7 @@ import com.levelup.picturecache.BuildConfig;
 import com.levelup.picturecache.LogManager;
 import com.levelup.picturecache.PictureCache;
 import com.levelup.picturecache.PictureLoaderHandler;
+import com.levelup.picturecache.ThreadSafeBitmapLruCache;
 import com.levelup.picturecache.UIHandler;
 import com.levelup.picturecache.loaders.internal.DrawType;
 import com.levelup.picturecache.loaders.internal.ImageViewReference;
@@ -28,7 +28,7 @@ import com.levelup.picturecache.transforms.storage.StorageTransform;
 
 /**
  * Base class used to display the loaded/default bitmap in an View
- * <p>You will likely want to override {@link #displayLoadedDrawable(Drawable)}, {@link #displayDefaultView(BitmapLruCache)} or {@link #displayErrorView(BitmapLruCache)}</p>
+ * <p>You will likely want to override {@link #displayLoadedDrawable(Drawable)}, {@link #displayDefaultView(ThreadSafeBitmapLruCache)} or {@link #displayErrorView(ThreadSafeBitmapLruCache)}</p>
  * @see {@link ViewLoaderDefaultResource} and {@link ViewLoaderDefaultDrawable} 
  */
 public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
@@ -77,19 +77,19 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 	}
 
 	/**
-	 * To override the default display, use {@link #displayDefaultView(BitmapLruCache)}
+	 * To override the default display, use {@link #displayDefaultView(ThreadSafeBitmapLruCache)}
 	 */
 	@Override
-	public final void drawDefaultPicture(String url, BitmapLruCache drawableCache) {
+	public final void drawDefaultPicture(String url, ThreadSafeBitmapLruCache drawableCache) {
 		if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" drawDefaultPicture");
 		showDrawable(drawableCache, null, url, DrawType.LOADING, false);
 	}
 
 	/**
-	 * To override the error display, use {@link #displayErrorView(BitmapLruCache)}
+	 * To override the error display, use {@link #displayErrorView(ThreadSafeBitmapLruCache)}
 	 */
 	@Override
-	public final void drawErrorPicture(String url, BitmapLruCache drawableCache) {
+	public final void drawErrorPicture(String url, ThreadSafeBitmapLruCache drawableCache) {
 		if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" drawDefaultPicture");
 		showDrawable(drawableCache, null, url, DrawType.ERROR, false);
 	}
@@ -98,7 +98,7 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 	 * To override the drawable display, use {@link #displayLoadedDrawable(Drawable)}
 	 */
 	@Override
-	public final void drawBitmap(Drawable bmp, String url, Object drawCookie, BitmapLruCache drawableCache, boolean immediate) {
+	public final void drawBitmap(Drawable bmp, String url, Object drawCookie, ThreadSafeBitmapLruCache drawableCache, boolean immediate) {
 		if (DEBUG_VIEW_LOADING) LogManager.getLogger().d(PictureCache.LOG_TAG, this+" drawBitmap "+view+" with "+bmp);
 		showDrawable(drawableCache, bmp, url, DrawType.LOADED_DRAWABLE, immediate);
 	}
@@ -108,7 +108,7 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 	 * <p>called in the UI thread under a lock on {@link view}</p>
 	 * @param cache the bitmap cache
 	 */
-	public void displayDefaultView(BitmapLruCache cache) {
+	public void displayDefaultView(ThreadSafeBitmapLruCache cache) {
 		// do nothing by default
 	}
 
@@ -117,7 +117,7 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 	 * <p>called in the UI thread under a lock on {@link view}</p>
 	 * @param cache the bitmap cache
 	 */
-	public void displayErrorView(BitmapLruCache cache) {
+	public void displayErrorView(ThreadSafeBitmapLruCache cache) {
 		// do nothing
 	}
 
@@ -130,7 +130,7 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 		view.setImageDrawable(pendingDrawable);
 	}
 
-	private void showDrawable(BitmapLruCache cache, Drawable drawable, String url, DrawType drawType, boolean immediate) {
+	private void showDrawable(ThreadSafeBitmapLruCache cache, Drawable drawable, String url, DrawType drawType, boolean immediate) {
 		synchronized (view.getImageView()) {
 			ViewLoadingTag tag = view.getTag();
 			if (tag==null) {
@@ -143,7 +143,7 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 	}
 
 	@Override
-	public String setLoadingURL(String newURL, BitmapLruCache cache) {
+	public String setLoadingURL(String newURL, ThreadSafeBitmapLruCache cache) {
 		ViewLoadingTag newTag = new ViewLoadingTag(cache, newURL, getStorageTransform(), getDisplayTransform());
 
 		ViewLoadingTag oldTag = null;

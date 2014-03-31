@@ -2,11 +2,11 @@ package com.levelup.picturecache.loaders;
 
 import java.io.File;
 
-import uk.co.senab.bitmapcache.BitmapLruCache;
 import android.graphics.drawable.Drawable;
 import android.view.View;
 
 import com.levelup.picturecache.PictureLoaderHandler;
+import com.levelup.picturecache.ThreadSafeBitmapLruCache;
 import com.levelup.picturecache.UIHandler;
 import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
 import com.levelup.picturecache.transforms.storage.StorageTransform;
@@ -60,7 +60,7 @@ public class ViewBackgroundLoader<V extends View> extends PictureLoaderHandler {
 	}
 
 	@Override
-	public void drawDefaultPicture(String url, BitmapLruCache drawableCache) {
+	public void drawDefaultPicture(String url, ThreadSafeBitmapLruCache drawableCache) {
 		UIHandler.instance.runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
@@ -71,7 +71,7 @@ public class ViewBackgroundLoader<V extends View> extends PictureLoaderHandler {
 	}
 	
 	@Override
-	public void drawErrorPicture(String url, BitmapLruCache drawableCache) {
+	public void drawErrorPicture(String url, ThreadSafeBitmapLruCache drawableCache) {
 		UIHandler.instance.runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
@@ -82,7 +82,7 @@ public class ViewBackgroundLoader<V extends View> extends PictureLoaderHandler {
 	}
 
 	@Override
-	public void drawBitmap(final Drawable bmp, final String url, Object drawCookie, BitmapLruCache drawableCache, boolean immediate) {
+	public void drawBitmap(final Drawable bmp, final String url, Object drawCookie, ThreadSafeBitmapLruCache drawableCache, boolean immediate) {
 		UIHandler.instance.runOnUiThread(new Runnable() {
 			@SuppressWarnings("deprecation")
 			@Override
@@ -96,7 +96,7 @@ public class ViewBackgroundLoader<V extends View> extends PictureLoaderHandler {
 	}
 
 	@Override
-	public String setLoadingURL(String newURL, BitmapLruCache cache) {
+	public String setLoadingURL(String newURL, ThreadSafeBitmapLruCache cache) {
 		// TODO use the ImageViewLoadingTag
 		String oldLoadingUrl = mLoadingUrl;
 		mLoadingUrl = newURL;

@@ -1,6 +1,5 @@
 package com.levelup.picturecache.samples;
 
-import uk.co.senab.bitmapcache.BitmapLruCache;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.view.View;
@@ -9,6 +8,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 
 import com.levelup.picturecache.PictureJob;
+import com.levelup.picturecache.ThreadSafeBitmapLruCache;
 import com.levelup.picturecache.loaders.ImageViewLoaderDefaultResource;
 
 /**
@@ -39,7 +39,7 @@ class AlternateAvatarsAdapter extends ArrayAdapter<SampleSource.Sample> {
 		}
 
 		@Override
-		public void displayDefaultView(BitmapLruCache drawableCache) {
+		public void displayDefaultView(ThreadSafeBitmapLruCache drawableCache) {
 			//no need to display the default view super.displayDefaultView();
 			getImageView().setImageDrawable(null);
 			progress.setVisibility(View.VISIBLE);

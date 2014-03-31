@@ -5,7 +5,6 @@ import java.security.InvalidParameterException;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
-import uk.co.senab.bitmapcache.BitmapLruCache;
 import uk.co.senab.bitmapcache.CacheableImageView;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -23,6 +22,7 @@ import com.levelup.picturecache.PictureJob;
 import com.levelup.picturecache.PictureJobConcurrency;
 import com.levelup.picturecache.PictureJobRenderer;
 import com.levelup.picturecache.PictureJobTransforms;
+import com.levelup.picturecache.ThreadSafeBitmapLruCache;
 import com.levelup.picturecache.UIHandler;
 import com.levelup.picturecache.loaders.ViewLoader;
 import com.levelup.picturecache.loaders.internal.DrawType;
@@ -94,7 +94,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 	 * DO NOT CALL, internal code
 	 */
 	@Override
-	public String setLoadingURL(String url, BitmapLruCache mBitmapCache) {
+	public String setLoadingURL(String url, ThreadSafeBitmapLruCache mBitmapCache) {
 		String oldURL = currentURL;
 		currentURL = url;
 		return oldURL;
@@ -113,7 +113,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 	 * DO NOT CALL, internal code
 	 */
 	@Override
-	public final void drawDefaultPicture(final String url, final BitmapLruCache drawableCache) {
+	public final void drawDefaultPicture(final String url, final ThreadSafeBitmapLruCache drawableCache) {
 		UIHandler.assertUIThread();
 		if (!TextUtils.equals(url, currentURL)) {
 			// we don't care about this anymore
@@ -137,7 +137,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 	 * DO NOT CALL, internal code
 	 */
 	@Override
-	public final void drawErrorPicture(final String url, final BitmapLruCache drawableCache) {
+	public final void drawErrorPicture(final String url, final ThreadSafeBitmapLruCache drawableCache) {
 		UIHandler.assertUIThread();
 		if (!TextUtils.equals(url, currentURL)) {
 			// we don't care about this anymore
@@ -161,7 +161,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 	 * DO NOT CALL, internal code
 	 */
 	@Override
-	public final void drawBitmap(final Drawable drawable, final String url, final Object drawCookie, final BitmapLruCache drawableCache, final boolean immediate) {
+	public final void drawBitmap(final Drawable drawable, final String url, final Object drawCookie, final ThreadSafeBitmapLruCache drawableCache, final boolean immediate) {
 		UIHandler.assertUIThread();
 		if (!TextUtils.equals(url, currentURL)) {
 			// we don't care about this anymore
@@ -194,7 +194,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 		}
 	};
 
-	private void drawInView(final DrawType type, final String url, final BitmapLruCache drawableCache, final Drawable drawable, boolean immediate, final LoadedImageViewRender renderer) {
+	private void drawInView(final DrawType type, final String url, final ThreadSafeBitmapLruCache drawableCache, final Drawable drawable, boolean immediate, final LoadedImageViewRender renderer) {
 		pendingDraws.put(this, new Runnable() {
 			@Override
 			public void run() {

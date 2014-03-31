@@ -2,11 +2,11 @@ package com.levelup.picturecache.loaders;
 
 import java.io.File;
 
-import uk.co.senab.bitmapcache.BitmapLruCache;
 import android.graphics.drawable.Drawable;
 import android.widget.RemoteViews;
 
 import com.levelup.picturecache.PictureLoaderHandler;
+import com.levelup.picturecache.ThreadSafeBitmapLruCache;
 import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
 import com.levelup.picturecache.transforms.storage.StorageTransform;
 
@@ -31,17 +31,17 @@ public class RemoteViewLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	public void drawDefaultPicture(String url, BitmapLruCache drawableCache) {
+	public void drawDefaultPicture(String url, ThreadSafeBitmapLruCache drawableCache) {
 		remoteViews.setImageViewResource(viewId, defaultResourceId);
 	}
 	
 	@Override
-	public void drawErrorPicture(String url, BitmapLruCache drawableCache) {
+	public void drawErrorPicture(String url, ThreadSafeBitmapLruCache drawableCache) {
 		remoteViews.setImageViewResource(viewId, errorDrawableResId);
 	}
 
 	@Override
-	public void drawBitmap(Drawable bmp, String url, Object drawCookie, BitmapLruCache drawableCache, boolean immediate) {
+	public void drawBitmap(Drawable bmp, String url, Object drawCookie, ThreadSafeBitmapLruCache drawableCache, boolean immediate) {
 		remoteViews.setImageViewBitmap(viewId, ViewLoader.drawableToBitmap(bmp));
 	}
 
@@ -64,7 +64,7 @@ public class RemoteViewLoader extends PictureLoaderHandler {
 	}
 
 	@Override
-	public String setLoadingURL(String newURL, BitmapLruCache cache) {
+	public String setLoadingURL(String newURL, ThreadSafeBitmapLruCache cache) {
 		String oldLoadingUrl = mLoadingUrl;
 		mLoadingUrl = newURL;
 		return oldLoadingUrl;

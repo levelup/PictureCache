@@ -3,11 +3,11 @@ package com.levelup.picturecache.loaders.internal;
 import java.util.Collection;
 import java.util.HashSet;
 
-import uk.co.senab.bitmapcache.BitmapLruCache;
 import android.graphics.drawable.Drawable;
 
 import com.levelup.picturecache.LogManager;
 import com.levelup.picturecache.PictureCache;
+import com.levelup.picturecache.ThreadSafeBitmapLruCache;
 import com.levelup.picturecache.UIHandler;
 import com.levelup.picturecache.loaders.ViewLoader;
 import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
@@ -15,7 +15,7 @@ import com.levelup.picturecache.transforms.storage.StorageTransform;
 
 public class ViewLoadingTag {
 	public final String url;
-	public final BitmapLruCache bitmapCache;
+	public final ThreadSafeBitmapLruCache bitmapCache;
 	private final StorageTransform storageTransform;
 	private final BitmapTransform displayTransform;
 
@@ -28,7 +28,7 @@ public class ViewLoadingTag {
 	private DrawType mPendingDrawType;
 	private DrawInUI mDrawInUI;
 
-	public ViewLoadingTag(BitmapLruCache cache, String url, StorageTransform storageTransform, BitmapTransform displayTransform) {
+	public ViewLoadingTag(ThreadSafeBitmapLruCache cache, String url, StorageTransform storageTransform, BitmapTransform displayTransform) {
 		this.bitmapCache = cache;
 		this.url = url;
 		this.displayTransform = displayTransform;

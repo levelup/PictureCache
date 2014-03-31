@@ -1,12 +1,12 @@
 package com.levelup.picturecache.loaders;
 
-import uk.co.senab.bitmapcache.BitmapLruCache;
 import uk.co.senab.bitmapcache.CacheableBitmapDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.widget.ImageView;
 
+import com.levelup.picturecache.ThreadSafeBitmapLruCache;
 import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
 import com.levelup.picturecache.transforms.storage.StorageTransform;
 
@@ -31,7 +31,7 @@ public class ViewLoaderDefaultResource<T extends View> extends ViewLoader<T> {
 	}
 
 	@Override
-	public void displayDefaultView(BitmapLruCache drawableCache) {
+	public void displayDefaultView(ThreadSafeBitmapLruCache drawableCache) {
 		if (getImageView() instanceof ImageView) {
 			if (drawableCache!=null) {
 				final String drawableName = "android.resource://" + defaultDrawableResId;
@@ -52,7 +52,7 @@ public class ViewLoaderDefaultResource<T extends View> extends ViewLoader<T> {
 	}
 	
 	@Override
-	public void displayErrorView(BitmapLruCache drawableCache) {
+	public void displayErrorView(ThreadSafeBitmapLruCache drawableCache) {
 		displayDefaultView(drawableCache);
 	}
 }

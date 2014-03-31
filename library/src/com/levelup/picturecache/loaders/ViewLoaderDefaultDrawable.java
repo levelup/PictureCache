@@ -1,10 +1,10 @@
 package com.levelup.picturecache.loaders;
 
-import uk.co.senab.bitmapcache.BitmapLruCache;
 import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.widget.ImageView;
 
+import com.levelup.picturecache.ThreadSafeBitmapLruCache;
 import com.levelup.picturecache.transforms.bitmap.BitmapTransform;
 import com.levelup.picturecache.transforms.storage.StorageTransform;
 
@@ -28,14 +28,14 @@ public class ViewLoaderDefaultDrawable<T extends View> extends ViewLoader<T> {
 	}
 
 	@Override
-	public void displayDefaultView(BitmapLruCache drawableCache) {
+	public void displayDefaultView(ThreadSafeBitmapLruCache drawableCache) {
 		if (getImageView() instanceof ImageView) {
 			((ImageView) getImageView()).setImageDrawable(defaultDrawable);
 		}
 	}
 	
 	@Override
-	public void displayErrorView(BitmapLruCache cache) {
+	public void displayErrorView(ThreadSafeBitmapLruCache cache) {
 		if (getImageView() instanceof ImageView) {
 			((ImageView) getImageView()).setImageDrawable(defaultDrawable);
 		}
