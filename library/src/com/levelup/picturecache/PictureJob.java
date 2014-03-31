@@ -195,7 +195,7 @@ public class PictureJob implements PictureJobTransforms {
 	public void stopLoading(PictureCache cache, boolean resetToDefault) {
 		cache.cancelPictureJob(this);
 		if (resetToDefault)
-			mDisplayHandler.drawDefaultPicture(url, cache.getBitmapCache());
+			mDisplayHandler.drawDefaultPicture(url);
 	}
 
 	@Override

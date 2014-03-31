@@ -35,6 +35,7 @@ import com.levelup.picturecache.internal.CacheVariant;
 import com.levelup.picturecache.internal.DownloadManager;
 import com.levelup.picturecache.internal.PictureJobList;
 import com.levelup.picturecache.internal.RemoveExpired;
+import com.levelup.picturecache.internal.ThreadSafeBitmapLruCache;
 import com.levelup.picturecache.loaders.PrecacheImageLoader;
 import com.levelup.picturecache.loaders.RemoteViewLoader;
 import com.levelup.picturecache.loaders.ViewLoader;
@@ -477,7 +478,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			}
 			
 			//LogManager.logger.v(TAG, "load "+URL+" in "+target+" key:"+key);
-			String wasPreviouslyLoading = job.mConcurrencyHandler.setLoadingURL(job.url, mBitmapCache); 
+			String wasPreviouslyLoading = job.mConcurrencyHandler.setLoadingURL(job.url); 
 			if (null!=job.url && job.url.equals(wasPreviouslyLoading)) {
 				if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, job.mDisplayHandler+" no need to draw anything");
 				// TODO if the old job is different than the new one, we need to go ahead and do the new one
@@ -487,7 +488,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			if (TextUtils.isEmpty(job.url)) {
 				LogManager.logger.i(LOG_TAG, "no URL specified/known for "+job.key+" using default");
 				cancelPictureJob(job);
-				job.mDisplayHandler.drawDefaultPicture(null, mBitmapCache);
+				job.mDisplayHandler.drawDefaultPicture(null);
 				return;
 			}
 
@@ -556,7 +557,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 								cachedBmp = new BitmapDrawable(mContext.getResources(), bmp);
 						}
 						if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using cached bitmap for URL "+job.url+" key:"+bitmapCacheKey);
-						job.mDisplayHandler.drawBitmap(cachedBmp, job.url, job.drawCookie, mBitmapCache, true);
+						job.mDisplayHandler.drawBitmap(cachedBmp, job.url, job.drawCookie, true);
 						return;
 					}
 					LogManager.logger.w(LOG_TAG, "try to draw bitmap "+job.key+" already recycled in "+job.mDisplayHandler+" URL:"+job.url);
@@ -584,7 +585,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 												cachedBmp = new BitmapDrawable(mContext.getResources(), newBmp);
 										}
 										if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using direct file for URL "+job.url+" file:"+file);
-										job.mDisplayHandler.drawBitmap(cachedBmp, job.url, job.drawCookie, mBitmapCache, true);
+										job.mDisplayHandler.drawBitmap(cachedBmp, job.url, job.drawCookie, true);
 										return;
 									}
 								}
@@ -597,12 +598,12 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 								BitmapDrawable cachedBmp = new BitmapDrawable(mContext.getResources(), bmp);
 								if (DEBUG_CACHE) LogManager.logger.d(LOG_TAG, "using direct file for URL "+job.url+" file:"+file);
-								job.mDisplayHandler.drawBitmap(cachedBmp, job.url, job.drawCookie, mBitmapCache, true);
+								job.mDisplayHandler.drawBitmap(cachedBmp, job.url, job.drawCookie, true);
 								return;
 							}
 						}
 					} catch (OutOfMemoryError e) {
-						job.mDisplayHandler.drawDefaultPicture(job.url, mBitmapCache);
+						job.mDisplayHandler.drawDefaultPicture(job.url);
 						LogManager.logger.w(LOG_TAG, "can't decode "+file,e);
 						ooHandler.onOutOfMemoryError(e);
 						return;
@@ -612,7 +613,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				}
 			}
 
-			job.mDisplayHandler.drawDefaultPicture(job.url, mBitmapCache);
+			job.mDisplayHandler.drawDefaultPicture(job.url);
 
 			// we could not read from the cache, load the URL
 			mJobManager.addDownloadTarget(job);
@@ -919,7 +920,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		return mCacheFolder;
 	}
 
-	public BitmapLruCache getBitmapCache() {
+	public ThreadSafeBitmapLruCache getBitmapCache() {
 		return mBitmapCache;
 	}
 

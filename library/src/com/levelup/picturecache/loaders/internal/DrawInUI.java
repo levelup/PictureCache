@@ -39,13 +39,13 @@ class DrawInUI implements Runnable {
 
 					if (mPendingDrawType==DrawType.LOADING) {
 						if (tag.setDrawnType(mPendingDrawType)!=DrawType.LOADING) {
-							viewLoader.displayDefaultView(tag.bitmapCache);
+							viewLoader.displayDefaultView();
 							tag.setUrlIsLoaded(false);
 						}
 						else if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().e(PictureCache.LOG_TAG, viewLoader+" saved a default drawing");
 					} else if (mPendingDrawType==DrawType.ERROR) {
 						if (tag.setDrawnType(mPendingDrawType)!=DrawType.ERROR) {
-							viewLoader.displayErrorView(tag.bitmapCache);
+							viewLoader.displayErrorView();
 							tag.setUrlIsLoaded(true);
 						}
 						else if (ViewLoader.DEBUG_VIEW_LOADING) LogManager.getLogger().e(PictureCache.LOG_TAG, viewLoader+" saved an error drawing");

@@ -22,7 +22,6 @@ import com.levelup.picturecache.PictureJob;
 import com.levelup.picturecache.PictureJobConcurrency;
 import com.levelup.picturecache.PictureJobRenderer;
 import com.levelup.picturecache.PictureJobTransforms;
-import com.levelup.picturecache.ThreadSafeBitmapLruCache;
 import com.levelup.picturecache.UIHandler;
 import com.levelup.picturecache.loaders.ViewLoader;
 import com.levelup.picturecache.loaders.internal.DrawType;
@@ -94,7 +93,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 	 * DO NOT CALL, internal code
 	 */
 	@Override
-	public String setLoadingURL(String url, ThreadSafeBitmapLruCache mBitmapCache) {
+	public String setLoadingURL(String url) {
 		String oldURL = currentURL;
 		currentURL = url;
 		return oldURL;
@@ -113,7 +112,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 	 * DO NOT CALL, internal code
 	 */
 	@Override
-	public final void drawDefaultPicture(final String url, final ThreadSafeBitmapLruCache drawableCache) {
+	public final void drawDefaultPicture(final String url) {
 		UIHandler.assertUIThread();
 		if (!TextUtils.equals(url, currentURL)) {
 			// we don't care about this anymore
@@ -124,20 +123,20 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 			post(new Runnable() {
 				@Override
 				public void run() {
-					drawDefaultPicture(url, drawableCache);
+					drawDefaultPicture(url);
 				}
 			});
 			return;
 		}
 
-		drawInView(DrawType.LOADING, url, drawableCache, null, true, currentDrawer);
+		drawInView(DrawType.LOADING, url, null, true, currentDrawer);
 	}
 
 	/**
 	 * DO NOT CALL, internal code
 	 */
 	@Override
-	public final void drawErrorPicture(final String url, final ThreadSafeBitmapLruCache drawableCache) {
+	public final void drawErrorPicture(final String url) {
 		UIHandler.assertUIThread();
 		if (!TextUtils.equals(url, currentURL)) {
 			// we don't care about this anymore
@@ -148,20 +147,20 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 			post(new Runnable() {
 				@Override
 				public void run() {
-					drawErrorPicture(url, drawableCache);
+					drawErrorPicture(url);
 				}
 			});
 			return;
 		}
 
-		drawInView(DrawType.ERROR, url, drawableCache, null, true, currentDrawer);
+		drawInView(DrawType.ERROR, url, null, true, currentDrawer);
 	}
 
 	/**
 	 * DO NOT CALL, internal code
 	 */
 	@Override
-	public final void drawBitmap(final Drawable drawable, final String url, final Object drawCookie, final ThreadSafeBitmapLruCache drawableCache, final boolean immediate) {
+	public final void drawBitmap(final Drawable drawable, final String url, final Object drawCookie, final boolean immediate) {
 		UIHandler.assertUIThread();
 		if (!TextUtils.equals(url, currentURL)) {
 			// we don't care about this anymore
@@ -172,13 +171,13 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 			post(new Runnable() {
 				@Override
 				public void run() {
-					drawBitmap(drawable, url, drawCookie, drawableCache, immediate);
+					drawBitmap(drawable, url, drawCookie, immediate);
 				}
 			});
 			return;
 		}
 
-		drawInView(DrawType.LOADED_DRAWABLE, url, drawableCache, drawable, immediate, currentDrawer);
+		drawInView(DrawType.LOADED_DRAWABLE, url, drawable, immediate, currentDrawer);
 	}
 
 	private static boolean drawsEnqueued;
@@ -194,7 +193,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 		}
 	};
 
-	private void drawInView(final DrawType type, final String url, final ThreadSafeBitmapLruCache drawableCache, final Drawable drawable, boolean immediate, final LoadedImageViewRender renderer) {
+	private void drawInView(final DrawType type, final String url, final Drawable drawable, boolean immediate, final LoadedImageViewRender renderer) {
 		pendingDraws.put(this, new Runnable() {
 			@Override
 			public void run() {
@@ -338,7 +337,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 				if (BuildConfig.DEBUG) throw new InvalidParameterException("can't change the default drawer yet "+currentDrawer+" vs "+viewRenderer);
 			}
 			currentDrawer = viewRenderer;
-			drawDefaultPicture(currentURL, null!=currentCache ? currentCache.getBitmapCache() : null);
+			drawDefaultPicture(currentURL);
 			currentURL = null;
 			if (DEBUG_STATE) LogManager.getLogger().d(VIEW_LOG_TAG, this+" reset URL");
 		} else if (currentDrawType!=DrawType.LOADED_DRAWABLE) {

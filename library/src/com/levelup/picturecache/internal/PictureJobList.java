@@ -236,9 +236,9 @@ public class PictureJobList implements Runnable {
 										drawable = new BitmapDrawable(mCache.getContext().getResources(), transformedBitmap);
 								}
 
-								target.mDisplayHandler.drawBitmap(drawable, url, target.drawCookie, mCache.getBitmapCache(), false);
+								target.mDisplayHandler.drawBitmap(drawable, url, target.drawCookie, false);
 							} else
-								target.mDisplayHandler.drawErrorPicture(url, mCache.getBitmapCache());
+								target.mDisplayHandler.drawErrorPicture(url);
 						}
 					}
 					mTargetJobs.clear();
