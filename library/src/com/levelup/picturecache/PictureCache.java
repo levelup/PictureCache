@@ -570,7 +570,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 					LogManager.logger.w(LOG_TAG, "File "+file+" disappeared for "+job.key);
 					remove(job.key);
 				}
-				else if (job.mConcurrencyHandler.canDirectLoad(file)) {
+				else if (!UIHandler.isUIThread() || job.mConcurrencyHandler.canDirectLoad(file)) {
 					try {
 						mDataLock.unlock();
 						if (mBitmapCache!=null) {

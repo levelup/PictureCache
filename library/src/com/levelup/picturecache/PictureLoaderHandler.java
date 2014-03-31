@@ -1,5 +1,7 @@
 package com.levelup.picturecache;
 
+import java.io.File;
+
 import com.levelup.picturecache.loaders.PrecacheImageLoader;
 import com.levelup.picturecache.loaders.RemoteViewLoader;
 import com.levelup.picturecache.loaders.ViewLoader;
@@ -41,6 +43,11 @@ public abstract class PictureLoaderHandler implements PictureJobRenderer, Pictur
 	 */
 	public boolean isDownloadAllowed() {
 		return true;
+	}
+	
+	@Override
+	public boolean canDirectLoad(File file) {
+		return false;
 	}
 
 	private final BitmapTransform mBitmapTransform;

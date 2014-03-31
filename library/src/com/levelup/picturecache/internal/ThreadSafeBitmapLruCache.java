@@ -4,7 +4,6 @@ import java.io.File;
 
 import uk.co.senab.bitmapcache.BitmapLruCache;
 import uk.co.senab.bitmapcache.CacheableBitmapDrawable;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory.Options;
 
 public class ThreadSafeBitmapLruCache {
@@ -25,10 +24,6 @@ public class ThreadSafeBitmapLruCache {
 
 	public synchronized CacheableBitmapDrawable put(String cacheKey, File file, Options decodeOpts) {
 		return cache.put(cacheKey, file, decodeOpts);
-	}
-
-	public synchronized CacheableBitmapDrawable put(String cacheKey, Bitmap bitmap) {
-		return cache.put(cacheKey, bitmap);
 	}
 	
 	public synchronized void trimMemory() {

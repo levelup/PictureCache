@@ -1,7 +1,5 @@
 package com.levelup.picturecache.loaders;
 
-import java.io.File;
-
 import android.graphics.drawable.Drawable;
 import android.view.View;
 
@@ -106,11 +104,6 @@ public class ViewBackgroundLoader<V extends View> extends PictureLoaderHandler {
 	protected String getLoadingURL() {
 		// TODO use the ImageViewLoadingTag
 		return mLoadingUrl;
-	}
-
-	@Override
-	public boolean canDirectLoad(File file) {
-		return true;
 	}
 
 	@Override

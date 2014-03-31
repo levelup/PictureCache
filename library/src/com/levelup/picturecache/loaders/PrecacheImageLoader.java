@@ -1,6 +1,5 @@
 package com.levelup.picturecache.loaders;
 
-import java.io.File;
 import java.util.Random;
 
 import android.graphics.drawable.Drawable;
@@ -59,10 +58,5 @@ public class PrecacheImageLoader extends PictureLoaderHandler {
 	@Override
 	public String getLoadingURL() {
 		return mLoadingUrl;
-	}
-
-	@Override
-	public boolean canDirectLoad(File file) {
-		return false;
 	}
 }

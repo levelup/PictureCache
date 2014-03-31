@@ -16,7 +16,6 @@ import com.levelup.picturecache.BuildConfig;
 import com.levelup.picturecache.LogManager;
 import com.levelup.picturecache.PictureCache;
 import com.levelup.picturecache.PictureLoaderHandler;
-import com.levelup.picturecache.UIHandler;
 import com.levelup.picturecache.loaders.internal.DrawType;
 import com.levelup.picturecache.loaders.internal.ImageViewReference;
 import com.levelup.picturecache.loaders.internal.ImageViewReferenceSDK12;
@@ -183,7 +182,7 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 
 	@Override
 	public boolean canDirectLoad(File file) {
-		return !UIHandler.isUIThread() || file.length() < MAX_SIZE_IN_UI_THREAD;
+		return file.length() < MAX_SIZE_IN_UI_THREAD;
 	}
 
 	public static Bitmap drawableToBitmap(Drawable drawable) {

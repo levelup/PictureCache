@@ -1,7 +1,5 @@
 package com.levelup.picturecache.loaders;
 
-import java.io.File;
-
 import android.graphics.drawable.Drawable;
 import android.widget.RemoteViews;
 
@@ -72,10 +70,5 @@ public class RemoteViewLoader extends PictureLoaderHandler {
 	@Override
 	public String getLoadingURL() {
 		return mLoadingUrl;
-	}
-
-	@Override
-	public boolean canDirectLoad(File file) {
-		return true;
 	}
 }
