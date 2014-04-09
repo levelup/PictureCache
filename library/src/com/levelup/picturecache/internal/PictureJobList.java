@@ -319,7 +319,7 @@ public class PictureJobList implements Runnable {
 		//else LogManager.getLogger().i(PictureCache.TAG, " keep downloading URL:" + mURL + " remaining views:" + reqViews.size() + " like view:"+reqViews.get(0));
 		return deleted;
 	}
-	
+
 	synchronized boolean hasTargets() {
 		for (Entry<PictureJob, Boolean> target : mTargetJobs.entrySet()) {
 			if (target.getValue()!=Boolean.FALSE)
@@ -412,7 +412,11 @@ public class PictureJobList implements Runnable {
 					readAmount = is.read(data);
 				}
 			} finally {
-				bis.close();
+				try {
+					bis.close();
+				} catch (ArrayIndexOutOfBoundsException ignored) {
+					// okhttp 1.5.3 issue https://github.com/square/okhttp/issues/658
+				}
 				out.flush();
 				out.close();
 			}
@@ -433,6 +437,8 @@ public class PictureJobList implements Runnable {
 					is.close();
 			} catch (IOException e) {
 				LogManager.getLogger().e(PictureCache.LOG_TAG, "Could not close " + is, e);
+			} catch (ArrayIndexOutOfBoundsException ignored) {
+				// okhttp 1.5.3 issue https://github.com/square/okhttp/issues/658
 			}
 		}
 	}
