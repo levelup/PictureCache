@@ -13,7 +13,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.UnknownHostException;
-import java.security.InvalidParameterException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -260,7 +259,7 @@ public class PictureJobList implements Runnable {
 	 * @return {@code false} if the job was not added to this target (if the download is aborting)
 	 */
 	synchronized boolean addJob(PictureJob job) {
-		if (BuildConfig.DEBUG && !job.url.equals(url)) throw new InvalidParameterException(this+" wrong job URL "+job);
+		if (BuildConfig.DEBUG && !job.url.equals(url)) throw new IllegalArgumentException(this+" wrong job URL "+job);
 
 		if (mAborting.get()) {
 			if (DEBUG_BITMAP_DOWNLOADER) LogManager.getLogger().w(PictureCache.LOG_TAG, this+ " is aborting");

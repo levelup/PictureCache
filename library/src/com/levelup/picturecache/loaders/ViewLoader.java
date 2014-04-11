@@ -1,7 +1,6 @@
 package com.levelup.picturecache.loaders;
 
 import java.io.File;
-import java.security.InvalidParameterException;
 
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
@@ -43,7 +42,7 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	protected ViewReference<T> createViewReference(T view) {
-		if (!(view instanceof ImageView)) throw new InvalidParameterException("You need to override createViewReference() in your loader to handle non ImageView targets like "+view);
+		if (!(view instanceof ImageView)) throw new IllegalArgumentException("You need to override createViewReference() in your loader to handle non ImageView targets like "+view);
 		if (Build.VERSION.SDK_INT >= 12) {
 			return new ImageViewReferenceSDK12((ImageView) view);
 		} else {

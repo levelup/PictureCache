@@ -1,7 +1,6 @@
 package com.levelup.picturecache.widget;
 
 import java.io.File;
-import java.security.InvalidParameterException;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -334,7 +333,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 		if (null!=viewRenderer) {
 			if (null!=currentDrawer && !viewRenderer.equals(currentDrawer)) {
 				// TODO rebuild a PictureJob with this default handler
-				if (BuildConfig.DEBUG) throw new InvalidParameterException("can't change the default drawer yet "+currentDrawer+" vs "+viewRenderer);
+				if (BuildConfig.DEBUG) throw new IllegalArgumentException("can't change the default drawer yet "+currentDrawer+" vs "+viewRenderer);
 			}
 			currentDrawer = viewRenderer;
 			drawDefaultPicture(currentURL);
