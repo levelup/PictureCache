@@ -200,7 +200,7 @@ public class PictureJobList implements Runnable {
 			downloadedToFile = null;
 		} catch (OutOfMemoryError e) {
 			mCache.getOutOfMemoryHandler().onOutOfMemoryError(e);
-			LogManager.getLogger().w(PictureCache.LOG_TAG, "Failed to load " + url, e);
+			LogManager.getLogger().w(PictureCache.LOG_TAG, "Failed to load " + url+' '+e);
 			/*} catch (InterruptedException e) {
 			LogManager.getLogger().e(PictureCache.TAG, "Interrupted while loading " + mURL, e);*/
 		} catch (DownloadFailureException e) {
@@ -427,7 +427,7 @@ public class PictureJobList implements Runnable {
 			throw new DownloadFailureException("host not found in "+url, e);
 		} catch (OutOfMemoryError e) {
 			mCache.getOutOfMemoryHandler().onOutOfMemoryError(e);
-			throw new DownloadFailureException("Could not decode image " + url, e);
+			throw new DownloadFailureException("Could not decode image " + url+' '+e);
 		} catch (IOException e) {
 			throw new DownloadFailureException("Could not read " + url, e);
 		} finally {

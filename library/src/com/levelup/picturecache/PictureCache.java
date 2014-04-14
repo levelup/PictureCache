@@ -540,7 +540,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				} catch (SecurityException e) {
 					LogManager.logger.e(LOG_TAG, "getPicture exception:" + e.getMessage(), e);
 				} catch (OutOfMemoryError e) {
-					LogManager.logger.w(LOG_TAG, "Could not decode image " + job.url, e);
+					LogManager.logger.w(LOG_TAG, "Could not decode image " + job.url+' '+e);
 					ooHandler.onOutOfMemoryError(e);
 				}
 			}
@@ -608,7 +608,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 				}
 			} catch (OutOfMemoryError e) {
 				job.mDisplayHandler.drawDefaultPicture(job.url);
-				LogManager.logger.w(LOG_TAG, "can't decode "+file,e);
+				LogManager.logger.w(LOG_TAG, "can't decode "+file+' '+e);
 				ooHandler.onOutOfMemoryError(e);
 				return;
 			}
