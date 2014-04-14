@@ -26,7 +26,6 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.util.FloatMath;
 
-import com.levelup.http.HttpException;
 import com.levelup.picturecache.BuildConfig;
 import com.levelup.picturecache.LifeSpan;
 import com.levelup.picturecache.LogManager;
