@@ -421,6 +421,9 @@ public class PictureJobList implements Runnable {
 			}
 
 			//LogManager.getLogger().v(" got direct:"+bmp);
+		} catch (ArrayIndexOutOfBoundsException e) {
+			// okhttp 1.5.3 issue https://github.com/square/okhttp/issues/658
+			throw new DownloadFailureException("reading failed in "+url, e);
 		} catch (MalformedURLException e) {
 			throw new DownloadFailureException("bad URL " + url, e);
 		} catch (UnknownHostException e) {
