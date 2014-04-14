@@ -439,6 +439,8 @@ public class PictureJobList implements Runnable {
 					is.close();
 			} catch (IOException e) {
 				LogManager.getLogger().e(PictureCache.LOG_TAG, "Could not close " + is, e);
+			} catch (NullPointerException ignored) {
+				// okhttp 2.0 bug https://github.com/square/okhttp/issues/690
 			} catch (ArrayIndexOutOfBoundsException ignored) {
 				// okhttp 1.5.3 issue https://github.com/square/okhttp/issues/658
 			}
