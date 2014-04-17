@@ -12,7 +12,9 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import android.annotation.SuppressLint;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.text.TextUtils;
 
 import com.levelup.picturecache.LogManager;
@@ -44,8 +46,11 @@ public class DownloadManager {
 	private final Hashtable<String, PictureJobList> mDownloadJobs = new Hashtable<String, PictureJobList>();
 	private final PictureCache mCache;
 
+	@SuppressLint("NewApi")
 	public DownloadManager(PictureCache pictureCache) {
 		this.mCache = pictureCache;
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD)
+			threadPool.allowCoreThreadTimeOut(true);
 	}
 
 	public void addDownloadTarget(PictureJob job) {
