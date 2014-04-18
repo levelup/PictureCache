@@ -296,8 +296,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	}
 
 	@Override
-	protected void preloadInit(Object c) {
-		super.preloadInit(c);
+	protected void preloadInit(Object c, Logger logger) {
+		super.preloadInit(c, logger);
 
 		mDirAsserted = Boolean.FALSE;
 
