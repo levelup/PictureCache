@@ -102,7 +102,7 @@ public class PictureJobList implements Runnable {
 					break;
 
 				File fileInCache = mCache.getCachedFile(target.key);
-				boolean bitmapWasInCache = fileInCache!=null;
+				boolean bitmapWasInCache = fileInCache!=null && fileInCache.exists() && fileInCache.length()>0;
 				if (!bitmapWasInCache) {
 					// we can't use the older version, download the file and create the stored file again
 					fileInCache = mCache.getCachedFilepath(target.key);
@@ -141,13 +141,15 @@ public class PictureJobList implements Runnable {
 						if (displayDrawable==null && downloadedToFile!=null && !downloaded) {
 							try {
 								downloadInTempFile(downloadedToFile);
-								// we need the dimensions of the downloaded file
-								tmpFileOptions.inJustDecodeBounds = true;
-								BitmapFactory.decodeFile(downloadedToFile.getAbsolutePath(), tmpFileOptions);
-								if (DEBUG_BITMAP_DOWNLOADER && tmpFileOptions.outHeight <= 0) LogManager.getLogger().i(PictureCache.LOG_TAG, this+" failed to get dimensions from "+downloadedToFile);
-								downloaded = true;
+								if (downloadedToFile.exists() && downloadedToFile.length()>0) {
+									// we need the dimensions of the downloaded file
+									tmpFileOptions.inJustDecodeBounds = true;
+									BitmapFactory.decodeFile(downloadedToFile.getAbsolutePath(), tmpFileOptions);
+									if (DEBUG_BITMAP_DOWNLOADER && tmpFileOptions.outHeight <= 0) LogManager.getLogger().i(PictureCache.LOG_TAG, this+" failed to get dimensions from "+downloadedToFile);
+									downloaded = true;
+								}
 							} finally {
-								if (!downloaded && downloadedToFile!=fileInCache)
+								if (!downloaded)
 									downloadedToFile.delete();
 							}
 							checkAbort();
