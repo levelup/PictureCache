@@ -8,7 +8,7 @@ import android.os.Looper;
  */
 public class UIHandler extends Handler {
 	
-	public static UIHandler instance = new UIHandler();
+	public static final UIHandler instance = new UIHandler();
 
 	public UIHandler() {
 		super(Looper.getMainLooper());

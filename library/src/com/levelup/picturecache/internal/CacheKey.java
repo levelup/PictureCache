@@ -116,13 +116,13 @@ public class CacheKey {
 		return filename.toString();
 	}
 
-	private final boolean isJPEG() {
+	private boolean isJPEG() {
 		if (extensionMode==StorageType.JPEG) return true;
 		if (extensionMode==StorageType.PNG) return false;
 		return (widthBased && dimension > 150);
 	}
 
-	private final String getExtension() {
+	private String getExtension() {
 		return isJPEG() ? "jpg" : "png";
 	}
 

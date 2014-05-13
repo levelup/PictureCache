@@ -141,7 +141,7 @@ public abstract class ViewLoader<T extends View> extends PictureLoaderHandler {
 	public String setLoadingURL(String newURL) {
 		ViewLoadingTag newTag = new ViewLoadingTag(newURL, getStorageTransform(), getDisplayTransform());
 
-		ViewLoadingTag oldTag = null;
+		ViewLoadingTag oldTag;
 		synchronized (view.getImageView()) {
 			oldTag = view.getTag();
 			if (newTag.equals(oldTag)) {

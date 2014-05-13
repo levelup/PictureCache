@@ -96,7 +96,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 					"DATE LONG not null DEFAULT -1, " +  // the date of last access to the item
 					"PRIMARY KEY (UUID));";
 
-	private Boolean mDirAsserted;
+	private Boolean mDirAsserted = Boolean.FALSE;
 
 	private final OutOfMemoryHandler ooHandler;
 
@@ -107,8 +107,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 	private File mCacheFolder;
 
-	private AtomicInteger mPurgeCounterLongterm = new AtomicInteger();
-	private AtomicInteger mPurgeCounterShortterm = new AtomicInteger();
+	private final AtomicInteger mPurgeCounterLongterm = new AtomicInteger();
+	private final AtomicInteger mPurgeCounterShortterm = new AtomicInteger();
 
 	@Override
 	protected final String getMainTableName() {
@@ -310,9 +310,9 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 			File newdir = null;
 			try {
 				newdir = ApiLevel8.getPrivatePictureDir(cookie.context);
-			} catch (VerifyError e) {
-			} catch (NoSuchFieldError e) {
-			} catch (NullPointerException e) {
+			} catch (VerifyError ignored) {
+			} catch (NoSuchFieldError ignored) {
+			} catch (NullPointerException ignored) {
 			} finally {
 				if (newdir == null)
 					newdir = olddir;
@@ -522,8 +522,8 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 							else
 								oldVersionKey = job.key.copyWithNewUrl(v.URL);
 							// move the current content to the deprecated key
-							moveCachedFiles(job.key, oldVersionKey, LifeSpan.SHORTTERM);
-							if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, job.key+" moved to "+oldVersionKey);
+							boolean success = moveCachedFiles(job.key, oldVersionKey, LifeSpan.SHORTTERM);
+							if (DEBUG_CACHE) LogManager.logger.v(LOG_TAG, job.key+" moved to "+oldVersionKey+" success:"+success);
 						} else {
 							// use the old image from the cache with that URL
 							String dstUUID = getOldPicUUID(job.key.UUID, job.url);

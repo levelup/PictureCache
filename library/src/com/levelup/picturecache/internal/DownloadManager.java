@@ -56,10 +56,10 @@ public class DownloadManager {
 	public void addDownloadTarget(PictureJob job) {
 		// find out if that URL is already loading, if so add the view to the recipient
 		boolean isNewJobList = false;
-		PictureJobList jobList = null;
+		PictureJobList jobList;
 		synchronized (mDownloadJobs) {
 			// add job by URL
-			jobList = mDownloadJobs.get(job.url);
+            jobList = mDownloadJobs.get(job.url);
 			if (null==jobList) {
 				isNewJobList = true;
 				if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "add new downloader for "+job.url+" key:"+job.key+" job:"+job+" downloads:"+mDownloadJobs);
