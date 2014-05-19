@@ -32,7 +32,7 @@ import com.levelup.picturecache.loaders.internal.DrawType;
  */
 public class LoadedImageView extends CacheableImageView implements PictureJobConcurrency, PictureJobRenderer {
 	private final static boolean DEBUG_STATE = BuildConfig.DEBUG && false;
-	
+
 	/**
 	 * Callback for custom {@link LoadedImageView} rendering  
 	 */
@@ -59,7 +59,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 		 */
 		void renderError(LoadedImageView view);
 	}
-	
+
 	public static class BaseLoadedImageViewRender implements LoadedImageViewRender {
 		@Override
 		public void renderDrawable(LoadedImageView view, Drawable drawable) {
@@ -78,7 +78,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 	}
 
 	public static final LoadedImageViewRender DefaultRenderer = new BaseLoadedImageViewRender();
-	
+
 	// PictureJobConcurrency
 	private String currentURL;
 
@@ -247,7 +247,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 	public LoadedImageView(Context context, AttributeSet attrs, int defStyle) {
 		super(context, attrs, defStyle);
 	}
-	
+
 	/**
 	 * Load the given URL from the network using the provided cache
 	 * <p>An empty drawable is displayed while the picture is loading</p>
@@ -261,7 +261,7 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 	public void loadImageURL(PictureCache cache, String url) {
 		loadImageURL(cache, url, null, DefaultRenderer, 0, 0, null, 0, null, null);
 	}
-	
+
 	/**
 	 * Load the given URL from the network using the provided cache
 	 * 
@@ -318,12 +318,23 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 		currentJob.startLoading(currentCache);
 	}
 
+
 	/**
 	 * Stop the currently loading URL job and do not display it. If a {@code viewRenderer} is provided, it will be used to reset the display to the default view
 	 * 
 	 * @param viewRenderer The renderer to use to reset bring back the display to the loading view, can be {@code null}
 	 */
 	public void resetImageURL(LoadedImageViewRender viewRenderer) {
+		resetImageURL(viewRenderer, false);
+	}
+
+	/**
+	 * Stop the currently loading URL job and do not display it. If a {@code viewRenderer} is provided, it will be used to reset the display to the default view
+	 * 
+	 * @param viewRenderer The renderer to use to reset bring back the display to the loading view, can be {@code null}
+	 * @param isError {@code true} if an error should be displayed, rather than the default display
+	 */
+	public void resetImageURL(LoadedImageViewRender viewRenderer, boolean isError) {
 		UIHandler.assertUIThread();
 		if (DEBUG_STATE) LogManager.getLogger().d(VIEW_LOG_TAG, this+" resetImageURL renderer:"+viewRenderer+" drawType:"+currentDrawType);
 		pendingDraws.remove(this);
@@ -336,7 +347,10 @@ public class LoadedImageView extends CacheableImageView implements PictureJobCon
 				if (BuildConfig.DEBUG) throw new IllegalArgumentException("can't change the default drawer yet "+currentDrawer+" vs "+viewRenderer);
 			}
 			currentDrawer = viewRenderer;
-			drawDefaultPicture(currentURL);
+			if (isError)
+				drawErrorPicture(currentURL);
+			else
+				drawDefaultPicture(currentURL);
 			currentURL = null;
 			if (DEBUG_STATE) LogManager.getLogger().d(VIEW_LOG_TAG, this+" reset URL");
 		} else if (currentDrawType!=DrawType.LOADED_DRAWABLE) {
