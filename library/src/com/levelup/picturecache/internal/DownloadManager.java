@@ -27,7 +27,7 @@ public class DownloadManager {
 
 	private final static int THREAD_POOL_SIZE = Runtime.getRuntime().availableProcessors();
 
-	private static final BlockingQueue<Runnable> sPoolWorkQueue = new LinkedBlockingQueue<Runnable>(20);
+	private static final BlockingQueue<Runnable> sPoolWorkQueue = new LinkedBlockingQueue<Runnable>();
 
 	private final ThreadPoolExecutor threadPool = new ThreadPoolExecutor(THREAD_POOL_SIZE, 2*THREAD_POOL_SIZE, 10, TimeUnit.SECONDS, sPoolWorkQueue) {
 		@Override
