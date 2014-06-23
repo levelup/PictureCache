@@ -12,8 +12,8 @@ import com.levelup.picturecache.transforms.storage.StorageTransform;
  */
 public abstract class ImageViewLoader extends ViewLoader<ImageView> {
 
-	public ImageViewLoader(ImageView view, StorageTransform storageTransform,
-			BitmapTransform loadTransform) {
+	protected ImageViewLoader(ImageView view, StorageTransform storageTransform,
+	                          BitmapTransform loadTransform) {
 		super(view, storageTransform, loadTransform);
 	}
 
