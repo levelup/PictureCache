@@ -7,6 +7,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import st.gaw.db.InMemoryHashmapDb;
@@ -96,7 +97,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 					"DATE LONG not null DEFAULT -1, " +  // the date of last access to the item
 					"PRIMARY KEY (UUID));";
 
-	private Boolean mDirAsserted = Boolean.FALSE;
+	private final AtomicBoolean hasAssertedDirectory = new AtomicBoolean();
 
 	private final OutOfMemoryHandler ooHandler;
 
@@ -299,7 +300,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	protected void preloadInit(Object c, Logger logger) {
 		super.preloadInit(c, logger);
 
-		mDirAsserted = Boolean.FALSE;
+		hasAssertedDirectory.set(false);
 
 		InitCookie cookie = (InitCookie) c;
 
@@ -387,17 +388,17 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 	private void assertFolderExists() throws IOException, SecurityException {
 		//LogManager.logger.e(TAG, "assertFolderExists " +DirAsserted);
-		synchronized (mDirAsserted) {
-			if (!mDirAsserted) {
+		synchronized (hasAssertedDirectory) {
+			if (!hasAssertedDirectory.get()) {
 				//LogManager.logger.i("data dir=" + Environment.getDataDirectory().getAbsolutePath());
 				if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
 					//LogManager.logger.w(TAG, "cache dir=" + dir.getAbsolutePath()+" exists:"+dir.exists());
 					if (mCacheFolder.exists() && mCacheFolder.isDirectory())
-						mDirAsserted = Boolean.TRUE;
+						hasAssertedDirectory.set(true);
 					else {
-						mDirAsserted = mCacheFolder.mkdirs();
+						hasAssertedDirectory.set(mCacheFolder.mkdirs());
 						//LogManager.logger.w(TAG, "cache dir=" + dir.getAbsolutePath()+" asserted:"+DirAsserted);
-						if (mDirAsserted) {
+						if (hasAssertedDirectory.get()) {
 							new File(mCacheFolder, ".nomedia").createNewFile();
 						}
 					}
@@ -457,13 +458,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 
 	/**
 	 * 
-	 * @param URL
-	 * @param key
-	 * @param cookie TODO
-	 * @param itemDate use to store the previous item for the same {@link key}
-	 * @param loader
-	 * @param lifeSpan see {@link LifeSpan}
-	 * @param networkLoader TODO
+	 * @param job
 	 */
 	void doPictureJob(PictureJob job) {
 		File file;
@@ -726,9 +721,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		super.onDataCleared();
 		try {
 			FileUtils.deleteDirectory(mCacheFolder);
-			synchronized (mDirAsserted) {
-				mDirAsserted = Boolean.FALSE;
-			}
+			hasAssertedDirectory.set(false);
 			assertFolderExists();
 		} catch (SecurityException e) {
 			LogManager.logger.e(LOG_TAG, "clearCache exception", e);

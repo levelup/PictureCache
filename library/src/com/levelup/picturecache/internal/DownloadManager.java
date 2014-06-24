@@ -69,6 +69,7 @@ public class DownloadManager {
 				mDownloadJobs.put(job.url, jobList);
 			} else {
 				boolean jobAdded;
+				//noinspection SynchronizationOnLocalVariableOrMethodParameter
 				synchronized (jobList) { // avoid the downloader from aborting while we're adding a job
 					if (DEBUG_DOWNLOADER) LogManager.getLogger().i(PictureCache.LOG_TAG, "add job:"+job+" to downloader:"+jobList);
 					jobAdded = jobList.addJob(job);
