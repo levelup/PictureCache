@@ -2,7 +2,8 @@ apply plugin: 'android-library'
 
 dependencies {
     compile files('libs/android-bitmapcache.jar')
-    compile files('libs/disklrucache-2.0.1.jar')
+    //compile files('libs/disklrucache-2.0.1.jar')
+    compile 'com.jakewharton:disklrucache:2.0.+'
     compile files('libs/inmemorydb.jar')
 }
 
