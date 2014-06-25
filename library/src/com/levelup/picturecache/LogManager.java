@@ -1,6 +1,6 @@
 package com.levelup.picturecache;
 
-import st.gaw.db.Logger;
+import org.gawst.asyncdb.Logger;
 import android.util.Log;
 
 /**

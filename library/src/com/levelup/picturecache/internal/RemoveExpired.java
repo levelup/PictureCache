@@ -3,9 +3,9 @@ package com.levelup.picturecache.internal;
 import java.io.File;
 import java.util.Map.Entry;
 
-import st.gaw.db.AsynchronousDbHelper;
-import st.gaw.db.AsynchronousDbOperation;
-import st.gaw.db.MapEntry;
+import org.gawst.asyncdb.AsynchronousDbHelper;
+import org.gawst.asyncdb.AsynchronousDbOperation;
+import org.gawst.asyncdb.MapEntry;
 
 import com.levelup.picturecache.LifeSpan;
 import com.levelup.picturecache.LogManager;
