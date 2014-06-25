@@ -97,7 +97,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 					"DATE LONG not null DEFAULT -1, " +  // the date of last access to the item
 					"PRIMARY KEY (UUID));";
 
-	private final AtomicBoolean hasAssertedDirectory = new AtomicBoolean();
+	private Boolean hasAssertedDirectory = Boolean.FALSE;
 
 	private final OutOfMemoryHandler ooHandler;
 
@@ -300,7 +300,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	protected void preloadInit(Object c, Logger logger) {
 		super.preloadInit(c, logger);
 
-		hasAssertedDirectory.set(false);
+		hasAssertedDirectory = false;
 
 		InitCookie cookie = (InitCookie) c;
 
@@ -388,16 +388,16 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 	private void assertFolderExists() throws IOException, SecurityException {
 		//LogManager.logger.e(TAG, "assertFolderExists " +DirAsserted);
 		synchronized (hasAssertedDirectory) {
-			if (!hasAssertedDirectory.get()) {
+			if (!hasAssertedDirectory) {
 				//LogManager.logger.i("data dir=" + Environment.getDataDirectory().getAbsolutePath());
 				if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
 					//LogManager.logger.w(TAG, "cache dir=" + dir.getAbsolutePath()+" exists:"+dir.exists());
 					if (mCacheFolder.exists() && mCacheFolder.isDirectory())
-						hasAssertedDirectory.set(true);
+						hasAssertedDirectory = true;
 					else {
-						hasAssertedDirectory.set(mCacheFolder.mkdirs());
+						hasAssertedDirectory = mCacheFolder.mkdirs();
 						//LogManager.logger.w(TAG, "cache dir=" + dir.getAbsolutePath()+" asserted:"+DirAsserted);
-						if (hasAssertedDirectory.get()) {
+						if (hasAssertedDirectory) {
 							new File(mCacheFolder, ".nomedia").createNewFile();
 						}
 					}
@@ -720,7 +720,7 @@ public abstract class PictureCache extends InMemoryHashmapDb<CacheKey,CacheItem>
 		super.onDataCleared();
 		try {
 			FileUtils.deleteDirectory(mCacheFolder);
-			hasAssertedDirectory.set(false);
+			hasAssertedDirectory = false;
 			assertFolderExists();
 		} catch (SecurityException e) {
 			LogManager.logger.e(LOG_TAG, "clearCache exception", e);
